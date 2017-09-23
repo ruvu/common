@@ -1,5 +1,5 @@
 <template>
-  <b-button :variant="variant" v-text='status'>Connected</b-button>
+  <b-button :variant="variant" v-text='status.message'>Connected</b-button>
 </template>
 
 <script>
@@ -23,7 +23,7 @@ export default {
         'connected': 'outline-success sm',
         'closed': 'outline-danger sm'
       }
-      return statusVariantMapping[this.status]
+      return statusVariantMapping[this.status.message]
     }
   }
 }

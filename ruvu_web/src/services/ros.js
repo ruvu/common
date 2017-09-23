@@ -13,19 +13,22 @@ class Connection extends ROSLIB.Ros {
     const host = queryString.parse(location.search)['host'] || 'localhost'
     this.url = `ws://${host}:9090`
 
-    this.status = 'closed'
+    this.status = {
+      message: 'closed',
+      lifetime: 0
+    }
 
     this.on('connection', () => {
       console.log('Connected')
-      this.status = 'connected'
+      this.status.message = 'connected'
     })
     this.on('close', () => {
       setTimeout(this._connect(), RECONNECT_TIMEOUT)
       console.log('Connection closed')
-      this.status = 'closed'
+      this.status.message = 'closed'
     })
     this.on('error', () => {
-      this.status = 'Connection error'
+      this.status.message = 'error'
     })
 
     this._connect()
@@ -34,7 +37,7 @@ class Connection extends ROSLIB.Ros {
   _connect () {
     console.log(`connecting to ${this.url}`)
     this.connect(this.url)
-    this.status = 'connecting'
+    this.status.message = 'connecting'
   }
 }
 
