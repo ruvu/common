@@ -1,11 +1,6 @@
 <template>
   <div class='canvas-container'>
-    <canvas :id='canvasId' width='600' height='600'
-    @mouseup='onMouseUp' @mouseleave='onMouseLeave'
-    @mousemove='onMouseMove' @mousedown='onMouseDown'
-    @touchstart='onTouchStart' @touchend='onTouchEnd'
-    @touchmove='onTouchMove'
-    ></canvas>
+    <canvas :id='canvasId' v-touch:pan='onPan'></canvas>
     <resize-observer @notify="resizeCanvas" />
   </div>
 </template>
@@ -133,39 +128,37 @@ export default {
         this.ctx.restore() // restore original state
       }
     },
-    onMouseUp () {
-      this.end()
+    getCenterWRTCanvas (pageCenter) {
+      var boundingRect = this.canvas.getBoundingClientRect()
+      var x = pageCenter.x - boundingRect.x
+      var y = pageCenter.y - boundingRect.y
+      return {x: x, y: y}
     },
-    onMouseLeave () {
-      this.end()
-    },
-    onMouseMove (e) {
-      this.move(e.offsetX, e.offsetY)
-    },
-    onMouseDown (e) {
-      this.start(e.offsetX, e.offsetY)
-    },
-    onTouchMove (e) {
-      this.move(e.originalEvent.touches[0].offsetX,
-                e.originalEvent.touches[0].offsetY)
-    },
-    onTouchStart (e) {
-      this.start(e.originalEvent.touches[0].offsetX,
-                 e.originalEvent.touches[0].offsetY)
-    },
-    onTouchEnd (e) {
-      this.end()
+    onPan (touchType, e) {
+      var center = this.getCenterWRTCanvas(e.center)
+
+      switch (touchType) {
+        case 'panstart':
+          this.start(center.x, center.y)
+          break
+        case 'panmove':
+          this.move(center.x, center.y)
+          break
+        case 'panend':
+          this.end()
+          break
+      }
     }
   }
 }
 </script>
 
 <style>
-.canvas-container: {
+.canvas-container {
   width: 100%;
   height: 100%;
-  margin: 0;
-  padding: 0;
-  display: inline-block;
+}
+canvas {
+  touch-action: none;
 }
 </style>

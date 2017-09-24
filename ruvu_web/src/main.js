@@ -16,6 +16,12 @@ Vue.use(BootstrapVue)
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
+import VueMoment from 'vue-moment'
+Vue.use(VueMoment)
+
+import Vue2Touch from 'vue2-touch'
+Vue.use(Vue2Touch)
+
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */

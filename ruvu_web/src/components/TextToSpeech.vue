@@ -1,11 +1,11 @@
 <template>
   <div class="card">
     <div class="card-header">
-      Twist teleop
+      Text to speech
     </div>
     <topic-selector :initial="topicName" @updated="topicName = $event"></topic-selector>
-    <div class="card-block twist-teleop-canvas-container">
-      <twist-teleop-canvas :topicName="topicName"></twist-teleop-canvas>
+    <div class="card-block">
+      TODO
     </div>
     <div class="card-footer text-muted">
       Publishing to {{topicName}}
@@ -14,30 +14,22 @@
 </template>
 
 <script>
-import TwistTeleopCanvas from '@/components/ros/TwistTeleopCanvas'
 import TopicSelector from '@/components/ros/TopicSelector'
+import localStorageUtil from '@/util/localStorage'
 
 export default {
   components: {
-    TwistTeleopCanvas,
     TopicSelector
   },
   data () {
     return {
-      topicName: localStorage.getItem('TwistTeleop.topicName') || 'cmd_vel'
+      topicName: localStorageUtil.getLocalStorageWithDefault('TextToSpeech.topicName', 'cmd_vel')
     }
   },
   watch: {
     topicName () {
-      localStorage.setItem('TwistTeleop.topicName', this.topicName)
+      localStorage.setItem('TextToSpeech.topicName', this.topicName)
     }
   }
 }
 </script>
-
-<style>
-.twist-teleop-canvas-container {
-  width: 100%;
-  height: 300px;
-}
-</style>

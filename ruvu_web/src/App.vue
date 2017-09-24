@@ -1,13 +1,18 @@
 <template>
   <div id="app">
-      <b-navbar type="light" variant="light" :sticky="true" fixed="top">
-      <b-navbar-brand href="#">RUVU</b-navbar-brand>
+    <b-navbar toggleable="md"  type="light" variant="light" :sticky="true" fixed="top">
+      <b-nav-toggle target="nav_collapse"></b-nav-toggle>
 
-      <b-nav is-nav-bar>
-        <router-link tag="li" to="/" exact>
-          <a class="nav-link">CmdVelTeleop</a>
-        </router-link>
-      </b-nav>
+      <b-collapse is-nav id="nav_collapse">
+        <b-nav is-nav-bar>
+          <router-link tag="li" to="/" exact>
+            <a class="nav-link">Twist teleop</a>
+          </router-link>
+          <router-link tag="li" to="/text_to_speech" exact>
+            <a class="nav-link">Text to speech</a>
+          </router-link>
+        </b-nav>
+      </b-collapse>
 
       <!-- Right aligned nav items -->
       <b-nav is-nav-bar class="ml-auto">
@@ -34,6 +39,6 @@ export default {
 
 <style>
 #main {
-  padding-top: 5rem;
+  padding-top: 20px
 }
 </style>

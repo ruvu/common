@@ -44,7 +44,7 @@ export default {
       if (this.twistTopic !== null) {
         this.twistTopic.unadvertise()
       }
-      console.log(`Subscribing to ${this.topicName}`)
+      console.log(`Advertising to ${this.topicName}`)
       this.twistTopic = new ROSLIB.Topic({
         ros: ros,
         name: this.topicName,
@@ -73,6 +73,5 @@ export default {
 <style>
 .teleop-canvas-container {
   width: 100%;
-  height: 600px;
 }
 </style>

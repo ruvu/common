@@ -15,16 +15,18 @@ class Connection extends ROSLIB.Ros {
 
     this.status = {
       message: 'closed',
-      lifetime: 0
+      connectionStartTime: 0,
+      numberOfReconnects: -1
     }
-
     this.on('connection', () => {
       console.log('Connected')
+      this.status.connectionStartTime = new Date()
       this.status.message = 'connected'
     })
     this.on('close', () => {
       setTimeout(this._connect(), RECONNECT_TIMEOUT)
       console.log('Connection closed')
+      this.status.connectionStartTime = 0
       this.status.message = 'closed'
     })
     this.on('error', () => {
@@ -36,6 +38,7 @@ class Connection extends ROSLIB.Ros {
 
   _connect () {
     console.log(`connecting to ${this.url}`)
+    this.status.numberOfReconnects += 1
     this.connect(this.url)
     this.status.message = 'connecting'
   }

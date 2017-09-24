@@ -18,8 +18,10 @@
     "random-id": "0.0.2",
     "roslib": "git://github.com/RobotWebTools/roslibjs.git#develop",
     "vue": "^2.4.2",
+    "vue-moment": "^2.0.2",
     "vue-resize": "^0.4.2",
-    "vue-router": "^2.7.0"
+    "vue-router": "^2.7.0",
+    "vue2-touch": "^1.0.5"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
