@@ -9,7 +9,7 @@
 <script>
 export default {
   props: {
-    initial: {
+    initialTopicName: {
       required: true,
       type: String
     },
@@ -19,7 +19,7 @@ export default {
   },
   data () {
     return {
-      topicName: this.initial
+      topicName: this.initialTopicName
     }
   },
   watch: {

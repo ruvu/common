@@ -9,9 +9,9 @@
           <td>url:</td>
           <td v-text="url"></td>
         </tr>
-        <tr v-if="status.connectionStartTime">
-          <td>since:</td>
-          <td>{{status.connectionStartTime | moment("YYYY/MM/DD hh:mm")}}</td>
+        <tr v-if="connectionLifetime">
+          <td>lifetime:</td>
+          <td v-text="connectionLifetime"></td>
         </tr>
       </table>
     </b-tooltip>
@@ -22,15 +22,22 @@
 import TeleopCanvas from '@/components/ros/TeleopCanvas'
 
 import ros from '@/services/ros'
+import moment from 'moment'
 
 export default {
   components: {
     TeleopCanvas
   },
+  mounted () {
+    setInterval(() => {
+      this.connectionLifetime = moment(this.status.connectionStartTime).toNow(true)
+    }, 1000)
+  },
   data () {
     return {
       status: ros.status,
-      url: ros.url
+      url: ros.url,
+      connectionLifetime: ''
     }
   },
   computed: {

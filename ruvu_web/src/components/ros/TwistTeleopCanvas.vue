@@ -23,7 +23,7 @@ export default {
     },
     rotationalVelocityScaling: {
       type: Number,
-      default: 0.5
+      default: 0.8
     }
   },
   watch: {
@@ -33,7 +33,7 @@ export default {
   },
   data () {
     return {
-      twistTopic: null
+      topic: null
     }
   },
   created () {
@@ -41,30 +41,35 @@ export default {
   },
   methods: {
     readvertise () {
-      if (this.twistTopic !== null) {
-        this.twistTopic.unadvertise()
+      if (this.topic !== null) {
+        this.topic.unadvertise()
       }
       console.log(`Advertising to ${this.topicName}`)
-      this.twistTopic = new ROSLIB.Topic({
+      this.topic = new ROSLIB.Topic({
         ros: ros,
         name: this.topicName,
         messageType: 'geometry_msgs/Twist'
       })
     },
+    absClip (absValue, value) {
+      return Math.max(Math.min(value, absValue), -absValue)
+    },
     publishTwistMessage (e) {
       var msg = new ROSLIB.Message({
         linear: {
-          x: e.py,
+          x: this.absClip(this.translationalVelocityScaling * e.py,
+                          this.translationalVelocityScaling),
           y: 0,
           z: 0
         },
         angular: {
           x: 0,
           y: 0,
-          z: -e.px
+          z: this.absClip(-this.rotationalVelocityScaling * e.px,
+                          this.rotationalVelocityScaling)
         }
       })
-      this.twistTopic.publish(msg)
+      this.topic.publish(msg)
     }
   }
 }

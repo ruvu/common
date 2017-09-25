@@ -3,7 +3,9 @@
     <div class="card-header">
       Twist teleop
     </div>
-    <topic-selector :initial="topicName" @updated="topicName = $event"></topic-selector>
+    <div class="card-block">
+      <topic-selector :initialTopicName="topicName" @updated="topicName = $event"></topic-selector>
+    </div>
     <div class="card-block twist-teleop-canvas-container">
       <twist-teleop-canvas :topicName="topicName"></twist-teleop-canvas>
     </div>
