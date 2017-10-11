@@ -14,5 +14,6 @@
   <!-- Add here all ROS packages that contain behaviors -->
   <run_depend>behavior_example_behavior</run_depend>
   <run_depend>behavior_demonstration</run_depend>
+  <run_depend>behavior_conversation</run_depend>
 
 </package>
