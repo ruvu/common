@@ -69,7 +69,7 @@ class HMIRequestState(EventState):
         elif rospy.get_rostime() > self._last_feedback_time + self._timeout:
             # preempt action
             rospy.logdebug("Canceling goal")
-            self._client.cancel()
+            self._client.cancel(self._topic)
 
         # Check if the action has finished
         if self._client.has_result(self._topic):
