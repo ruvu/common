@@ -15,7 +15,7 @@
                            v-text="item"
                           :key="idx"
                           href="#"
-                          @click="publishString(item)">
+                          @click="sendGoal(item)">
         </b-list-group-item>
       </b-list-group>
     </div>
@@ -31,7 +31,7 @@ export default {
       required: true,
       type: Object
     },
-    topicName: {
+    actionName: {
       required: true,
       type: String
     },
@@ -44,32 +44,33 @@ export default {
     return {
       string: '',
       stringHistory: [],
-      topic: null
+      actionClient: null,
+      actionGoal: null
     }
   },
   created () {
     this.readvertise()
   },
   watch: {
-    topicName () {
+    actionName () {
       this.readvertise()
     }
   },
   methods: {
     readvertise () {
-      if (this.topic !== null) {
-        this.topic.unadvertise()
-      }
-      console.log(`Advertising to ${this.topicName}`)
-      this.topic = new ROSLIB.Topic({
+      // if (this.topic !== null) {
+      //   this.topic.unadvertise()
+      // }
+      // console.log(`Advertising to ${this.topicName}`)
+      this.actionClient = new ROSLIB.ActionClient({
         ros: this.ros,
-        name: this.topicName,
-        messageType: 'std_msgs/String'
+        serverName: this.actionName,
+        actionName: 'hmi_msgs/CastAction'
       })
     },
     keydown (e) {
       if (event.which === 13) { // enter
-        this.publishString(this.string)
+        this.sendGoal(this.string)
         this.stringHistory.unshift(this.string)
         this.string = ''
         while (this.stringHistory.length > this.historySize) {
@@ -77,11 +78,15 @@ export default {
         }
       }
     },
-    publishString (string) {
-      var msg = new ROSLIB.Message({
-        data: string
+    sendGoal (string) {
+      this.actionGoal = new ROSLIB.Goal({
+        actionClient: this.actionClient,
+        goalMessage: {
+          message: string
+        }
       })
-      this.topic.publish(msg)
+      this.actionGoal.send()
+      console.log('Sending goal', this.actionGoal)
     }
   }
 }

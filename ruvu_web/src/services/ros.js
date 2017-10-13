@@ -2,11 +2,10 @@ import ROSLIB from 'roslib'
 import queryString from 'query-string'
 
 // reconnect timeout in ms
-const RECONNECT_TIMEOUT = 5000
+// const RECONNECT_TIMEOUT = 5000
 
 // Connection constructor
 class Connection extends ROSLIB.Ros {
-
   constructor () {
     super({encoding: 'ascii'})
 
@@ -24,7 +23,7 @@ class Connection extends ROSLIB.Ros {
       this.status.message = 'connected'
     })
     this.on('close', () => {
-      setTimeout(this._connect(), RECONNECT_TIMEOUT)
+      // setTimeout(this._connect(), RECONNECT_TIMEOUT)
       console.log('Connection closed')
       this.status.connectionStartTime = 0
       this.status.message = 'closed'

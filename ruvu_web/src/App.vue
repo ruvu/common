@@ -8,15 +8,24 @@
           <router-link tag="li" to="/" exact>
             <a class="nav-link">Twist teleop</a>
           </router-link>
-          <router-link tag="li" to="/text_to_speech" exact>
-            <a class="nav-link">Text to speech</a>
+          <router-link tag="li" to="/string_publisher" exact>
+            <a class="nav-link">String publisher</a>
+          </router-link>
+          <router-link tag="li" to="/hmi_cast_client" exact>
+            <a class="nav-link">HMI cast client</a>
+          </router-link>
+          <router-link tag="li" to="/hmi_query_client" exact>
+            <a class="nav-link">HMI query client</a>
+          </router-link>
+          <router-link tag="li" to="/hmi_server" exact>
+            <a class="nav-link">HMI server</a>
           </router-link>
         </b-nav>
       </b-collapse>
 
       <!-- Right aligned nav items -->
       <b-nav is-nav-bar class="ml-auto">
-        <connection-status-button></connection-status-button>
+        <connection-status-button :ros="ros"></connection-status-button>
       </b-nav>
     </b-navbar>
 
@@ -28,10 +37,16 @@
 
 <script>
 import ConnectionStatusButton from '@/components/ros/ConnectionStatusButton'
+import ros from '@/services/ros'
 
 export default {
   components: {
     ConnectionStatusButton
+  },
+  data () {
+    return {
+      ros: ros
+    }
   },
   name: 'app'
 }
@@ -40,5 +55,8 @@ export default {
 <style>
 #main {
   padding-top: 20px
+}
+.btn {
+  cursor: pointer;
 }
 </style>

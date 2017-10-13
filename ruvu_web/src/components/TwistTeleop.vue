@@ -7,7 +7,7 @@
       <topic-selector :initialTopicName="topicName" @updated="topicName = $event"></topic-selector>
     </div>
     <div class="card-block twist-teleop-canvas-container">
-      <twist-teleop-canvas :topicName="topicName"></twist-teleop-canvas>
+      <twist-teleop-canvas :topicName="topicName" :ros="ros"></twist-teleop-canvas>
     </div>
     <div class="card-footer text-muted">
       Publishing to {{topicName}}
@@ -18,6 +18,7 @@
 <script>
 import TwistTeleopCanvas from '@/components/ros/TwistTeleopCanvas'
 import TopicSelector from '@/components/ros/TopicSelector'
+import ros from '@/services/ros'
 
 export default {
   components: {
@@ -26,6 +27,7 @@ export default {
   },
   data () {
     return {
+      ros: ros,
       topicName: localStorage.getItem('TwistTeleop.topicName') || 'cmd_vel'
     }
   },

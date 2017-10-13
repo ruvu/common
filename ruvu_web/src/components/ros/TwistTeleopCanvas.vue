@@ -4,15 +4,17 @@
 
 <script>
 import TeleopCanvas from '@/components/ros/TeleopCanvas'
-
 import ROSLIB from 'roslib'
-import ros from '@/services/ros'
 
 export default {
   components: {
     TeleopCanvas
   },
   props: {
+    ros: {
+      required: true,
+      type: Object
+    },
     topicName: {
       type: String,
       required: true
@@ -46,15 +48,16 @@ export default {
       }
       console.log(`Advertising to ${this.topicName}`)
       this.topic = new ROSLIB.Topic({
-        ros: ros,
+        ros: this.ros,
         name: this.topicName,
         messageType: 'geometry_msgs/Twist'
       })
     },
-    absClip (absValue, value) {
+    absClip (value, absValue) {
       return Math.max(Math.min(value, absValue), -absValue)
     },
     publishTwistMessage (e) {
+      console.log(e)
       var msg = new ROSLIB.Message({
         linear: {
           x: this.absClip(this.translationalVelocityScaling * e.py,
@@ -69,6 +72,7 @@ export default {
                           this.rotationalVelocityScaling)
         }
       })
+      console.log(msg)
       this.topic.publish(msg)
     }
   }

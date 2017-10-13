@@ -1,11 +1,11 @@
 <template>
   <div class="card">
     <div class="card-header">
-      Text to speech
+      String publisher
     </div>
     <topic-selector :initialTopicName="topicName" @updated="topicName = $event"></topic-selector>
     <div class="card-block">
-      <string-publisher :topicName="topicName" :historySize="historySize"></string-publisher>
+      <string-publisher :topicName="topicName" :historySize="historySize" :ros="ros"></string-publisher>
       <b-input-group>
         <b-input-group-addon>History size</b-input-group-addon>
         <b-form-input v-model="historySize"
@@ -22,6 +22,7 @@
 import TopicSelector from '@/components/ros/TopicSelector'
 import StringPublisher from '@/components/ros/StringPublisher'
 import localStorageUtil from '@/util/localStorage'
+import ros from '@/services/ros'
 
 export default {
   components: {
@@ -30,6 +31,7 @@ export default {
   },
   data () {
     return {
+      ros: ros,
       topicName: localStorageUtil.getLocalStorageWithDefault('TextToSpeech.topicName', 'cmd_vel'),
       historySize: 1 // localStorageUtil.getLocalStorageWithDefault('TextToSpeech.historySize', parseInt(5))
     }
