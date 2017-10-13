@@ -4,6 +4,7 @@
       <h1 v-text="castGoal.message"></h1>
     </div>
     <div v-if="queryGoal">
+      <h1 v-text="queryGoal.description"></h1>
       <b-list-group>
         <b-list-group-item v-for="s in queryGoal.example_sentences" :key="s.id"
                            v-text="s"
