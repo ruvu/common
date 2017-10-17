@@ -127,6 +127,7 @@ class HMIRequestState(EventState):
         goal.description = self._description
         goal.grammar = self._grammar
         goal.target = self._target
+        goal.example_sentences = self._grammar_parser.get_random_sentences(self._target, num=10, max_num=1e5)
 
         # Send the goal
         try:
