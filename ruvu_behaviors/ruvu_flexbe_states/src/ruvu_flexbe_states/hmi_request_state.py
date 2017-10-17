@@ -6,49 +6,64 @@ from flexbe_core.proxy import ProxyActionClient
 from hmi_msgs.msg import QueryAction, QueryGoal
 from actionlib_msgs.msg import GoalStatus
 import rospy
+import json
+
+from hmi import GrammarParser
+
+
+def check_param(param, error_msg, condition=lambda x: x):
+    if condition(param):
+        return param
+    else:
+        rospy.logerr(error_msg)
+        raise Exception(error_msg)
 
 
 class HMIRequestState(EventState):
     """
     Implements a query to the robot's user. Input can be given using any HMI server such as a GUI or speech interaction.
 
-    -- topic        string  The HMI topic to use
-    -- timeout      float 	Time to wait for input before the request times out (in seconds)
-    -- description  string  Description of the requested user input
-    -- grammar		string	The grammar used for the request.
-    -- target       string  The root element of the grammar tree
+    -- topic        string      The HMI topic to use
+    -- timeout      float       Time to wait for input before the request times out (in seconds)
+    -- description  string      Description of the requested user input
+    -- grammar      text        The grammar used for the HMI request (as specified in hmi_msgs/Query)
+    -- outcomes     [string]    List of outcomes of this state. Should be a subset of the grammar outcomes.
+    -- num_examples int         Number of example responses to pass to HMI servers
 
-    #> sentence		string 	The sentence retrieved from the HMI server
-    #> semantics	string	A json string containing the semantics of the sentence
+    #> sentence     string      The sentence retrieved from the HMI server
+    #> semantics    string      A json string containing the semantics of the sentence
 
-    <= timed_out			The request timed out
-    <= succeeded			The request resulted in input data
-    <= command_error        The command sent to the connected action server was invalid
-    <= failed               The action failed for an unknown reason
+    <= timed_out                The request timed out
+    <= failed                   The action failed for an unknown reason
     """
 
-    def __init__(self, topic=None, timeout=10, description="", grammar=None, target=None):
-        super(HMIRequestState, self).__init__(outcomes=['timed_out', 'succeeded', 'command_error', 'failed'],
+    def __init__(self, topic=None, timeout=10, description="", grammar=None, target="T", outcomes=[], num_examples=10):
+        self._grammar = check_param(grammar, "Please set the grammar to use for HMI requests.")
+
+        self._target = check_param(target, "Please specify a valid target.")
+
+        self._grammar_parser = GrammarParser.fromstring(self._grammar)
+        self._grammar_parser.verify(target=self._target)
+
+        # # Check if grammar outcomes are a subset of the specified outcomes
+        # grammar_outcomes = set(_get_outcomes_from_grammar(self._grammar)).union({'timed_out', 'failed'})
+        # check_param(set(outcomes), "Parameter 'outcomes' must be a subset of the grammar outcomes.",
+        #             lambda x: x.issubset(grammar_outcomes))
+
+        # Check if 'timed_out' and 'failed' are at least in the specified outcomes
+        check_param({'timed_out', 'failed'}, "outcomes 'timed_out' and 'failed' must be in the paramter 'outcomes'",
+                    lambda x: x.issubset(set(outcomes)))
+        self._outcomes = outcomes
+
+        super(HMIRequestState, self).__init__(outcomes=outcomes,
                                               output_keys=['sentence', 'semantics'])
 
-        if not topic:
-            rospy.logerr("Please set the topic to use for HMI requests.")
-            raise Exception()
-        self._topic = topic
+        self._topic = check_param(topic, "Please set the topic to use for HMI requests.")
 
+        check_param(timeout, "Timeout must be greater than zero", lambda x: x > 0)
         self._timeout = rospy.Duration(timeout)
 
         self._description = description
-
-        if not grammar:
-            rospy.logerr("Please set a grammar to use for HMI requests.")
-            raise Exception()
-        self._grammar = grammar
-
-        if not target:
-            rospy.logerr("Please set a target to use for HMI requests.")
-            raise Exception()
-        self._target = target
 
         self._client = ProxyActionClient({self._topic: QueryAction})
 
