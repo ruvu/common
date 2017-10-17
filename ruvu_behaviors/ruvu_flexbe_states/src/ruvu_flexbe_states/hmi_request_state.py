@@ -69,7 +69,6 @@ class HMIRequestState(EventState):
 
         # Initialize member variables
         self._error = False
-        self._last_talker_id = ""
         self._last_feedback_time = None
 
     def execute(self, userdata):
@@ -92,10 +91,27 @@ class HMIRequestState(EventState):
 
             if state == GoalStatus.SUCCEEDED:
                 result = self._client.get_result(self._topic)
+
                 userdata.sentence = result.sentence
-                userdata.semantics = result.semantics
-                self._last_talker_id = result.talker_id
-                return 'succeeded'
+
+                # If the server gave back semantics, use that, otherwise parse the sentence yourself
+                if result.semantics:
+                    semantics = json.loads(result.semantics)
+                else:
+                    semantics = self._grammar_parser.parse(self._target, result.sentence)
+
+                # If neither the server, nor we were able to parse the sentence...
+                if not isinstance(semantics, dict):
+                    return 'failed'
+                # If no outcome field is in the semantics...
+                elif 'outcome' not in semantics:
+                    return 'failed'
+                # If the outcome is not one of the specified outcomes...
+                elif semantics['outcome'] not in self._outcomes:
+                    return 'failed'
+                else:
+                    return semantics['outcome']
+
             elif state == GoalStatus.PREEMPTED:
                 return 'timed_out'
             else:
@@ -104,7 +120,6 @@ class HMIRequestState(EventState):
     def on_enter(self, userdata):
         # Make sure to reset all member variables since execution may enter this state more than once
         self._error = False
-        self._last_talker_id = ""
         self._last_feedback_time = rospy.get_rostime()
 
         # Create the goal
