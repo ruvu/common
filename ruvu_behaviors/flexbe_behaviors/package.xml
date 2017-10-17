@@ -16,5 +16,6 @@
   <run_depend>behavior_demonstration</run_depend>
   <run_depend>behavior_conversation</run_depend>
   <run_depend>behavior_chatter</run_depend>
+  <run_depend>behavior_facetracking</run_depend>
 
 </package>
