@@ -8,6 +8,14 @@ from actionlib_msgs.msg import GoalStatus
 import rospy
 
 
+def check_param(param, error_msg, condition=lambda x: x):
+    if condition(param):
+        return param
+    else:
+        rospy.logerr(error_msg)
+        raise Exception(error_msg)
+
+
 class HMICastState(EventState):
     """
     Implements a cast to the robot's user.
@@ -17,25 +25,23 @@ class HMICastState(EventState):
 
     -- topic        string  The HMI topic to use
     -- timeout      float 	Time to wait for input before the cast times out (in seconds)
+    -- message      string  The message to be cast to the user
+    -- emotion		string	Optional emotion of the message
 
-    ># message      string  The message to be cast to the user
-    ># emotion		string	Optional emotion of the message
-
-    <= timed_out			The cast timed out
     <= succeeded			The cast succeeded
-    <= command_error        The command sent to the connected action server was invalid
-    <= failed               The action failed for an unknown reason
+    <= failed               The cast failed for an unknown reason
+    <= timed_out            The cast timed out
     """
 
-    def __init__(self, topic=None, timeout=10):
-        super(HMICastState, self).__init__(outcomes=['timed_out', 'succeeded', 'command_error', 'failed'],
-                                           input_keys=['message', 'emotion'])
+    def __init__(self, topic, message, timeout=10, emotion=0):
+        super(HMICastState, self).__init__(outcomes=['succeeded', 'timed_out', 'failed'])
 
-        if not topic:
-            rospy.logerr("Please set the topic to use for HMI casts.")
-            raise Exception()
-        self._topic = topic
+        self._topic = check_param(topic, "Please set the topic to use for HMI casts.")
 
+        self._message = check_param(message, "Message cannot be empty.")
+        self._emotion = emotion
+
+        timeout = check_param(timeout, "Timeout should be greater than zero", lambda x: x > 0)
         self._timeout = rospy.Duration(timeout)
 
         self._client = ProxyActionClient({self._topic: CastAction})
@@ -72,9 +78,8 @@ class HMICastState(EventState):
 
         # Create the goal
         goal = CastGoal()
-        goal.message = userdata.message
-        if userdata.emotion:
-            goal.emotion = userdata.emotion
+        goal.message = self._message
+        goal.emotion = self._emotion
 
         # Send the goal
         try:
