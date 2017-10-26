@@ -1,0 +1,8 @@
+kinetic-x86:
+    image: docker:git
+    services:
+        - docker:dind
+    script:
+        - docker build -t registry.gitlab.com/ruvu/common/kinetic-x86 -f docker/Dockerfile-kinetic-x86 .
+        - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+        - docker push registry.gitlab.com/ruvu/common/kinetic-x86:latest
