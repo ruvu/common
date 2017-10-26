@@ -1,0 +1,235 @@
+#!/usr/bin/env python
+
+# MIT License
+#
+# Copyright (c) 2017 RUVU Robotics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+import rospy
+from pepper_hardware import QiSession
+from sensor_msgs.msg import LaserScan
+
+
+class Laser(object):
+
+    # # PEPPER laser specs
+    # # see https://community.aldebaran.com/doc/2-1/family/juliette_technical/laser_juliette.html#juliette-laser
+    # PEPPER_LASER_FREQ = 6                       # [hZ] --> check on that
+    # PEPPER_LASER_MIN_ANGLE = -0.523598776          # [rad]
+    # PEPPER_LASER_MAX_ANGLE = 0.523598776           # [radi]
+    # PEPPER_LASER_FOV = math.fabs(PEPPER_LASER_MIN_ANGLE)+math.fabs(PEPPER_LASER_MAX_ANGLE)
+    #
+    # PEPPER_LASER_MIN_RANGE = 0.1                   # [m] --> no spec given here
+    # PEPPER_LASER_MAX_RANGE = 5.0                   # [m] --> same here, 5m as quality guess
+    #
+    # # FRONT GROUND LASERS
+    # PEPPER_LASER_GROUND_SHOVEL_POINTS = 3
+    # PEPPER_LASER_GROUND_LEFT_POINTS = 1
+    # PEPPER_LASER_GROUND_RIGHT_POINTS = 1
+    # # SURROUNDING LASER
+    # PEPPER_LASER_SRD_POINTS = 15
+
+    # memory key to fetch laser readings from
+    # see memory key listing https://community.aldebaran.com/doc/2-1/family/juliette_technical/juliette_dcm/actuator_sensor_names.html#lasers
+    # iterate over all segments e.g./SubDeviceList/Platform/LaserSensor/Front/Shovel/Seg01/X/Value
+    LASER_MEMORY_KEY = 'Device/SubDeviceList/Platform/LaserSensor/%s'
+    # PEPPER_MEM_KEY_SHOVEL = 'Device/SubDeviceList/Platform/LaserSensor/Front/Shovel/'
+    # PEPPER_MEM_KEY_GROUND_LEFT = 'Device/SubDeviceList/Platform/LaserSensor/Front/Vertical/Left/'
+    # PEPPER_MEM_KEY_GROUND_RIGHT = 'Device/SubDeviceList/Platform/LaserSensor/Front/Vertical/Right/'
+    # PEPPER_MEM_KEY_SRD_FRONT = 'Device/SubDeviceList/Platform/LaserSensor/Front/Horizontal/'
+    # PEPPER_MEM_KEY_SRD_LEFT = 'Device/SubDeviceList/Platform/LaserSensor/Left/Horizontal/'
+    # PEPPER_MEM_KEY_SRD_RIGHT = 'Device/SubDeviceList/Platform/LaserSensor/Right/Horizontal/'
+    #
+    # # ROS params to check
+    # # acc. to spec: 40 kHz
+    # PARAM_LASER_RATE = '~laser_rate'
+    # PARAM_LASER_RATE_DEFAULT = PEPPER_LASER_FREQ
+    #
+    # # frame id to publish
+    # PARAM_LASER_SHOVEL_FRAME = '~laser_shovel_frame_id'
+    # PARAM_LASER_SHOVEL_FRAME_DEFAULT = 'ShovelLaser_frame'
+    #
+    # PARAM_LASER_GROUND_LEFT_FRAME = '~laser_ground_left_frame_id'
+    # PARAM_LASER_GROUND_LEFT_FRAME_DEFAULT = 'VerticalLeftLaser_frame'
+    #
+    # PARAM_LASER_GROUND_RIGHT_FRAME = '~laser_ground_right_frame_id'
+    # PARAM_LASER_GROUND_RIGHT_FRAME_DEFAULT = 'VerticalRightLaser_frame'
+    #
+    # PARAM_LASER_SRD_FRONT_FRAME = '~laser_srd_front_frame_id'
+    # PARAM_LASER_SRD_FRONT_FRAME_DEFAULT = 'SurroundingFrontLaser_frame'
+    #
+    # PARAM_LASER_SRD_LEFT_FRAME = '~laser_srd_left_frame_id'
+    # PARAM_LASER_SRD_LEFT_FRAME_DEFAULT = 'SurroundingLeftLaser_frame'
+    #
+    # PARAM_LASER_SRD_RIGHT_FRAME = '~laser_srd_right_frame_id'
+    # PARAM_LASER_SRD_RIGHT_FRAME_DEFAULT = 'SurroundingRightLaser_frame'
+    #
+    # PEPPER_LASER_SUB_NAME = 'pepper_ros_laser'
+
+    def __init__(self):
+        """
+        Laser sensor wrapper for the Pepper Robot
+        """
+        self._session = QiSession()
+
+        self._memory = self._session.get_service("ALMemory")
+        self._laser = self._session.get_service("ALLaser")
+
+        self._sensor_id = rospy.get_param("~sensor_id")
+
+        self._laser.subscribe("%s_laser_reader" % self._sensor_id)
+
+        self._memory_key = self.LASER_MEMORY_KEY % self._sensor_id + "/Horizontal/Seg07/X/Sensor/Value"
+
+        print self._memory_key
+        status_key = self.LASER_MEMORY_KEY % self._sensor_id + "Reg/Status/Sensor/Value"
+        print status_key
+        print self._memory.getData(status_key)
+
+        try:
+            self._subscriber = self._memory.subscriber(self._memory_key)
+        except RuntimeError as e:
+            rospy.logerr('Service with key %s not available.' % self._memory_key)
+            raise e
+
+        self._subscriber.signal.connect(self.laser_callback)
+
+        self._publisher = rospy.Publisher("scan", LaserScan, queue_size=1)
+
+        self._timer = rospy.Timer(rospy.Duration(0.1), self.print_laser_data)
+
+    def laser_callback(self, value):
+        rospy.loginfo("Got laser data!")
+        rospy.loginfo(value)
+
+        scan = LaserScan()
+        scan.header.frame_id = "frame_id"
+        scan.header.stamp = rospy.get_rostime()
+
+        self._publisher.publish(scan)
+
+    def print_laser_data(self, event):
+        rospy.loginfo("Manually retrieving laser data...")
+        print self._memory.getData(self._memory_key)
+
+
+    # def fetchLaserValues(self, keyPrefix, scanNum):
+    #     ranges = []
+    #     # traverse backwards
+    #     tmp_array = []
+    #     for i in xrange(scanNum, 0, -1):
+    #         keyX = keyPrefix + 'Seg' + '%02d' % (i,) + '/X/Sensor/Value'
+    #         keyY = keyPrefix + 'Seg' + '%02d' % (i,) + '/Y/Sensor/Value'
+    #         tmp_array.append(keyX)
+    #         tmp_array.append(keyY)
+    #     memData = self.memProxy.getListData(tmp_array)
+    #     for i in xrange(0, len(tmp_array), 2):
+    #         x = memData[i]
+    #         y = memData[i + 1]
+    #         ranges.append(math.sqrt(math.pow(x, 2.0) + math.pow(y, 2.0)))
+    #     return ranges
+    #
+    # def createLaserMessage(self, frameID, keyPrefix, scanNum):
+    #     laserScanMsg = LaserScan()
+    #     laserScanMsg.header.frame_id = frameID
+    #     laserScanMsg.angle_min = self.PEPPER_LASER_MIN_ANGLE
+    #     laserScanMsg.angle_max = self.PEPPER_LASER_MAX_ANGLE
+    #     laserScanMsg.angle_increment = self.PEPPER_LASER_FOV / scanNum
+    #     laserScanMsg.range_min = self.PEPPER_LASER_MIN_RANGE
+    #     laserScanMsg.range_max = self.PEPPER_LASER_MAX_RANGE
+    #     return laserScanMsg
+    #
+    # def cb(self):
+    #     shovelScan = self.createLaserMessage(
+    #         self.laserShovelFrame,
+    #         self.PEPPER_MEM_KEY_GROUND_SHOVEL,
+    #         self.PEPPER_LASER_GROUND_SHOVEL_POINTS)
+    #     groundLeftScan = self.createLaserMessage(
+    #         self.laserGroundLeftFrame,
+    #         self.PEPPER_MEM_KEY_GROUND_LEFT,
+    #         self.PEPPER_LASER_GROUND_LEFT_POINTS)
+    #     groundRightScan = self.createLaserMessage(
+    #         self.laserGroundRightFrame,
+    #         self.PEPPER_MEM_KEY_GROUND_RIGHT,
+    #         self.PEPPER_LASER_GROUND_RIGHT_POINTS)
+    #     srdFrontScan = self.createLaserMessage(
+    #         self.laserSRDFrontFrame,
+    #         self.PEPPER_MEM_KEY_SRD_FRONT,
+    #         self.PEPPER_LASER_SRD_POINTS)
+    #     srdLeftScan = self.createLaserMessage(
+    #         self.laserSRDLeftFrame,
+    #         self.PEPPER_MEM_KEY_SRD_LEFT,
+    #         self.PEPPER_LASER_SRD_POINTS)
+    #     srdRightScan = self.createLaserMessage(
+    #         self.laserSRDRightFrame,
+    #         self.PEPPER_MEM_KEY_SRD_RIGHT,
+    #         self.PEPPER_LASER_SRD_POINTS)
+    #
+    #     # fetch values
+    #     shovelScan.header.stamp = rospy.Time.now()
+    #     shovelScan.ranges = self.fetchLaserValues(
+    #         self.PEPPER_MEM_KEY_GROUND_SHOVEL,
+    #         self.PEPPER_LASER_GROUND_SHOVEL_POINTS
+    #     )
+    #
+    #     groundLeftScan.header.stamp = rospy.Time.now()
+    #     groundLeftScan.ranges = self.fetchLaserValues(
+    #         self.PEPPER_MEM_KEY_GROUND_LEFT,
+    #         self.PEPPER_LASER_GROUND_LEFT_POINTS
+    #     )
+    #
+    #     groundRightScan.header.stamp = rospy.Time.now()
+    #     groundRightScan.ranges = self.fetchLaserValues(
+    #         self.PEPPER_MEM_KEY_GROUND_RIGHT,
+    #         self.PEPPER_LASER_GROUND_RIGHT_POINTS
+    #     )
+    #
+    #     srdFrontScan.header.stamp = rospy.Time.now()
+    #     srdFrontScan.ranges = self.fetchLaserValues(
+    #         self.PEPPER_MEM_KEY_SRD_FRONT,
+    #         self.PEPPER_LASER_SRD_POINTS
+    #     )
+    #
+    #     srdLeftScan.header.stamp = rospy.Time.now()
+    #     srdLeftScan.ranges = self.fetchLaserValues(
+    #         self.PEPPER_MEM_KEY_SRD_LEFT,
+    #         self.PEPPER_LASER_SRD_POINTS
+    #     )
+    #
+    #     srdRightScan.header.stamp = rospy.Time.now()
+    #     srdRightScan.ranges = self.fetchLaserValues(
+    #         self.PEPPER_MEM_KEY_SRD_RIGHT,
+    #         self.PEPPER_LASER_SRD_POINTS
+    #     )
+    #
+    #     # publish messages
+    #     self.laserShovelPublisher.publish(shovelScan)
+    #     self.laserGroundLeftPublisher.publish(groundLeftScan)
+    #     self.laserGroundRightPublisher.publish(groundRightScan)
+    #     self.laserSRDFrontPublisher.publish(srdFrontScan)
+    #     self.laserSRDLeftPublisher.publish(srdLeftScan)
+    #     self.laserSRDRightPublisher.publish(srdRightScan)
+
+
+if __name__ == "__main__":
+    rospy.init_node("laser")
+    controller = Laser()
+    rospy.spin()

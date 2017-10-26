@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="debug" default="false" />
+
+    <arg name="ip" default="pepper.local" />
+    <arg name="port" default="9559" />
+
+    <arg name="tablet_url" default="http://192.168.1.134?host=192.168.1.134" />
+
+    <group ns="hmi">
+
+        <node name="tablet" pkg="pepper_hardware" type="tablet" required="true">
+            <param name="ip" value="$(arg ip)" />
+            <param name="port" value="$(arg port)" />
+            <param name="url" value="$(arg tablet_url)" />
+        </node>
+
+        <group ns="cast">
+
+            <node name="text_to_speech" pkg="pepper_hardware" type="text_to_speech" required="true">
+                <param name="ip" value="$(arg ip)" />
+                <param name="port" value="$(arg port)" />
+            </node>
+
+        </group>
+
+        <node name="query" pkg="hmi" type="multi_client" output="log"/>
+
+        <group ns="query">
+
+            <node name="string_topic_answerer" pkg="hmi" type="string_topic_answerer" output="log"/>
+
+            <node name="speech_recognition" pkg="pepper_hardware" type="speech_recognition" required="true">
+                <param name="ip" value="$(arg ip)" />
+                <param name="port" value="$(arg port)" />
+            </node>
+
+        </group>
+
+    </group>
+
+ </launch>

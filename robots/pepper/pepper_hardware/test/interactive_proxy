@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+ipython -i --no-banner --no-confirm-exit -m pepper_hardware.proxy $@
