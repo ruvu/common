@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find ruvu_web)/test/map.pgm 0.025" />
+</launch>

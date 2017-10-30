@@ -13,10 +13,11 @@
   "dependencies": {
     "bootstrap-vue": "^1.0.0-beta.9",
     "eventemitter2": "^4.1.2",
+    "font-awesome": "^4.7.0",
     "lodash": "^4.17.4",
     "query-string": "^5.0.0",
     "random-id": "0.0.2",
-    "ros3djs": "git://github.com/RobotWebTools/ros3djs.git#develop",
+    "ros3djs": "git+https://github.com/RobotWebTools/ros3djs.git#develop",
     "roslib": "git://github.com/RobotWebTools/roslibjs.git#develop",
     "vue": "^2.4.2",
     "vue-moment": "^2.1.0",

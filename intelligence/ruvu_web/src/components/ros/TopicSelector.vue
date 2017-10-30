@@ -1,6 +1,6 @@
 <template>
   <b-input-group>
-    <b-input-group-addon>Topic name</b-input-group-addon>
+    <b-input-group-addon v-text="label"></b-input-group-addon>
     <b-form-input v-model="topicName"
                   placeholder="Please enter a topic"></b-form-input>
   </b-input-group>
@@ -15,6 +15,10 @@ export default {
     },
     messageType: {
       type: String
+    },
+    label: {
+      type: String,
+      default: 'Topic name'
     }
   },
   data () {
