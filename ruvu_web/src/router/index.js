@@ -6,6 +6,7 @@ import StringPublisher from '@/components/StringPublisher'
 import HmiCastClient from '@/components/HmiCastClient'
 import HmiQueryClient from '@/components/HmiQueryClient'
 import HmiServer from '@/components/HmiServer'
+import NavigationViewer from '@/components/NavigationViewer'
 
 Vue.use(Router)
 
@@ -35,6 +36,11 @@ export default new Router({
       path: '/hmi_server',
       name: 'HmiServer',
       component: HmiServer
+    },
+    {
+      path: '/navigation_viewer',
+      name: 'NavigationViewer',
+      component: NavigationViewer
     }
   ]
 })

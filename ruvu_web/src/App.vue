@@ -20,6 +20,9 @@
           <router-link tag="li" to="/hmi_server" exact>
             <a class="nav-link">HMI server</a>
           </router-link>
+          <router-link tag="li" to="/navigation_viewer" exact>
+            <a class="nav-link">Navigation viewer</a>
+          </router-link>
         </b-nav>
       </b-collapse>
 

@@ -1,4 +1,5 @@
 import ROSLIB from 'roslib'
+window.ROSLIB = ROSLIB
 import queryString from 'query-string'
 
 // reconnect timeout in ms
@@ -9,7 +10,7 @@ class Connection extends ROSLIB.Ros {
   constructor () {
     super({encoding: 'ascii'})
 
-    const host = queryString.parse(location.search)['host'] || 'localhost'
+    const host = queryString.parse(location.search)['host'] || window.location.hostname
     this.url = `ws://${host}:9090`
 
     this.status = {
