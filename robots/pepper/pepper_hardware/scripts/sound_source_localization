@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+# MIT License
+#
+# Copyright (c) 2017 RUVU Robotics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+import rospy
+
+from std_msgs.msg import Header
+from geometry_msgs.msg import PoseStamped
+
+from pepper_hardware import QiSession, geometry_helpers
+
+
+class SoundSourceLocalization(object):
+
+    def __init__(self):
+        self._session = QiSession()
+        self._sound_localization = self._session.get_service("ALSoundLocalization")
+        self._mem = self._session.get_memory_wrapper()
+        self._mem.subscribe(self._sound_localization, "ALSoundLocalization/SoundLocated", self._sound_located_callback)
+
+        self._publisher = rospy.Publisher("sound_direction", PoseStamped, queue_size=1)
+        self._confidence_threshold = rospy.get_param("~confidence_threshold", 0.6)
+
+    def _sound_located_callback(self, data):
+        time, detection, pose_in_torso_frame, pose_in_robot_frame = data
+
+        yaw, _, confidence, energy = detection
+
+        if confidence > self._confidence_threshold:
+            self._publisher.publish(PoseStamped(
+                header=Header(
+                    frame_id="torso",
+                    stamp=rospy.Time.now()
+                ),
+                pose=geometry_helpers.get_ros_pose_from_pose_array_azimuth(pose_in_torso_frame, yaw)
+            ))
+
+if __name__ == "__main__":
+    rospy.init_node("sound_source_localization")
+    ssl = SoundSourceLocalization()
+    rospy.spin()

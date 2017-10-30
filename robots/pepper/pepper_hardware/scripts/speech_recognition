@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+
+# MIT License
+#
+# Copyright (c) 2017 RUVU Robotics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import subprocess
+import os
+import rospy
+import time
+from hmi import AbstractHMIServer, HMIResult, GrammarParser
+from pepper_hardware import QiSession
+from pepper_hardware.util import tic, toc
+
+
+class SpeechRecognition:
+    """
+    SpeechRecognition Class providing a convenient interface to Pepper's speech recognition API with nice behavior.
+    """
+    def __init__(self):
+        self.result_probability = 0
+        self.result_value = ""
+
+        self._session = QiSession()
+        self._mem_wrapper = self._session.get_memory_wrapper()
+        self._speech = self._session.get_service("ALSpeechRecognition")
+
+    def configure(self, grammar, language):
+        self.reset()
+
+        # Subscribe to WordRecognized events
+        self._speech.setAudioExpression(False)
+        self._speech.setVisualExpression(False)
+        self._mem_wrapper.subscribe(self._speech, "WordRecognized", self._recognition_cb)
+
+        # Make sure the speech recognition service is paused and clean
+        self._speech.pause(True)
+        self._speech.deleteAllContexts()
+        self._speech.setLanguage(language)
+
+        self._load_grammar(grammar, language)
+
+    def enable(self):
+        self._speech.setAudioExpression(True)
+        self._speech.setVisualExpression(True)
+        self._speech.pause(False)
+        self._speech.setAudioExpression(False)
+
+    def disable(self):
+        self._speech.setAudioExpression(True)
+        self._mem_wrapper.unsubscribe(self._speech, "WordRecognized")
+        self._speech.setAudioExpression(True)
+
+    def reset(self):
+        self.result_probability = 0
+        self.result_value = ""
+
+    def _load_grammar(self, grammar, language):
+        # Save the description to a file on the local computer
+        local_bnf_path = "/tmp/grammar.bnf"
+        remote_bnf_path = "/tmp/grammar.bnf"
+        with open(local_bnf_path, "w") as grammar_file:
+            grammar_file.write(grammar)
+
+        # Copy it to the Pepper pc
+        FNULL = open(os.devnull, 'w')
+        if subprocess.Popen(["rsync", "-a", local_bnf_path, "nao@%s:%s" % (self._session.pepper_ip, remote_bnf_path)],
+                            stdout=FNULL).wait() == 1:
+            raise RuntimeError("Failed to scp the grammar file to Pepper.")
+
+        # Compile this to a binary grammar file and load it
+        remote_lcf_path = remote_bnf_path[0:-3] + "lcf"
+        self._speech.compile(remote_bnf_path, remote_lcf_path, language)
+        self._speech.addContext(remote_lcf_path, "grammar")
+        rospy.logdebug("Loaded a grammar. Active rules: %s" % self._speech.getRules('grammar', 'active'))
+
+    def _recognition_cb(self, value):
+        self.result_probability = value[1]
+        self.result_value = value[0]
+        rospy.loginfo("Understood %s with probability %f" % (value[0], value[1]))
+
+
+class SpeechRecognitionServer(AbstractHMIServer):
+    """
+    SpeechRecognitionServer Speech recognition action server for the pepper robot
+
+    ROS interfaces:
+    See AbstractHMIServer for the ros interfaces
+
+    ROS parameters:
+    ~probability_threshold: The probability value necessary for accepting a speech recognition result
+    ~language: The speech recognition language
+    See AbstractHMIServer for any other parameters
+    """
+    def __init__(self):
+        self._node_name = rospy.get_name()
+        AbstractHMIServer.__init__(self, self._node_name)
+
+        self._speech = SpeechRecognition()
+
+        self._probability_threshold = rospy.get_param("~probability_threshold", 0.5)
+        self._language = rospy.get_param("~language", "English")
+
+    def _determine_answer(self, description, example_sentences, grammar, target, is_preempt_requested):
+        grammar_parser = GrammarParser.fromstring(grammar)
+
+        # Convert the grammar from the message type to bnf
+        bnf_grammar = grammar_parser.to_bnf_grammar(target)
+
+        # Enable the speech recognition engine
+        tic("Configure")
+        self._speech.configure(bnf_grammar, self._language)
+        toc()
+
+        # Re-enable the speech recognition service
+        tic("Enable")
+        self._speech.enable()
+        toc()
+
+        # Wait for the speech recognition to work; return None if it doesn't return or a preempt is requested
+        while not is_preempt_requested():
+            if self._speech.result_probability > self._probability_threshold:
+                result = HMIResult(sentence=self._speech.result_value,
+                                   semantics=grammar_parser.parse(target, self._speech.result_value))
+                self._speech.reset()
+                tic("Disable")
+                self._speech.disable()
+                toc()
+                return result
+
+            rospy.sleep(rospy.Duration(0.05))
+
+        self._speech.reset()
+        self._speech.disable()
+        return None
+
+
+if __name__ == "__main__":
+    rospy.init_node("speech_recognition")
+    speech = SpeechRecognitionServer()
+    rospy.spin()

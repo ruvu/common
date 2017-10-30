@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+# MIT License
+#
+# Copyright (c) 2017 RUVU Robotics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import rospy
+from sensor_msgs.msg import BatteryState, Temperature
+from std_msgs.msg import Header
+
+from pepper_hardware import QiSession
+
+BATTERY_DEVICE_PREFIX = "Device/SubDeviceList/Battery/%s"
+
+
+class BatteryStatus(object):
+
+    def __init__(self):
+        """
+        BatteryStatus for the Pepper Robot, publishes ALMemory values of the battery at a specified rate
+        """
+        self._session = QiSession()
+        self._mem = self._session.get_memory_wrapper()
+        self._timer = rospy.Timer(rospy.Duration(1 / rospy.get_param("~frequency", 1.0)), self._timer_callback)
+        self._pub_battery_state = rospy.Publisher("battery_state", BatteryState, queue_size=1)
+        self._pub_battery_temperature = rospy.Publisher("battery_temperature", Temperature, queue_size=1)
+
+    def _timer_callback(self, e):
+        battery_msg = BatteryState(
+            header=Header(
+                stamp=rospy.Time.now()
+            ),
+            voltage=self._mem.get(BATTERY_DEVICE_PREFIX % "Charge/Sensor/TotalVoltage"),
+            current=abs(self._mem.get(BATTERY_DEVICE_PREFIX % "Current/Sensor/Value")),
+            charge=self._mem.get(BATTERY_DEVICE_PREFIX % "Charge/Sensor/RemainingCapacity"),
+            capacity=self._mem.get(BATTERY_DEVICE_PREFIX % "Charge/Sensor/FullChargeCapacity"),
+            design_capacity=float('nan'),
+            percentage=self._mem.get(BATTERY_DEVICE_PREFIX % "Charge/Sensor/Value") * 100,
+            present=True
+        )
+
+        self._pub_battery_state.publish(battery_msg)
+
+        temperature_msg = Temperature(
+            header=Header(
+                stamp=rospy.Time.now()
+            ),
+            temperature=self._mem.get(BATTERY_DEVICE_PREFIX % "Temperature/Sensor/Value")
+        )
+
+        self._pub_battery_temperature.publish(temperature_msg)
+
+
+if __name__ == "__main__":
+    rospy.init_node("battery_status")
+    battery = BatteryStatus()
+    rospy.spin()

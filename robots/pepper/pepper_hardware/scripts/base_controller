@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+
+# MIT License
+#
+# Copyright (c) 2017 RUVU Robotics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+from math import sqrt, sin, cos
+
+import rospy
+from std_msgs.msg import Header
+from geometry_msgs.msg import Twist, TwistWithCovariance, PoseWithCovariance, Pose, Quaternion, Point, Vector3
+from sensor_msgs.msg import JointState
+from nav_msgs.msg import Odometry
+
+from pepper_hardware import QiSession
+
+WHEEL_RADIUS = 0.07  # Source = http://doc.aldebaran.com/2-4/_images/juliet_links_wheel.png
+WHEEL_TO_CENTER_OF_MASS_DISTANCE = 0.1762  # Source = http://doc.aldebaran.com/2-4/_images/juliet_links_wheel.png
+WHEEL_KEYS = ["WheelFL", "WheelFR", "WheelB"]
+ACTUATOR_STIFFNESS_KEY = "Device/SubDeviceList/%s/Stiffness/Actuator/Value"
+ACTUATOR_SPEED_KEY = "Device/SubDeviceList/%s/Speed/Actuator/Value"
+SENSOR_SPEED_KEY = "Device/SubDeviceList/%s/Speed/Sensor/Value"
+
+
+class BaseController(object):
+
+    def __init__(self): 
+        """
+        Base Controller for the Pepper Robot, decouples Twist to Joint velocities
+        """
+        self._session = QiSession()
+        self._dcm = self._session.get_dcm_wrapper()
+        self._motion = self._session.get_service("ALMotion")
+        self._sub = rospy.Subscriber("cmd_vel", Twist, self._twist_callback, queue_size=1)
+
+        # Set the wheel stiffness to 1.0
+        for wheel_key in WHEEL_KEYS:
+            self._dcm.set(ACTUATOR_STIFFNESS_KEY % wheel_key, 1.0)
+
+        # Calculate decoupling matrix
+        #
+        # m = Decoupling matrix
+        # q = Wheel positions [FR, FL, B]
+        # v = 2D base twist according to http://www.ros.org/reps/rep-0105.html
+        #
+        # q_dot = m * v
+        l = WHEEL_TO_CENTER_OF_MASS_DISTANCE
+        self._decoupling_matrix = [.5*sqrt(3), .5, l,
+                                   -.5*sqrt(3), .5, l,
+                                   0, -1, l]
+
+        self._reference_timeout = rospy.Duration(rospy.get_param("~reference_timeout", 1.0))
+        self._timeout_timer = None
+
+        self._odom_frame_id = rospy.get_param("~odom_frame_id", "odom")
+        self._base_footprint_frame_id = rospy.get_param("~base_footprint_frame_id", "base_footprint")
+
+        self._joint_state_publisher = rospy.Publisher("joint_states", JointState, queue_size=1)
+        self._odometry_publisher = rospy.Publisher("odom", Odometry, queue_size=1)
+        self._state_publisher_timer = rospy.Timer(rospy.Duration(1 / rospy.get_param("~frequency", 10.0)),
+                                                  self._state_publisher_timer_callback)
+
+    def _state_publisher_timer_callback(self, e):
+        self._publish_odometry()
+        self._publish_joint_states()
+
+    def _publish_odometry(self):
+        position_x, position_y, position_yaw = self._motion.getRobotPosition(True) # True for sensors
+        velocity_x, velocity_y, velocity_yaw = self._motion.getRobotVelocity()
+
+        self._odometry_publisher.publish(Odometry(
+            header=Header(
+                stamp=rospy.Time.now(),
+                frame_id=self._odom_frame_id
+            ),
+            child_frame_id=self._base_footprint_frame_id,
+            pose=PoseWithCovariance(
+                pose=Pose(
+                    position=Point(
+                        x=position_x,
+                        y=position_y
+                    ),
+                    orientation=Quaternion(
+                        z=sin(position_yaw / 2.0),
+                        w=cos(position_yaw / 2.0)
+                    )
+                )
+            ),
+            twist=TwistWithCovariance(
+                twist=Twist(
+                    linear=Vector3(
+                        x=velocity_x,
+                        y=velocity_y
+                    ),
+                    angular=Vector3(
+                        z=velocity_yaw
+                    )
+                )
+            )
+        ))
+
+    def _publish_joint_states(self):
+        self._joint_state_publisher.publish(JointState(
+            header=Header(
+                stamp=rospy.Time.now()
+            ),
+            name=WHEEL_KEYS,
+            position=[0] * len(WHEEL_KEYS)
+        ))
+
+    def _send_wheel_velocity(self, velocity_wheel_fl, velocity_wheel_fr, velocity_wheel_b):
+        rospy.logdebug("velocity_wheel_fl, velocity_wheel_fr, velocity_wheel_b: {}, {}, {}"
+                       .format(velocity_wheel_fl, velocity_wheel_fr, velocity_wheel_b))
+
+        self._dcm.set(ACTUATOR_SPEED_KEY % "WheelFL", velocity_wheel_fl)
+        self._dcm.set(ACTUATOR_SPEED_KEY % "WheelFR", velocity_wheel_fr)
+        self._dcm.set(ACTUATOR_SPEED_KEY % "WheelB", velocity_wheel_b)
+
+    def _timeout_timer_callback(self, e):
+        rospy.logdebug("Timeout of {} seconds exceeded, sending zero velocity".format(self._reference_timeout.to_sec()))
+        self._send_wheel_velocity(0.0, 0.0, 0.0)
+
+    def _twist_callback(self, msg):
+        """
+        Twist callback via the cmd_vel topic
+        :param msg: Incoming Twist setpoint
+        """
+        m = self._decoupling_matrix
+
+        q_dot_fl = m[3] * msg.linear.x + m[4] * msg.linear.y + m[5] * msg.angular.z
+        q_dot_fr = m[0] * msg.linear.x + m[1] * msg.linear.y + m[2] * msg.angular.z
+        q_dot_b = m[6] * msg.linear.x + m[7] * msg.linear.y + m[8] * msg.angular.z
+
+        rospy.logdebug("q_dot_fl, q_dot_fr, q_dot_b: {}, {}, {}".format(q_dot_fl, q_dot_fr, q_dot_b))
+
+        velocity_wheel_fl = - (q_dot_fl / WHEEL_RADIUS)
+        velocity_wheel_fr = - (q_dot_fr / WHEEL_RADIUS)
+        velocity_wheel_b = - (q_dot_b / WHEEL_RADIUS)
+
+        self._send_wheel_velocity(velocity_wheel_fl, velocity_wheel_fr, velocity_wheel_b)
+
+        if self._timeout_timer:
+            self._timeout_timer.shutdown()
+        self._timeout_timer = rospy.Timer(self._reference_timeout, self._timeout_timer_callback, oneshot=True)
+
+
+if __name__ == "__main__":
+    rospy.init_node("base_controller")
+    controller = BaseController()
+    rospy.spin()

@@ -1,0 +1,140 @@
+#!/usr/bin/env python
+
+# MIT License
+#
+# Copyright (c) 2017 RUVU Robotics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+import rospy
+import actionlib
+
+from std_msgs.msg import Header
+from sensor_msgs.msg import JointState
+from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryResult
+
+from pepper_hardware import QiSession
+
+STATIC_JOINT_STATES = {
+    "LFinger11": 0,
+    "LFinger12": 0,
+    "LFinger13": 0,
+    "LFinger21": 0,
+    "LFinger22": 0,
+    "LFinger23": 0,
+    "LFinger31": 0,
+    "LFinger32": 0,
+    "LFinger33": 0,
+    "LFinger41": 0,
+    "LFinger42": 0,
+    "LFinger43": 0,
+    "LThumb1": 0,
+    "LThumb2": 0,
+
+    "RFinger11": 0,
+    "RFinger12": 0,
+    "RFinger13": 0,
+    "RFinger21": 0,
+    "RFinger22": 0,
+    "RFinger23": 0,
+    "RFinger31": 0,
+    "RFinger32": 0,
+    "RFinger33": 0,
+    "RFinger41": 0,
+    "RFinger42": 0,
+    "RFinger43": 0,
+    "RThumb1": 0,
+    "RThumb2": 0,
+}
+
+
+class BodyController:
+
+    def __init__(self):
+        """
+        Body Controller for the Pepper Robot
+        """
+        self._session = QiSession()
+        self._motion = self._session.get_service("ALMotion")
+        self._motion.wakeUp()
+
+        self._joint_names = self._motion.getBodyNames("JointActuators")
+
+        self._joint_state_publisher = rospy.Publisher("joint_states", JointState, queue_size=1)
+        self._joint_state_publisher_timer = rospy.Timer(rospy.Duration(1 / rospy.get_param("~frequency", 10.0)),
+                                                        self._joint_state_publisher_timer_callback)
+
+        self._follow_joint_trajectory_action_server = actionlib.SimpleActionServer(
+            "follow_joint_trajectory", FollowJointTrajectoryAction,
+            execute_cb=self._follow_joint_trajectory_execute_callback, auto_start=False)
+        self._follow_joint_trajectory_action_server.start()
+
+        # Set all stifnesses on 1.0
+        for joint in self._joint_names:
+            self._motion.setStiffnesses(joint, 1.0)
+
+    def _joint_state_publisher_timer_callback(self, e):
+        self._publish_joint_states()
+
+    def _publish_joint_states(self):
+        self._joint_state_publisher.publish(JointState(
+            header=Header(
+                stamp=rospy.Time.now()
+            ),
+            name=STATIC_JOINT_STATES.keys() + self._joint_names,
+            position=STATIC_JOINT_STATES.values() + self._motion.getAngles("JointActuators", True)  # True for sensor values
+        ))
+
+    def _follow_joint_trajectory_execute_callback(self, goal):
+        rospy.logdebug("Received follow joint trajectory goal ... {}".format(goal))
+
+        if len(goal.trajectory.points) != 1:
+            msg = "For now, only one point is supported"
+            rospy.logerr(msg)
+            self._follow_joint_trajectory_action_server.set_aborted(
+                FollowJointTrajectoryResult(FollowJointTrajectoryResult.INVALID_GOAL, msg))
+            return
+
+        if len(goal.trajectory.joint_names) != len(goal.trajectory.points[0].positions):
+            msg = "Names and positions should be of same size"
+            rospy.logerr(msg)
+            self._follow_joint_trajectory_action_server.set_aborted(
+                FollowJointTrajectoryResult(FollowJointTrajectoryResult.INVALID_GOAL, msg)
+            )
+            return
+
+        for name in goal.trajectory.joint_names:
+            if name not in self._joint_names:
+                msg = "{} not in joint names. Available joints: {}".format(name, self._joint_names)
+                rospy.logerr(msg)
+                self._follow_joint_trajectory_action_server.set_aborted(
+                    FollowJointTrajectoryResult(FollowJointTrajectoryResult.INVALID_JOINTS, msg))
+                return
+
+        for name, position in zip(goal.trajectory.joint_names, goal.trajectory.points[0].positions):
+            rospy.logdebug("Setting {} to {}".format(name, position))
+            self._motion.setAngles(name, position, 0.2)
+
+        self._follow_joint_trajectory_action_server.set_succeeded()
+
+if __name__ == "__main__":
+    rospy.init_node("body_controller")
+    controller = BodyController()
+    rospy.spin()
