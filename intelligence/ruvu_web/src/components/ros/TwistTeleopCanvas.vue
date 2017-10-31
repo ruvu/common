@@ -46,7 +46,6 @@ export default {
       if (this.topic !== null) {
         this.topic.unadvertise()
       }
-      console.log(`Advertising to ${this.topicName}`)
       this.topic = new ROSLIB.Topic({
         ros: this.ros,
         name: this.topicName,
@@ -57,7 +56,6 @@ export default {
       return Math.max(Math.min(value, absValue), -absValue)
     },
     publishTwistMessage (e) {
-      console.log(e)
       var msg = new ROSLIB.Message({
         linear: {
           x: this.absClip(this.translationalVelocityScaling * e.py,
@@ -72,7 +70,6 @@ export default {
                           this.rotationalVelocityScaling)
         }
       })
-      console.log(msg)
       this.topic.publish(msg)
     }
   }

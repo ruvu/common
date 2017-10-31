@@ -10,7 +10,9 @@
 
   <test_depend>rosbridge_suite</test_depend> 
   <test_depend>tf2_web_republisher</test_depend> 
-
+  <test_depend>tf2_ros</test_depend> 
+  <test_depend>rospy</test_depend> 
+  <test_depend>geometry_msgs</test_depend> 
   <test_depend>map_server</test_depend> 
 
   <buildtool_depend>catkin</buildtool_depend>

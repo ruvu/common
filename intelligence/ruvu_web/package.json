@@ -19,11 +19,13 @@
     "random-id": "0.0.2",
     "ros3djs": "git+https://github.com/RobotWebTools/ros3djs.git#develop",
     "roslib": "git://github.com/RobotWebTools/roslibjs.git#develop",
+    "three": "^0.87.1",
     "vue": "^2.4.2",
     "vue-moment": "^2.1.0",
     "vue-resize": "^0.4.2",
     "vue-router": "^2.7.0",
-    "vue-tap": "^1.0.3",
+    "vue-threejs": "0.0.4",
+    "vue-touch": "^2.0.0-beta.4",
     "vue2-touch": "^1.0.5"
   },
   "devDependencies": {

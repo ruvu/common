@@ -1,7 +1,7 @@
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
-import App from './App'
+import App from './NavigationApp'
 import router from './router'
 
 import ros from './services/ros'
@@ -20,8 +20,11 @@ import 'font-awesome/css/font-awesome.min.css'
 import VueMoment from 'vue-moment'
 Vue.use(VueMoment)
 
-// import VueTap from 'vue-tap'
-// Vue.use(VueTap)
+import Vue2Touch from 'vue2-touch'
+Vue.use(Vue2Touch)
+
+import VueThreejs from 'vue-threejs'
+Vue.use(VueThreejs)
 
 Vue.config.productionTip = false
 

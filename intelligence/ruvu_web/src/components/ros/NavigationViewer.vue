@@ -1,8 +1,18 @@
 <template>
   <div id="occupancy-map">
-    <b-button-group id="occupancy-map-buttons">
-      <b-button @click="userGoalToggled = !userGoalToggled" :variant="userGoalToggled ? 'success' : 'secondary'"><i class="fa fa-map-marker" aria-hidden="true"></i></b-button>
-    </b-button-group>
+    <div id="occupancy-map-buttons">
+      <b-button @click="robotTracking = !robotTracking" :variant="robotTracking ? 'success' : 'secondary'">
+        <i class="fa fa-crosshairs" aria-hidden="true"></i>
+      </b-button>
+      <b-button-group>
+        <b-button @click="userGoalToggled = !userGoalToggled" :variant="userGoalToggled ? 'success' : 'secondary'">
+          <i class="fa fa-map-marker" aria-hidden="true"></i>
+        </b-button>
+        <b-button @click="userGoalToggled = false; userGoal.position.x = 1e9" v-if="userGoalToggled">
+          <i class="fa fa-remove" aria-hidden="true"></i>
+        </b-button>
+      </b-button-group>
+    </div>
     <resize-observer @notify="resizeCanvas" />
   </div>
 </template>
@@ -34,9 +44,17 @@ export default {
       type: String,
       required: true
     },
-    polygonTopicName: {
+    userGoalTopicName: {
       type: String,
       required: true
+    },
+    robotFrameId: {
+      type: String,
+      required: true
+    },
+    pixelFactor: {
+      type: Number,
+      default: 4
     }
   },
   data () {
@@ -44,9 +62,11 @@ export default {
       viewer: null,
       tfClient: null,
       gridClient: null,
-      polygon: null,
+      robot: null,
+      robotTracking: false,
       userGoal: null,
-      userGoalToggled: false
+      userGoalToggled: false,
+      userGoalPublisher: null
     }
   },
   watch: {
@@ -69,6 +89,7 @@ export default {
     this.viewer.cameraControls.userRotateSpeed = 0
     this.viewer.camera.lookAt(new THREE.Vector3(5, 5, 0))
     this.viewer.cameraControls.showAxes = function () {}
+    window.VIEWER = this.viewer
 
     // Setup a client to listen to TFs.
     this.tfClient = new ROSLIB.TFClient({
@@ -79,6 +100,16 @@ export default {
       fixedFrame: 'map'
     })
 
+    var that = this
+    this.tfClient.subscribe(this.robotFrameId, (e) => {
+      if (this.robotTracking) {
+        // that.viewer.camera.position.x = e.translation.x
+        // that.viewer.camera.position.y = e.translation.y
+      }
+      that.robot.position.x = e.translation.x
+      that.robot.position.y = e.translation.y
+    })
+
     this.gridClient = new ROS3D.OccupancyGridClient({
       ros: this.ros,
       rootObject: this.viewer.scene,
@@ -87,18 +118,23 @@ export default {
       opacity: 0.5
     })
 
-    this.polygon = new ROS3D.Polygon({
-      ros: this.ros,
-      rootObject: this.viewer.scene,
-      topic: this.polygonTopicName,
-      tfClient: this.tfClient
-    })
+    var robotGeometry = new THREE.SphereGeometry(0.3, 100, 100)
+    var robotMaterial = new THREE.MeshBasicMaterial({color: 0xcc00ff})
+    this.robot = new THREE.Mesh(robotGeometry, robotMaterial)
+    this.robot.position.x = 1e9
+    this.viewer.scene.add(this.robot)
 
-    var sphereGeometry = new THREE.SphereGeometry(0.5, 100, 100)
+    var sphereGeometry = new THREE.SphereGeometry(0.3, 100, 100)
     var sphereMaterial = new THREE.MeshBasicMaterial({color: 0xffff00})
     this.userGoal = new THREE.Mesh(sphereGeometry, sphereMaterial)
     this.userGoal.position.x = 1e9
     this.viewer.scene.add(this.userGoal)
+
+    this.userGoalPublisher = new ROSLIB.Topic({
+      ros: this.ros,
+      name: this.userGoalTopicName,
+      messageType: 'geometry_msgs/PoseStamped'
+    })
 
     this.resizeCanvas()
 
@@ -107,6 +143,7 @@ export default {
         var pos = get3DPositionFromClickEvent(e, this.viewer.camera)
         this.userGoal.position = pos
         this.userGoalToggled = false
+        this.sendUserGoal(pos)
       }
     }, false)
   },
@@ -115,7 +152,15 @@ export default {
       var parentElement = this.viewer.renderer.domElement.parentElement
       this.viewer.camera.aspect = parentElement.offsetWidth / parentElement.offsetHeight
       this.viewer.camera.updateProjectionMatrix()
-      this.viewer.renderer.setSize(parentElement.offsetWidth, parentElement.offsetHeight)
+      this.viewer.renderer.setSize(parentElement.offsetWidth / this.pixelFactor, parentElement.offsetHeight / this.pixelFactor)
+      this.viewer.renderer.domElement.style = 'width: 100%; height: 100%'
+    },
+    sendUserGoal (position) {
+      this.userGoalPublisher.publish(new ROSLIB.Message({
+        pose: {
+          position: position
+        }
+      }))
     }
   }
 }

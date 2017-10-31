@@ -1,4 +1,6 @@
 <launch>
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
   <node name="map_server" pkg="map_server" type="map_server" args="$(find ruvu_web)/test/map.pgm 0.025" />
+  <node name="tf_broadcaster" pkg="ruvu_web" type="dummy_tf_broadcaster.py" />
+  <node name="tf2_web_republisher" pkg="tf2_web_republisher" type="tf2_web_republisher" />
 </launch>
