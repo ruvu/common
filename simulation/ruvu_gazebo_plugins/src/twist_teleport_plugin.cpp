@@ -33,13 +33,15 @@ public:
 
     //! Parse SDF for parameters
     std::string command_topic = getParameterFromSDF(sdf, "commandTopic", std::string("cmd_vel"));
-    cmd_timeout_ = getParameterFromSDF(sdf, "commandTimeout", 0.1);
+    cmd_timeout_ = getParameterFromSDF(sdf, "commandTimeout", 0.5);
     std::string odom_topic = getParameterFromSDF(sdf, "odometryTopic",  std::string("odom"));
     odom_msg_.header.frame_id = getParameterFromSDF(sdf, "odometryFrame",  std::string("odom"));
     odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
     odom_msg_.child_frame_id = getParameterFromSDF(sdf, "robotFrame",  std::string("base_link"));
 
     last_update_time_ = parent_->GetWorld()->GetSimTime();
+
+    alive_ = true;
 
     // Ensure that ROS has been initialized and subscribe to cmd_vel
     if (!ros::isInitialized())
@@ -65,7 +67,7 @@ public:
     // listen to the update event (broadcast every simulation iteration)
     update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&TwistTeleportPlugin::UpdateChild, this));
 
-    alive_ = true;
+    ROS_INFO("TwistTeleportPlugin started");
   }
 
 protected:
@@ -118,7 +120,6 @@ protected:
     std::lock_guard<std::mutex> lock(mutex_);
     cmd_msg_ = cmd_msg;
     last_cmd_time_ = parent_->GetWorld()->GetSimTime();
-    ROS_INFO("Cmd callback");
   }
 
   //!
@@ -145,7 +146,7 @@ protected:
     std::lock_guard<std::mutex> lock(mutex_);
 
     common::Time now = parent_->GetWorld()->GetSimTime();
-    common::Time dt = last_update_time_ - now;
+    common::Time dt = now - last_update_time_;
     math::Pose pose = parent_->GetWorldPose();
     geometry_msgs::Twist vel = getCurrentVelocity(now);
 
@@ -170,6 +171,8 @@ protected:
         publishOdometry(pose, vel, now);
       }
     }
+
+    last_update_time_ = now;
   }
 
   //!
