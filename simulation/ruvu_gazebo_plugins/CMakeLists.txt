@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(ruvu_gazebo_plugins)
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs)
+#include_directories(include)
+include_directories(${catkin_INCLUDE_DIRS})
+
+## Find gazebo
+find_package(gazebo REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+include_directories(${GAZEBO_INCLUDE_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
+
+## Find Boost
+find_package(Boost REQUIRED COMPONENTS thread)
+include_directories(${Boost_INCLUDE_DIRS})
+
+catkin_package(
+    CATKIN_DEPENDS roscpp geometry_msgs
+    #    INCLUDE_DIRS include
+    LIBRARIES
+)
+
+###########
+## Build ##
+###########
+
+add_library(ruvu_disable_physics src/disable_physics_plugin.cpp)
+target_link_libraries(ruvu_disable_physics ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
+add_library(ruvu_twist_teleport src/twist_teleport_plugin.cpp src/util.h)
+target_link_libraries(ruvu_twist_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
+#############
+## Install ##
+#############
+
+#install(DIRECTORY include/${PROJECT_NAME}/
+#  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#  FILES_MATCHING PATTERN "*.h"
+#)
+
+install(TARGETS
+  ruvu_disable_physics
+  ruvu_twist_teleport
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
