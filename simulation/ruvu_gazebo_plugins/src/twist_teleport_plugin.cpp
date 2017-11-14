@@ -14,9 +14,9 @@ namespace gazebo
 {
 
 //!
-//! \brief The TwistTeleportPlugin class teleports an entity in the scene
+//! \brief The TwistTeleportPlugin class teleports an entity in the scene base on a Twist command.
 //!
-//! This plugin assumes that the physics are disabled
+//! This plugin assumes that the physics are disabled and assumes infinite acceleration.
 //!
 class TwistTeleportPlugin : public ModelPlugin
 {
