@@ -1,0 +1,29 @@
+<launch>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find ruvu_gazebo_plugins)/test/disable_physics.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="false"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="true"/>
+    <arg name="verbose" default="true"/>
+  </include>
+
+  <!-- Robot 1 -->
+  <group ns="robot1">
+    <param name="robot_description" command="xacro --inorder '$(find ruvu_gazebo_plugins)/test/twist_teleport.urdf' robot_namespace:=robot1" />
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args="-urdf -model robot1 -param robot_description -x -2" />
+  </group>
+
+  <!-- Robot 2 -->
+  <group ns="robot2">
+    <param name="robot_description" command="xacro --inorder '$(find ruvu_gazebo_plugins)/test/twist_teleport.urdf' robot_namespace:=robot2" />
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args="-urdf -model robot2 -param robot_description -x 0" />
+  </group>
+
+  <!-- Robot 3 -->
+  <group ns="robot3">
+    <param name="robot_description" command="xacro --inorder '$(find ruvu_gazebo_plugins)/test/twist_teleport.urdf' robot_namespace:=robot3" />
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args="-urdf -model robot3 -param robot_description -x 2" />
+  </group>
+</launch>

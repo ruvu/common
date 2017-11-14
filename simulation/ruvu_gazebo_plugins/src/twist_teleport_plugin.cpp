@@ -33,12 +33,14 @@ public:
     model_ = model;
 
     //! Parse SDF for parameters
+    std::string robot_namespace = getParameterFromSDF(sdf, "robotNamespace", std::string(""));
+    std::string tf_prefix = robotNamespaceToTFPrefix(robot_namespace);
     std::string command_topic = getParameterFromSDF(sdf, "commandTopic", std::string("cmd_vel"));
     cmd_timeout_ = getParameterFromSDF(sdf, "commandTimeout", 0.5);
     std::string odom_topic = getParameterFromSDF(sdf, "odometryTopic",  std::string("odom"));
-    odom_msg_.header.frame_id = getParameterFromSDF(sdf, "odometryFrame",  std::string("odom"));
+    odom_msg_.header.frame_id = tf_prefix + getParameterFromSDF(sdf, "odometryFrame",  std::string("odom"));
     odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
-    odom_msg_.child_frame_id = getParameterFromSDF(sdf, "robotFrame",  std::string("base_link"));
+    odom_msg_.child_frame_id = tf_prefix + getParameterFromSDF(sdf, "robotFrame",  std::string("base_link"));
 
     //! Store last update, required for calculating the dt
     last_update_time_ = model_->GetWorld()->GetSimTime();
@@ -55,7 +57,7 @@ public:
         << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
       return;
     }
-    rosnode_.reset(new ros::NodeHandle());
+    rosnode_.reset(new ros::NodeHandle(robot_namespace));
 
     // subscribe to the command topic
     ros::SubscribeOptions so = ros::SubscribeOptions::create<geometry_msgs::Twist>(
