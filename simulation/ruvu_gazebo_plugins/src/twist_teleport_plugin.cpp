@@ -27,9 +27,10 @@ public:
   //! \brief Load Register update function
   //! \param ptr Pointer to the world
   //!
-  void Load(physics::ModelPtr parent, sdf::ElementPtr sdf)
+  void Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   {
-    parent_ = parent;
+    //! Store the model so that we can use it later
+    model_ = model;
 
     //! Parse SDF for parameters
     std::string command_topic = getParameterFromSDF(sdf, "commandTopic", std::string("cmd_vel"));
@@ -39,11 +40,13 @@ public:
     odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
     odom_msg_.child_frame_id = getParameterFromSDF(sdf, "robotFrame",  std::string("base_link"));
 
-    last_update_time_ = parent_->GetWorld()->GetSimTime();
+    //! Store last update, required for calculating the dt
+    last_update_time_ = model_->GetWorld()->GetSimTime();
 
+    //! Make sure that if we finish, we also shutdown the callback thread
     alive_ = true;
 
-    // Ensure that ROS has been initialized and subscribe to cmd_vel
+    // Ensure that ROS has been initialized (required for using ROS COM)
     if (!ros::isInitialized())
     {
       ROS_FATAL_STREAM_NAMED("twist_teleport", "TwistTeleportPlugin"
@@ -54,34 +57,28 @@ public:
     }
     rosnode_.reset(new ros::NodeHandle());
 
-    // subscribe to the odometry topic
+    // subscribe to the command topic
     ros::SubscribeOptions so = ros::SubscribeOptions::create<geometry_msgs::Twist>(
-          command_topic, 1, boost::bind(&TwistTeleportPlugin::twistCmdCallback, this, _1), ros::VoidPtr(), &queue_);
-
-    vel_sub_ = rosnode_->subscribe(so);
-    odometry_pub_ = rosnode_->advertise<nav_msgs::Odometry>(odom_topic, 1);
-
-    // start custom queue for diff drive
+          command_topic, 1, boost::bind(&TwistTeleportPlugin::twistCallback, this, _1), ros::VoidPtr(), &queue_);
+    twist_subscriber_ = rosnode_->subscribe(so);
     callback_queue_thread_ = boost::thread(boost::bind(&TwistTeleportPlugin::QueueThread, this));
+
+    // Initialize odometry publisher
+    odometry_publisher_ = rosnode_->advertise<nav_msgs::Odometry>(odom_topic, 1);
 
     // listen to the update event (broadcast every simulation iteration)
     update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&TwistTeleportPlugin::UpdateChild, this));
-
-    ROS_INFO("TwistTeleportPlugin started");
   }
 
 protected:
 
-  // Whether the plugin has been initialized
-  bool alive_;
+  //!
+  //! \brief model_ Pointer to the parent model
+  //!
+  physics::ModelPtr model_;
 
   //!
-  //! \brief parent_ Pointer to the parent entity
-  //!
-  physics::ModelPtr parent_;
-
-  //!
-  //! \brief update_connection_ Connection that triggers the callback function
+  //! \brief update_connection_ Connection that triggers the callback function of the model
   //!
   event::ConnectionPtr update_connection_;
 
@@ -98,8 +95,9 @@ protected:
   //!
   //! \brief QueueThread Custom callback queue thread in order to not block the physics engine
   //!
-  ros::CallbackQueue queue_;
-  boost::thread callback_queue_thread_;
+  bool alive_; //! To ensure we shutdown the thread when the plugin dies
+  ros::CallbackQueue queue_; // The ROS callback queue
+  boost::thread callback_queue_thread_; // The ROS message handler thread
   void QueueThread() {
     static const double timeout = 0.01;
     while (alive_ && rosnode_->ok())
@@ -112,20 +110,23 @@ protected:
   //! \brief twistCmdCallback Callback of the twist cmd
   //! \param cmd_msg Twist command
   //!
-  geometry_msgs::TwistConstPtr cmd_msg_;
-  common::Time last_cmd_time_;
-  double cmd_timeout_;
-  ros::Subscriber vel_sub_;
-  void twistCmdCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg) {
+  geometry_msgs::TwistConstPtr cmd_msg_; // Last received cmd_msg
+  common::Time last_cmd_time_; // Time last received cmd_msg
+  double cmd_timeout_; // Base controller timeout
+  ros::Subscriber twist_subscriber_; // The ROS subcriber on the Twist msg
+  void twistCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg) {
     std::lock_guard<std::mutex> lock(mutex_);
     cmd_msg_ = cmd_msg;
-    last_cmd_time_ = parent_->GetWorld()->GetSimTime();
+    last_cmd_time_ = model_->GetWorld()->GetSimTime();
   }
 
   //!
-  //! \brief getCurrentVelocity Get the current velocity based on the input command
+  //! \brief getCurrentVelocity Get the current velocity based on the input command and the last received time
+  //!
+  //! If the command is older than the command timeout, we will return zero
+  //!
   //! \param now The current time
-  //! \return Return the velocity
+  //! \return Return the current velocity
   //!
   geometry_msgs::Twist getCurrentVelocity(const common::Time& now) {
     geometry_msgs::Twist velocity;
@@ -140,14 +141,14 @@ protected:
   //!
   //! Also publishes the odometry if we exceed the step time of the odom
   //!
-  common::Time last_update_time_;
+  common::Time last_update_time_; // Keep track of the last update time in order to calculate the dt
   void UpdateChild()
   {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    common::Time now = parent_->GetWorld()->GetSimTime();
+    common::Time now = model_->GetWorld()->GetSimTime();
     common::Time dt = now - last_update_time_;
-    math::Pose pose = parent_->GetWorldPose();
+    math::Pose pose = model_->GetWorldPose();
     geometry_msgs::Twist vel = getCurrentVelocity(now);
 
     // Calculate the velocities based on last pose
@@ -161,9 +162,9 @@ protected:
     pose.rot.SetFromEuler(0, 0, pose.rot.GetYaw() + dt.Double() * vel.angular.z);
 
     // Update the model in gazebo
-    parent_->SetLinearVel(world_linear_velocity);
-    parent_->SetAngularVel(world_angular_velocity);
-    parent_->SetWorldPose(pose);
+    model_->SetLinearVel(world_linear_velocity);
+    model_->SetAngularVel(world_angular_velocity);
+    model_->SetWorldPose(pose);
 
     if (odometry_rate_ > 0.0) {
       double seconds_since_last_update = (now - common::Time(odom_msg_.header.stamp.toSec())).Double();
@@ -181,9 +182,9 @@ protected:
   //! \param velocity Current velocity
   //! \param now Current time
   //!
-  double odometry_rate_;
-  ros::Publisher odometry_pub_;
-  nav_msgs::Odometry odom_msg_;
+  double odometry_rate_; // Rate of the odometry publisher
+  ros::Publisher odometry_publisher_; // Odometry publisher
+  nav_msgs::Odometry odom_msg_; // The odom message to be published
   void publishOdometry(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& now)
   {
     odom_msg_.pose.pose.position.x = pose.pos.x;
@@ -197,7 +198,7 @@ protected:
     odom_msg_.twist.twist = velocity;
 
     odom_msg_.header.stamp = ros::Time(now.Double());
-    odometry_pub_.publish(odom_msg_);
+    odometry_publisher_.publish(odom_msg_);
   }
 
   //!

@@ -5,7 +5,7 @@ namespace gazebo
 {
 
 //!
-//! \brief The DisablePhysicsPlugin class simply disables the physics engine when it is on
+//! \brief The DisablePhysicsPlugin class disables the physics engine when it is on
 //!
 class DisablePhysicsPlugin : public WorldPlugin
 {
@@ -14,11 +14,11 @@ public:
 
   //!
   //! \brief Load Register update function
-  //! \param ptr Pointer to the world
+  //! \param world Pointer to the world
   //!
-  void Load(physics::WorldPtr ptr, sdf::ElementPtr /*_sdf*/)
+  void Load(physics::WorldPtr world, sdf::ElementPtr /*_sdf*/)
   {
-    world_ = ptr;
+    world_ = world;
     update_connection_ = event::Events::ConnectWorldUpdateBegin(
            boost::bind(&DisablePhysicsPlugin::OnUpdate, this, _1));
   }
