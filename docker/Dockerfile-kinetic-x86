@@ -21,8 +21,10 @@ RUN mkdir -p ~/common
 RUN ros-get ws-create ~/common /opt/ros/kinetic
 
 # Install packages (TODO: Removee source of setup.bash, this should be done by ros-get)
-RUN /bin/bash -c "PKGS=$(for xml in $(find -name package.xml); do pkg=${xml%/package.xml}; echo ${pkg##*/}; done) && \
-                  source ~/.ruvu/setup.bash && ros-get install $PKGS"
+RUN /bin/bash -c "source ~/.ruvu/setup.bash && \
+                  cd `ros-get ws-locate` && \
+                  PKGS=$(for xml in $(find -name package.xml); do pkg=${xml%/package.xml}; echo ${pkg##*/}; done) && \
+                  ros-get install $PKGS"
 
 # Install the ROS deps (TODO: This should not be necessay if ros-get is finished)
 RUN rosdep update --as-root apt:false
