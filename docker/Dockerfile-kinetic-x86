@@ -1,17 +1,35 @@
 FROM ros:kinetic-ros-core
 
-RUN apt-get update && apt-get install -y python-catkin-tools
+# Install ssh 
+RUN apt-get update
+RUN apt-get install --assume-yes cowsay
+RUN apt-get install --assume-yes ssh git
 
-# Create ROS workspace
-COPY . /ws/src/
-WORKDIR /ws
+# Make sure we have the correct SSH key
+ARG SSH_PRIVATE_KEY
+RUN mkdir ~/.ssh/
+RUN ssh-keyscan -t rsa gitlab.com > ~/.ssh/known_hosts
+RUN echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+RUN chmod 400 ~/.ssh/id_rsa
 
-# Install the package and its dependencies
+# Install the ruvu environment
+RUN git clone git@gitlab.com:ruvu/environment.git ~/.ruvu
+RUN ~/.ruvu/install.bash
+
+# Create workspace
+RUN mkdir -p ~/common
+RUN ros-get ws-create ~/common /opt/ros/kinetic
+
+# Install packages (TODO: Removee source of setup.bash, this should be done by ros-get)
+PKGS=$(for xml in $(find -name package.xml); do pkg=${xml%/package.xml}; echo ${pkg##*/}; done) && echo $PKGS
+RUN /bin/bash -c "source ~/.ruvu/setup.bash && ros-get install $PKGS"
+
+# Install the ROS deps (TODO: This should not be necessay if ros-get is finished)
 RUN rosdep update --as-root apt:false
-RUN rosdep install --as-root apt:false --from-paths src --ignore-src --rosdistro kinetic -y
+RUN rosdep install --as-root apt:false --from-paths `ros-get ws-locate`/src --ignore-src --rosdistro kinetic -y
 
-# Build the environment
-RUN /bin/bash -c "source /opt/ros/kinetic/setup.bash && catkin build"
+# Build the workspace
+RUN cd `ros-get ws-locate` && catkin build
 
-ADD docker/ruvu-ros-entrypoint.sh /ruvu-ros-entrypoint.sh
-ENTRYPOINT [ "/ruvu-ros-entrypoint.sh" ]
+ADD docker/entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
