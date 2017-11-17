@@ -20,11 +20,9 @@ RUN ~/.ruvu/install.bash
 RUN mkdir -p ~/common
 RUN ros-get ws-create ~/common /opt/ros/kinetic
 
-# Install packages (TODO: Removee source of setup.bash, this should be done by ros-get)
+# Install packages (TODO: Remove source of setup.bash, this should be done by ros-get)
 RUN /bin/bash -c "source ~/.ruvu/setup.bash && \
-                  cd `ros-get ws-locate` && \
-                  PKGS=$(for xml in $(find -name package.xml); do pkg=${xml%/package.xml}; echo ${pkg##*/}; done) && \
-                  ros-get install $PKGS"
+                  ros-get install ruvu_web ruvu_gazebo_plugins"
 
 # Install the ROS deps (TODO: This should not be necessay if ros-get is finished)
 RUN rosdep update --as-root apt:false
