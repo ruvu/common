@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <model name="dummy_robot">
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
+        <visual name="base">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+      <plugin name="twist_teleport" filename="libruvu_twist_teleport.so">
+      </plugin>
+    </model>
+
+    <model name="dummy_robot2">
+      <pose>2 0 0.5 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
+        <visual name="base">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+      <plugin name="twist_teleport" filename="libruvu_twist_teleport.so">
+      </plugin>
+    </model>
+
+    <model name="dummy_robot3">
+      <pose>-2 0 0.5 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
+        <visual name="base">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+      <plugin name="twist_teleport" filename="libruvu_twist_teleport.so">
+      </plugin>
+    </model>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <plugin name="disable_physics" filename="libruvu_disable_physics.so"/>
+  </world>
+
+</sdf>
