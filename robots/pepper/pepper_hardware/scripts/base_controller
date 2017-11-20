@@ -57,6 +57,7 @@ class BaseController(object):
                 self._dcm.set(ACTUATOR_STIFFNESS_KEY % wheel_key, 0.9)
 
         self._motion = self._session.get_service("ALMotion")
+        self._motion.setExternalCollisionProtectionEnabled("All", False)
         self._sub = rospy.Subscriber("cmd_vel", Twist, self._twist_callback, queue_size=1)
 
         # Calculate decoupling matrix
