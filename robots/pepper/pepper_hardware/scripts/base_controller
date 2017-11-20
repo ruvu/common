@@ -46,14 +46,18 @@ class BaseController(object):
         """
         Base Controller for the Pepper Robot, decouples Twist to Joint velocities
         """
+        self._use_dcm = rospy.get_param("~dcm", False)
+
         self._session = QiSession()
-        self._dcm = self._session.get_dcm_wrapper()
+        if self._use_dcm:
+            self._dcm = self._session.get_dcm_wrapper()
+
+            # Set the wheel stiffness to 1.0
+            for wheel_key in WHEEL_KEYS:
+                self._dcm.set(ACTUATOR_STIFFNESS_KEY % wheel_key, 0.9)
+
         self._motion = self._session.get_service("ALMotion")
         self._sub = rospy.Subscriber("cmd_vel", Twist, self._twist_callback, queue_size=1)
-
-        # Set the wheel stiffness to 1.0
-        for wheel_key in WHEEL_KEYS:
-            self._dcm.set(ACTUATOR_STIFFNESS_KEY % wheel_key, 1.0)
 
         # Calculate decoupling matrix
         #
@@ -136,26 +140,33 @@ class BaseController(object):
 
     def _timeout_timer_callback(self, e):
         rospy.logdebug("Timeout of {} seconds exceeded, sending zero velocity".format(self._reference_timeout.to_sec()))
-        self._send_wheel_velocity(0.0, 0.0, 0.0)
+        if self._use_dcm:
+            self._send_wheel_velocity(0.0, 0.0, 0.0)
+        else:
+            self._motion.move(0, 0, 0)
 
     def _twist_callback(self, msg):
         """
         Twist callback via the cmd_vel topic
         :param msg: Incoming Twist setpoint
         """
-        m = self._decoupling_matrix
 
-        q_dot_fl = m[3] * msg.linear.x + m[4] * msg.linear.y + m[5] * msg.angular.z
-        q_dot_fr = m[0] * msg.linear.x + m[1] * msg.linear.y + m[2] * msg.angular.z
-        q_dot_b = m[6] * msg.linear.x + m[7] * msg.linear.y + m[8] * msg.angular.z
+        if self._use_dcm:
+            m = self._decoupling_matrix
 
-        rospy.logdebug("q_dot_fl, q_dot_fr, q_dot_b: {}, {}, {}".format(q_dot_fl, q_dot_fr, q_dot_b))
+            q_dot_fl = m[3] * msg.linear.x + m[4] * msg.linear.y + m[5] * msg.angular.z
+            q_dot_fr = m[0] * msg.linear.x + m[1] * msg.linear.y + m[2] * msg.angular.z
+            q_dot_b = m[6] * msg.linear.x + m[7] * msg.linear.y + m[8] * msg.angular.z
 
-        velocity_wheel_fl = - (q_dot_fl / WHEEL_RADIUS)
-        velocity_wheel_fr = - (q_dot_fr / WHEEL_RADIUS)
-        velocity_wheel_b = - (q_dot_b / WHEEL_RADIUS)
+            rospy.logdebug("q_dot_fl, q_dot_fr, q_dot_b: {}, {}, {}".format(q_dot_fl, q_dot_fr, q_dot_b))
 
-        self._send_wheel_velocity(velocity_wheel_fl, velocity_wheel_fr, velocity_wheel_b)
+            velocity_wheel_fl = - (q_dot_fl / WHEEL_RADIUS)
+            velocity_wheel_fr = - (q_dot_fr / WHEEL_RADIUS)
+            velocity_wheel_b = - (q_dot_b / WHEEL_RADIUS)
+
+            self._send_wheel_velocity(velocity_wheel_fl, velocity_wheel_fr, velocity_wheel_b)
+        else:
+            self._motion.move(msg.linear.x, msg.linear.y, msg.angular.z)
 
         if self._timeout_timer:
             self._timeout_timer.shutdown()
