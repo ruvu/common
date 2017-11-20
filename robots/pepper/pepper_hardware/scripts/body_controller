@@ -73,6 +73,7 @@ class BodyController:
         """
         self._session = QiSession()
         self._motion = self._session.get_service("ALMotion")
+        self._motion.rest()
         self._motion.wakeUp()
 
         self._joint_names = self._motion.getBodyNames("JointActuators")
