@@ -12,5 +12,6 @@
   <run_depend>rospy</run_depend>
 
   <!-- Add here all ROS packages that contain behaviors -->
+  <run_depend>behavior_simple_navigation</run_depend>
 
 </package>
