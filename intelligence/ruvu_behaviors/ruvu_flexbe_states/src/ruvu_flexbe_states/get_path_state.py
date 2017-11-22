@@ -25,7 +25,7 @@ class GetPathState(EventState):
     <= error                                    Failed to send the goal to the planner
     """
 
-    def __init__(self, action=None, exec_timeout=10):
+    def __init__(self, action, exec_timeout=None):
         super(GetPathState, self).__init__(outcomes=['succeeded', 'failed', 'preempted', 'error'],
                                            input_keys=['target'],
                                            output_keys=['path'])
