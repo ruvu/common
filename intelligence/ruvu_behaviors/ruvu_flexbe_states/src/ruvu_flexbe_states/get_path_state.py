@@ -30,7 +30,10 @@ class GetPathState(EventState):
                                            input_keys=['target'],
                                            output_keys=['path'])
 
-        self._exec_timeout = rospy.Duration(exec_timeout)
+        if exec_timeout is not None:
+            self._exec_timeout = rospy.Duration(exec_timeout)
+        else:
+            self._exec_timeout = None
 
         self._action = action
         self._client = ProxyActionClient({self._action: GetPathAction})
@@ -56,7 +59,7 @@ class GetPathState(EventState):
             else:
                 return 'failed'
 
-        if state != GoalStatus.PREEMPTING:
+        if self._exec_timeout and state != GoalStatus.PREEMPTING:
             if rospy.get_rostime() - self._start_time > self._exec_timeout:
                 self._client.cancel(self._action)
 
