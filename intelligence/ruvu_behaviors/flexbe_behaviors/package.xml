@@ -12,10 +12,6 @@
   <run_depend>rospy</run_depend>
 
   <!-- Add here all ROS packages that contain behaviors -->
-  <run_depend>behavior_example_behavior</run_depend>
-  <run_depend>behavior_demonstration</run_depend>
-  <run_depend>behavior_conversation</run_depend>
   <run_depend>behavior_chatter</run_depend>
-  <run_depend>behavior_facetracking</run_depend>
 
 </package>
