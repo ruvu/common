@@ -49,6 +49,7 @@ class GetPathState(EventState):
         state = self._client.get_state(self._action)
 
         if self._client.has_result(self._action):
+            Logger.loginfo('state is now %s' % state)
             if state == GoalStatus.SUCCEEDED:
                 result = self._client.get_result(self._action)
                 userdata['path'] = result.path
@@ -69,7 +70,7 @@ class GetPathState(EventState):
         self._start_time = rospy.get_rostime()
 
         # Create the goal
-        goal = GetPathGoal(target_pose=userdata['target_pose_stamped'])
+        goal = GetPathGoal(target_pose=userdata['target'])
 
         # Send the goal
         try:
