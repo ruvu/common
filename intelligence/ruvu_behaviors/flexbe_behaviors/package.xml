@@ -12,6 +12,5 @@
   <run_depend>rospy</run_depend>
 
   <!-- Add here all ROS packages that contain behaviors -->
-  <run_depend>behavior_chatter</run_depend>
 
 </package>
