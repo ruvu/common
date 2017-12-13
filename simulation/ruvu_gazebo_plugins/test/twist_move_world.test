@@ -1,0 +1,16 @@
+<launch>
+  <arg name="debug" default="false" />
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+	<arg name="world_name" value="$(find ruvu_gazebo_plugins)/test/twist_move.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="false"/>
+    <arg name="gui" value="$(arg debug)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="verbose" default="true"/>
+  </include>
+  <test test-name="test_twist_odom_has_movement" pkg="ruvu_gazebo_plugins" type="test_twist_odom_has_movement.py" clear_params="true" time-limit="1000.0">
+  </test>
+</launch>
+

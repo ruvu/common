@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <robot name="robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="robot_namespace" default=""/>
+
   <gazebo>
     <plugin name="twist_teleport " filename="libruvu_twist_teleport.so">
       <robotNamespace>$(arg robot_namespace)</robotNamespace>
