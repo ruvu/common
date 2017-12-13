@@ -21,11 +21,7 @@ interested in exact physics simulation, it is cheaper (computationally) to
 ignore the physics and thus the collision engine. This gives us full control
 over the state-evolution in simulation.
 
-#### Test
-
-To test the plugin, run the following command:
-
-    roslaunch ruvu_gazebo_plugins disable_physics_world.launch
+![Disable Physics](doc/disable_physics.png)
 
 ### ruvu_twist_teleport (model plugin)
 
@@ -34,6 +30,8 @@ command and publishes an
 [nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html).
 This plugin assumes that the physics are disabled and assumes infinite
 acceleration.
+
+![Twist teleport](doc/twist_teleport.png)
 
 #### Parameters
 
@@ -49,12 +47,25 @@ message (default=`'odom'`)
 (default=`20`)
 - `robotFrame`: Frame id attached to the robot (default=`base_link`)
 
-#### Test
+### ruvu_twist_move (model plugin)
 
-To test the plugin with use of a gazebo world file, run the following command:
+This plugin moves the entity in the scene base on a [geometry_msgs/Twist](http://docs.ros.org/api/geometry_msgs/html/msg/Twist.html)
+command and publishes an
+[nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html).
+This plugin assumes physics and applies infinite acceleration.
 
-    roslaunch ruvu_gazebo_plugins twist_teleport_world.launch
+![Twist move](doc/twist_move.png)
 
-To test the plugin with use of XACRO URDF models, run the following command
+#### Parameters
 
-    roslaunch ruvu_gazebo_plugins twist_teleport_urdf_world.launch
+- `robotNamespace`: Namespace of the plugin, also used to extract the `tfPrefix`
+(default=`''`)
+- `commandTopic`: Topic name of the incoming [geometry_msgs/Twist](http://docs.ros.org/api/geometry_msgs/html/msg/Twist.html)
+ messages (default=`'cmd_vel'`)
+- `commandTimeout`: Time for an input command to be valid (default=`0.5`)
+- `odometryTopic`: Topic name of the outgoing  [nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)
+message (default=`'odom'`)
+- `odometryFrame`: Odom frame id (fixed frame to the world) (default=`odom`)
+- `odometryRate`: Frequency of the odometry that is being published
+(default=`20`)
+- `robotFrame`: Frame id attached to the robot (default=`base_link`)
