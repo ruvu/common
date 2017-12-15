@@ -1,0 +1,20 @@
+<launch>
+  <arg name="debug" default="false" />
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find ruvu_gazebo_plugins)/test/twist_move_urdf.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="false"/>
+    <arg name="gui" value="$(arg debug)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="verbose" default="true"/>
+  </include>
+
+  <!-- Without namespace -->
+  <param name="robot_description" command="xacro --inorder $(find ruvu_gazebo_plugins)/test/twist_move.urdf" />
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" args="-urdf -model robot -param robot_description -x -2" />
+  <test test-name="test_twist_odom_has_movement" pkg="ruvu_gazebo_plugins" type="test_twist_odom_has_movement.py" clear_params="true" time-limit="1000.0">
+  </test>
+
+</launch>
