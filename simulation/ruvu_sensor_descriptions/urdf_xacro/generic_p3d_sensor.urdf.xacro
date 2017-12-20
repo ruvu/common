@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:property name="M_PI" value="3.1415926535897931" />
+
+    <xacro:macro name="generic_p3d_sensor_model" params="name parent *origin"> 
+     <!-- use a zero limit revolute joint rather than fixed to prevent lumping -->
+      <joint name="${name}_joint" type="revolute"> 
+        <limit effort="0" lower="0" upper="0" velocity="0"/>
+        <xacro:insert_block name="origin" />
+        <parent link="${parent}"/>
+        <child link="${name}"/>
+      </joint>
+
+      <link name="${name}">
+        <inertial>
+          <mass value="0.270" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="2.632e-4" ixy="0" ixz="0" iyy="2.632e-4" iyz="0" izz="1.62e-4" />
+        </inertial>
+        <visual>
+          <origin xyz="0 0 -0.0115" rpy="0 0 0" />
+          <geometry>
+          <box size="0.058 0.058 0.087" />
+        </geometry>
+        </visual>
+        <collision>
+          <origin xyz="0 0 -0.0115" rpy="0 0 0" />
+          <geometry>
+          <box size="0.058 0.058 0.087" />
+        </geometry>
+        </collision>
+      </link>
+    </xacro:macro>
+
+    <xacro:macro name="generic_p3d_sensor" params="name parent *origin robot_namespace frame_name topic_name gaussian_noise update_rate">
+      <xacro:generic_p3d_sensor_model name="${name}" parent="${parent}">
+        <xacro:insert_block name="origin" />
+      </xacro:generic_p3d_sensor_model>
+
+      <gazebo>
+        <plugin name="${name}_p3d_plugin" filename="libgazebo_ros_p3d.so">
+          <robotNamespace>${robot_namespace}</robotNamespace>
+          <frameName>${frame_name}</frameName>
+          <bodyName>${name}</bodyName>
+          <topicName>${topic_name}</topicName>
+          <gaussianNoise>${gaussian_noise}</gaussianNoise>
+          <updateRate>${update_rate}</updateRate>
+        </plugin>
+      </gazebo> 
+    </xacro:macro>
+</robot>
