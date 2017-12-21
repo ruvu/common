@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ruvu_networkx</name>
+  <version>0.0.0</version>
+  <description>The ruvu_networkx package</description>
+
+  <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python-networkx</exec_depend>
+  <exec_depend>rospy</exec_depend>
+</package>
