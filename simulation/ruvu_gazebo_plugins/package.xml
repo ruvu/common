@@ -16,6 +16,7 @@
   <depend>nav_msgs</depend>
 
   <test_depend>rostest</test_depend>
+  <test_depend>ruvu_rostest</test_depend>
   <test_depend>rospy</test_depend>
   <test_depend>xacro</test_depend>
 
