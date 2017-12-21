@@ -41,7 +41,7 @@ class TestTwistOdomHasMovement(unittest.TestCase):
         self.assertNotEqual(0, self._odom_msg.pose.pose.position.y)
 
 
-PKG = 'ruvu_gazebo_plugins'
+PKG = 'ruvu_rostest'
 NAME = 'test_twist_odom_has_movement'
 if __name__ == '__main__':
     rostest.unitrun(PKG, NAME, TestTwistOdomHasMovement)
