@@ -10,7 +10,7 @@ before_script:
 
 kinetic-x86:
     variables:
-        PACKAGES: "pepper_hardware ruvu_web ruvu_flexbe_states ruvu_gazebo_plugins" # Separate with spaces
+        PACKAGES: "pepper_hardware ruvu_web ruvu_flexbe_states ruvu_gazebo_plugins ruvu_bringup" # Separate with spaces
         DOCKER_FILE: Dockerfile-kinetic-x86
     image: docker:git
     services:
