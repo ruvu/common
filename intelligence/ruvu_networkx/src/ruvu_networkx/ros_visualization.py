@@ -3,7 +3,7 @@ import itertools
 
 import rospy
 from std_msgs.msg import Header, ColorRGBA
-from geometry_msgs.msg import Vector3, Pose, Quaternion
+from geometry_msgs.msg import Vector3, Pose, Point, Quaternion
 from visualization_msgs.msg import MarkerArray, Marker
 
 
@@ -45,7 +45,7 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
         scale=Vector3(x=edge_width),
         color=ColorRGBA(0.0, 1.0, 1.0, 1.0),
         points=list(itertools.chain(*[(graph_poses[n1].position, graph_poses[n2].position) for n1, n2 in graph.edges])),
-        colors=list(itertools.chain(*[(ColorRGBA(a=1.0), ColorRGBA(1.0, 1.0, 1.0, 1.0)) for n1, n2 in graph.edges]))
+        colors=list(itertools.chain(*[(ColorRGBA(a=1.0), ColorRGBA(1.0, 1.0, 1.0, 1.0)) for _, _ in graph.edges]))
     ))
 
     arrow_length = 1.0
@@ -58,6 +58,26 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
         type=Marker.ARROW,
         scale=Vector3(x=arrow_length, y=arrow_width, z=arrow_width),
         color=ColorRGBA(1.0, 0.4, 0.4, 1.0),
+    ) for i, n in enumerate(graph.nodes)]
+
+    character_height = 0.5
+    offset_z = 0.5
+    marker_array.markers += [Marker(
+        header=header,
+        ns="labels",
+        text=str(n),
+        id=i,
+        pose=Pose(
+            orientation=graph_poses[n].orientation,
+            position=Point(
+                graph_poses[n].position.x,
+                graph_poses[n].position.y,
+                graph_poses[n].position.z + offset_z
+            )
+        ),
+        type=Marker.TEXT_VIEW_FACING,
+        scale=Vector3(z=character_height),
+        color=ColorRGBA(1.0, 1.0, 1.0, 1.0),
     ) for i, n in enumerate(graph.nodes)]
 
     return marker_array
