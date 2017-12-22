@@ -14,13 +14,16 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
     :param graph: The networkx graph
     :param attribute_name: The pose attribute name
     """
-    graph_poses = nx.get_node_attributes(graph, 'pose')
+    graph_poses = nx.get_node_attributes(graph, attribute_name)
 
     marker_array = MarkerArray()
     header = Header(
         frame_id=frame_id,
         stamp=rospy.Time.now()
     )
+    marker_array.markers.append(Marker(
+        action=Marker.DELETEALL
+    ))
 
     node_scale = 0.2
     marker_array.markers.append(Marker(
@@ -41,7 +44,8 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
         type=Marker.LINE_LIST,
         scale=Vector3(x=edge_width),
         color=ColorRGBA(0.0, 1.0, 1.0, 1.0),
-        points=list(itertools.chain(*[(graph_poses[n1].position, graph_poses[n2].position) for n1, n2 in graph.edges]))
+        points=list(itertools.chain(*[(graph_poses[n1].position, graph_poses[n2].position) for n1, n2 in graph.edges])),
+        colors=list(itertools.chain(*[(ColorRGBA(a=1.0), ColorRGBA(1.0, 1.0, 1.0, 1.0)) for n1, n2 in graph.edges]))
     ))
 
     arrow_length = 1.0
@@ -53,7 +57,7 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
         pose=graph_poses[n],
         type=Marker.ARROW,
         scale=Vector3(x=arrow_length, y=arrow_width, z=arrow_width),
-        color=ColorRGBA(1.0, 0, 0, 1.0),
+        color=ColorRGBA(1.0, 0.4, 0.4, 1.0),
     ) for i, n in enumerate(graph.nodes)]
 
     return marker_array

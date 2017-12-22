@@ -11,5 +11,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>python-networkx</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
   <exec_depend>rospy</exec_depend>
 </package>
