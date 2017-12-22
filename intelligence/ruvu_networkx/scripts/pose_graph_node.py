@@ -37,6 +37,15 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id):
     )
 
 
+def _get_empty_path(frame_id):
+    return Path(
+        header=Header(
+            stamp=rospy.Time.now(),
+            frame_id=frame_id
+        )
+    )
+
+
 def _get_squared_distance(p1, p2):
     """
     Calculate the squared distance between two geometry_msgs/Point
@@ -48,7 +57,7 @@ def _get_squared_distance(p1, p2):
 
 
 class PoseGraphNode(object):
-    def __init__(self, frame_id, file_path, edge_connect_timeout):
+    def __init__(self, frame_id, file_path, click_timeout):
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
             self._graph = nx.read_yaml(file_path)
@@ -60,14 +69,16 @@ class PoseGraphNode(object):
 
         self._frame_id = frame_id
         self._file_path = file_path
-        self._last_clicked_point = None
-        self._edge_connect_timeout = edge_connect_timeout
+        self._last_connect_clicked_point = None
+        self._last_get_path_clicked_point = None
+        self._click_timeout = click_timeout
 
         self._visualization_pub = rospy.Publisher("graph_visualization", MarkerArray, queue_size=1, latch=True)
         self._last_planner_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
         self._add_node_sub = rospy.Subscriber("add_node", PoseStamped, self._add_node_cb)
         self._remove_node_sub = rospy.Subscriber("remove_node", PointStamped, self._remove_node_cb)
         self._add_edge_sub = rospy.Subscriber("add_edge", PointStamped, self._add_edge_cb)
+        self._get_path_sub = rospy.Subscriber("get_path", PointStamped, self._get_path_cb)
 
         self._clear_service = rospy.Service("clear", Empty, self._clear_srv)
         self._store_service = rospy.Service("store", Empty, self._store_srv)
@@ -79,13 +90,13 @@ class PoseGraphNode(object):
         self._publish_graph_visualization()
         rospy.loginfo("PoseGraphNode initialized")
 
-    def _clear_srv(self, req):
+    def _clear_srv(self, _):
         self._graph.clear()
         rospy.loginfo("Cleared graph")
         self._publish_graph_visualization()
         return {}
 
-    def _store_srv(self, req):
+    def _store_srv(self, _):
         nx.write_yaml(self._graph, self._file_path)
         rospy.loginfo("Stored graph to {}".format(self._file_path))
         return {}
@@ -127,11 +138,30 @@ class PoseGraphNode(object):
         if not self._check_frame_id(point.header.frame_id):
             return
 
-        if self._last_clicked_point \
-                and (rospy.Time.now() - self._last_clicked_point.header.stamp).to_sec() < self._edge_connect_timeout:
-            self._add_edge_to_graph(self._last_clicked_point.point, point.point)
+        if self._last_connect_clicked_point \
+                and (rospy.Time.now() - self._last_connect_clicked_point.header.stamp).to_sec() < self._click_timeout:
+            self._add_edge_to_graph(self._last_connect_clicked_point.point, point.point)
 
-        self._last_clicked_point = point
+        self._last_connect_clicked_point = point
+
+    def _get_path_cb(self, point):
+        if not self._check_frame_id(point.header.frame_id):
+            return
+
+        if self._last_get_path_clicked_point \
+                and (rospy.Time.now() - self._last_get_path_clicked_point.header.stamp).to_sec() < self._click_timeout:
+            start_node = self._get_closest_node(self._last_get_path_clicked_point.point, tolerance=1.0)
+            end_node = self._get_closest_node(point.point, tolerance=1.0)
+            if start_node and end_node:
+                try:
+                    shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
+                except nx.NetworkXNoPath as _:
+                    self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
+                else:
+                    path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id)
+                    self._last_planner_path_pub.publish(path)
+
+        self._last_get_path_clicked_point = point
 
     def _get_path_action_cb(self, goal):
         result = GetPathResult()
@@ -158,6 +188,7 @@ class PoseGraphNode(object):
                 except nx.NetworkXNoPath as e:
                     result.outcome = GetPathResult.NO_PATH_FOUND
                     result.message = e.message
+                    self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
                 else:
                     result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id)
                     self._last_planner_path_pub.publish(result.path)
@@ -203,6 +234,6 @@ if __name__ == "__main__":
     pgn = PoseGraphNode(
         rospy.get_param("frame_id", "map"),
         rospy.get_param("file_path", "/tmp/pose_graph.yaml"),
-        rospy.get_param("edge_connect_timeout", 5.0)
+        rospy.get_param("click_timeout", 5.0)
     )
     rospy.spin()
