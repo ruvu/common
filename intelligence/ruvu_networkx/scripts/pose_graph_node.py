@@ -7,15 +7,32 @@ import rospy
 import actionlib
 from std_srvs.srv import Empty
 from std_msgs.msg import Header
-from geometry_msgs.msg import PoseStamped, PointStamped
+from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, Quaternion
 from nav_msgs.msg import Path
 from visualization_msgs.msg import MarkerArray
 from mbf_msgs.msg import GetPathAction, GetPathResult
+from tf.transformations import quaternion_slerp
 
 from ruvu_networkx import ros_visualization
 
+import math
+import numpy as np
 
-def _nx_path_to_nav_msgs_path(graph, path, frame_id):
+
+def _get_interpolated_pose(pose1, pose2, fraction):
+    return Pose(
+        position=Point(
+            x=pose1.position.x * (1 - fraction) + pose2.position.x * fraction,
+            y=pose1.position.y * (1 - fraction) + pose2.position.y * fraction,
+            z=pose1.position.z * (1 - fraction) + pose2.position.z * fraction
+        ),
+        orientation=Quaternion(
+            *quaternion_slerp(pose1.orientation.__getstate__(), pose2.orientation.__getstate__(), fraction)
+        )
+    )
+
+
+def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance):
     """
     Convert a path in the graph to a nav_msgs/Path
     :param graph: The graph
@@ -28,13 +45,30 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id):
         stamp=rospy.Time.now(),
         frame_id=frame_id
     )
-    return Path(
-        header=header,
-        poses=[PoseStamped(
-            header=header,
-            pose=graph_poses[p]
-        ) for p in path]
-    )
+
+    msg = Path(header=header)
+
+    last_idx = None
+    for idx in path:
+        pose = graph_poses[idx]
+        if last_idx is not None:
+            last_pose = graph_poses[last_idx]
+
+            step_size = 1. / int(math.hypot(pose.position.x - last_pose.position.x,
+                                            pose.position.y - last_pose.position.y) / interpolation_distance)
+
+            # Perform interpolation
+            msg.poses += [PoseStamped(header=header, pose=_get_interpolated_pose(last_pose, pose, f))
+                          for f in np.arange(step_size, 1.0, step_size)]
+
+        else:
+            msg.poses.append(PoseStamped(
+                header=header,
+                pose=pose
+            ))
+        last_idx = idx
+
+    return msg
 
 
 def _get_empty_path(frame_id):
@@ -57,7 +91,7 @@ def _get_squared_distance(p1, p2):
 
 
 class PoseGraphNode(object):
-    def __init__(self, frame_id, file_path, click_timeout):
+    def __init__(self, frame_id, file_path, click_timeout, interpolation_distance):
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
             self._graph = nx.read_yaml(file_path)
@@ -72,6 +106,7 @@ class PoseGraphNode(object):
         self._last_connect_clicked_point = None
         self._last_get_path_clicked_point = None
         self._click_timeout = click_timeout
+        self._interpolation_distance = interpolation_distance
 
         self._visualization_pub = rospy.Publisher("graph_visualization", MarkerArray, queue_size=1, latch=True)
         self._last_planner_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
@@ -158,7 +193,8 @@ class PoseGraphNode(object):
                 except nx.NetworkXNoPath as _:
                     self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
                 else:
-                    path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id)
+                    path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
+                                                     self._interpolation_distance)
                     self._last_planner_path_pub.publish(path)
 
         self._last_get_path_clicked_point = point
@@ -190,7 +226,8 @@ class PoseGraphNode(object):
                     result.message = e.message
                     self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
                 else:
-                    result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id)
+                    result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
+                                                            self._interpolation_distance)
                     self._last_planner_path_pub.publish(result.path)
             else:
                 result.outcome = GetPathResult.NO_PATH_FOUND
@@ -234,6 +271,7 @@ if __name__ == "__main__":
     pgn = PoseGraphNode(
         rospy.get_param("frame_id", "map"),
         rospy.get_param("file_path", "/tmp/pose_graph.yaml"),
-        rospy.get_param("click_timeout", 5.0)
+        rospy.get_param("click_timeout", 5.0),
+        rospy.get_param("interpolation_distance", 0.2)
     )
     rospy.spin()
