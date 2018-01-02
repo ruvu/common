@@ -16,4 +16,5 @@
   <exec_depend>mbf_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>actionlib</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
 </package>

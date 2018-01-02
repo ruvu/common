@@ -5,6 +5,7 @@ import os
 
 import rospy
 import actionlib
+import tf2_ros
 from std_srvs.srv import Empty
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, Quaternion
@@ -20,6 +21,13 @@ import numpy as np
 
 
 def _get_interpolated_pose(pose1, pose2, fraction):
+    """
+    Perform pose interpolation between two geometry_msgs.Pose
+    :param pose1: First pose
+    :param pose2: Second pose
+    :param fraction: Fraction from 0..1 (0 means pose1)
+    :return: The interpolated pose
+    """
     return Pose(
         position=Point(
             x=pose1.position.x * (1 - fraction) + pose2.position.x * fraction,
@@ -38,6 +46,7 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance):
     :param graph: The graph
     :param path: The path
     :param frame_id: The frame id that should be used in the resulting message
+    :param interpolation_distance: Step size (position) that is used for interpolation
     :return: The nav_msgs/Path
     """
     graph_poses = nx.get_node_attributes(graph, "pose")
@@ -72,6 +81,11 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance):
 
 
 def _get_empty_path(frame_id):
+    """
+    Returns an empty path
+    :param frame_id: The frame id
+    :return: The path
+    """
     return Path(
         header=Header(
             stamp=rospy.Time.now(),
@@ -91,7 +105,16 @@ def _get_squared_distance(p1, p2):
 
 
 class PoseGraphNode(object):
-    def __init__(self, frame_id, file_path, click_timeout, interpolation_distance):
+    def __init__(self, frame_id, robot_frame_id, file_path, click_timeout, interpolation_distance):
+        """
+        PoseGraphNode that holds a pose graph that can be created and modified by the user. This pose graph can be used
+        to search paths in euclidean space
+        :param frame_id: Frame ID of the graph
+        :param robot_frame_id: Robot frame id, when a path is queried from the robot's frame
+        :param file_path: Where to store the graph
+        :param click_timeout: Timeout between clicks when adding an edge or querying a path
+        :param interpolation_distance: Pose interpolation between graph poses (when a path is calculated)
+        """
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
             self._graph = nx.read_yaml(file_path)
@@ -102,6 +125,7 @@ class PoseGraphNode(object):
             ))
 
         self._frame_id = frame_id
+        self._robot_frame_id = robot_frame_id
         self._file_path = file_path
         self._last_connect_clicked_point = None
         self._last_get_path_clicked_point = None
@@ -122,27 +146,47 @@ class PoseGraphNode(object):
                                                          execute_cb=self._get_path_action_cb, auto_start=False)
         self._get_path_as.start()
 
+        self._tf_buffer = tf2_ros.Buffer()
+        self._tf_listener = tf2_ros.TransformListener(self._tf_buffer)
+
         self._publish_graph_visualization()
         rospy.loginfo("PoseGraphNode initialized")
 
     def _clear_srv(self, _):
+        """
+        Callback received when the clear service is called, it will clear the pose graph
+        """
         self._graph.clear()
         rospy.loginfo("Cleared graph")
         self._publish_graph_visualization()
         return {}
 
     def _store_srv(self, _):
+        """
+        Callback received when the store service is called, it will store the graph to file (file path parameter)
+        """
         nx.write_yaml(self._graph, self._file_path)
         rospy.loginfo("Stored graph to {}".format(self._file_path))
         return {}
 
     def _check_frame_id(self, frame_id):
+        """
+        Checks whether the param frame id equals the graph frame id
+        :param frame_id: The frame id to check
+        :return: True if correct, False otherwise
+        """
         if frame_id != self._frame_id:
             rospy.logerr("Received pose with invalid frame_id {}. Graph frame_id = {}".format(frame_id, self._frame_id))
             return False
         return True
 
     def _get_closest_node(self, point, tolerance=None):
+        """
+        Returns the closes node (based on euclidean distance)
+        :param point: The point
+        :param tolerance: Maximum tolerance
+        :return: The closes node id, None if no node was found
+        """
         if len(self._graph.nodes) == 0:
             return None
 
@@ -155,21 +199,38 @@ class PoseGraphNode(object):
         return closest_node
 
     def _get_unique_node_id(self):
+        """
+        Creates an unique node name to be added to the graph
+        :return: The node name
+        """
         return max(self._graph.nodes) + 1 if len(self._graph.nodes) != 0 else 1
 
     def _add_node_cb(self, pose):
+        """
+        Callback called when adding a node to the graph using a pose stamped
+        :param pose: The geometry_msgs.PoseStamped
+        """
         if not self._check_frame_id(pose.header.frame_id):
             return
 
         self._add_pose_to_graph(pose.pose)
 
     def _remove_node_cb(self, point):
+        """
+        Callback fired to remove a node from the graph together with its edges
+        :param point: A point near to the graph pose, the closest graph pose is removed
+        """
         if not self._check_frame_id(point.header.frame_id):
             return
 
         self._remove_pose_from_graph(point.point)
 
     def _add_edge_cb(self, point):
+        """
+        Callback for adding an edge to the graph. We do hold state for memorizing the last clicked point so that we can
+        connect to clicked nodes in the graph when we click on two nodes in an interval < click_timeout
+        :param point: The clicked point, we will select the closest node
+        """
         if not self._check_frame_id(point.header.frame_id):
             return
 
@@ -180,6 +241,11 @@ class PoseGraphNode(object):
         self._last_connect_clicked_point = point
 
     def _get_path_cb(self, point):
+        """
+        Callback for planning a route through the graph. We do hold state for memorizing the last clicked point so that
+        we can plan from one point to another when we click on two nodes in an interval < click_timeout
+        :param point: The clicked point, we will select the closest node
+        """
         if not self._check_frame_id(point.header.frame_id):
             return
 
@@ -200,38 +266,53 @@ class PoseGraphNode(object):
         self._last_get_path_clicked_point = point
 
     def _get_path_action_cb(self, goal):
+        """
+        The get path action goal callback
+        :param goal: The goal that describes the end contraint, the start position and what planner to use
+        """
         result = GetPathResult()
 
+        start_node = None
+        end_node = None
+
         # Check whether the goal is valid before planning the path
-        if not goal.use_start_pose:
-            result.outcome = GetPathResult.INVALID_START
-            result.message = "use_start_pose should be set to true"
-        elif goal.start_pose.header.frame_id != self._frame_id:
-            result.outcome = GetPathResult.INVALID_START
-            result.message = "start_pose frame_id != {}".format(self._frame_id)
-        elif goal.target_pose.header.frame_id != self._frame_id:
-            result.outcome = GetPathResult.INVALID_GOAL
-            result.message = "target_pose frame_id != {}".format(self._frame_id)
-        elif len(self._graph.nodes) == 0:
-            result.outcome = GetPathResult.NOT_INITIALIZED
-            result.message = "no nodes in the graph, is it initialized properly?"
-        else:
+        if goal.use_start_pose:
+            if goal.start_pose.header.frame_id != self._frame_id:
+                result.outcome = GetPathResult.INVALID_START
+                result.message = "start_pose frame_id != {}".format(self._frame_id)
+            elif goal.target_pose.header.frame_id != self._frame_id:
+                result.outcome = GetPathResult.INVALID_GOAL
+                result.message = "target_pose frame_id != {}".format(self._frame_id)
+            elif len(self._graph.nodes) == 0:
+                result.outcome = GetPathResult.NOT_INITIALIZED
+                result.message = "no nodes in the graph, is it initialized properly?"
             start_node = self._get_closest_node(goal.start_pose.pose.position, goal.tolerance)
             end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
-            if start_node and end_node:
-                try:
-                    shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
-                except nx.NetworkXNoPath as e:
-                    result.outcome = GetPathResult.NO_PATH_FOUND
-                    result.message = e.message
-                    self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
-                else:
-                    result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
-                                                            self._interpolation_distance)
-                    self._last_planner_path_pub.publish(result.path)
+        else:
+            try:
+                transform = self._tf_buffer.lookup_transform(self._frame_id, self._robot_frame_id, rospy.Time())
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                result.outcome = GetPathResult.TF_ERROR
+                result.message = "failed to obtain transform from {} to {}".format(self._frame_id, self._robot_frame_id)
             else:
+                start_node = self._get_closest_node(transform.transform.translation, goal.tolerance)
+                end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
+
+        # Goal seems valid, try planning
+        if start_node and end_node:
+            try:
+                shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
+            except nx.NetworkXNoPath as e:
                 result.outcome = GetPathResult.NO_PATH_FOUND
-                result.message = "no start or end node could be found, with tolerance {}".format(goal.tolerance)
+                result.message = e.message
+                self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
+            else:
+                result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
+                                                        self._interpolation_distance)
+                self._last_planner_path_pub.publish(result.path)
+        else:
+            result.outcome = GetPathResult.NO_PATH_FOUND
+            result.message = "no start or end node could be found, with tolerance {}".format(goal.tolerance)
 
         if result.outcome == GetPathResult.SUCCESS:
             self._get_path_as.set_succeeded(result, result.message)
@@ -239,6 +320,10 @@ class PoseGraphNode(object):
             self._get_path_as.set_aborted(result, result.message)
 
     def _add_pose_to_graph(self, pose):
+        """
+        Method for adding a pose to the graph
+        :param pose: The pose
+        """
         new_node = self._get_unique_node_id()
 
         self._graph.add_node(new_node, pose=pose)
@@ -247,6 +332,11 @@ class PoseGraphNode(object):
         self._publish_graph_visualization()
 
     def _add_edge_to_graph(self, p1, p2):
+        """
+        Method for adding an edge to the graph
+        :param p1: Point one (we will look for the closes pose within a tolerance region of 1.0)
+        :param p2: Point two (we will look for the closes pose within a tolerance region of 1.0)
+        """
         n1 = self._get_closest_node(p1, tolerance=1.0)
         n2 = self._get_closest_node(p2, tolerance=1.0)
         if n1 and n2:
@@ -255,6 +345,10 @@ class PoseGraphNode(object):
             self._publish_graph_visualization()
 
     def _remove_pose_from_graph(self, point):
+        """
+        Method to remove a pose from the graph together with its edges
+        :param point: Point (we will look for the closes pose within a tolerance region of 1.0)
+        """
         n = self._get_closest_node(point, tolerance=1.0)
         if n:
             self._graph.remove_node(n)
@@ -262,6 +356,9 @@ class PoseGraphNode(object):
             self._publish_graph_visualization()
 
     def _publish_graph_visualization(self):
+        """
+        Publish a visualization of the pose graph
+        """
         msg = ros_visualization.get_visualization_marker_array_msg_from_pose_graph(self._graph, self._frame_id)
         self._visualization_pub.publish(msg)
 
@@ -270,6 +367,7 @@ if __name__ == "__main__":
     rospy.init_node("pose_graph_node")
     pgn = PoseGraphNode(
         rospy.get_param("frame_id", "map"),
+        rospy.get_param("robot_frame_id", "base_link"),
         rospy.get_param("file_path", "/tmp/pose_graph.yaml"),
         rospy.get_param("click_timeout", 5.0),
         rospy.get_param("interpolation_distance", 0.2)
