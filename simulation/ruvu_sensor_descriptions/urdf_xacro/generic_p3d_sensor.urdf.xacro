@@ -3,9 +3,10 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:property name="M_PI" value="3.1415926535897931" />
 
-    <xacro:macro name="generic_p3d_sensor_model" params="name parent *origin">
+    <xacro:macro name="generic_p3d_sensor_model" params="name parent *origin"> 
      <!-- use a zero limit revolute joint rather than fixed to prevent lumping -->
-      <joint name="${name}_joint" type="fixed">
+      <joint name="${name}_joint" type="revolute"> 
+        <limit effort="0" lower="0" upper="0" velocity="0"/>
         <xacro:insert_block name="origin" />
         <parent link="${parent}"/>
         <child link="${name}"/>
@@ -46,6 +47,6 @@
           <gaussianNoise>${gaussian_noise}</gaussianNoise>
           <updateRate>${update_rate}</updateRate>
         </plugin>
-      </gazebo>
+      </gazebo> 
     </xacro:macro>
 </robot>
