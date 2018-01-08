@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pozyx_ros</name>
+  <version>0.1.0</version>
+  <description>ROS package for the Pozyx positioning system.</description>
+
+  <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>
+
+  <license>TODO</license>
+
+
+  <author email="rein@ruvu.nl">Rein Appeldoorn</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <exec_depend>python-pypozyx</exec_depend>
+</package>
