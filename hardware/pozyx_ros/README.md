@@ -4,7 +4,7 @@ ROS Wrapper for the pozyx localization system
 
 ## Nodes
 
-### [pose_graph_node.py](scripts/pozyx_node.py)
+### [pozyx_node.py](scripts/pozyx_node.py)
 
 Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag connected to the robot and anchors connected to the world.
 
@@ -12,10 +12,10 @@ Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag co
 
 ##### Publishers
 
-- odom ([nav_msgs/Odometry](http://docs.ros.org/api/visualization_msgs/html/msg/MarkerArray.html)) - Visualization of the graph for RVIZ
-- magnetic_field ([sensor_msgs/MagneticField](http://docs.ros.org/api/nav_msgs/html/msg/Path.html)) - Planned path output, also primarily for RVIZ
-- imu ([sensor_msgs/Imu](http://docs.ros.org/api/nav_msgs/html/msg/Path.html)) - Planned path output, also primarily for RVIZ
-- temperature ([sensor_msgs/Temperature](http://docs.ros.org/api/nav_msgs/html/msg/Path.html)) - Planned path output, also primarily for RVIZ
+- odom ([nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)) - Visualization of the graph for RVIZ
+- magnetic_field ([sensor_msgs/MagneticField](http://docs.ros.org/api/sensor_msgs/html/msg/MagneticField.html)) - Planned path output, also primarily for RVIZ
+- imu ([sensor_msgs/Imu](http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)) - Planned path output, also primarily for RVIZ
+- temperature ([sensor_msgs/Temperature](http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html)) - Planned path output, also primarily for RVIZ
 
 #### Parameters
 
