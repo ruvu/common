@@ -9,11 +9,19 @@ from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion, Vecto
 
 
 class ROSPozyx:
-    def __init__(self, port, anchors, frame_id):
+    def __init__(self, port, anchors, world_frame_id, sensor_frame_id):
+        """
+        ROS Pozyx wrapper that publishes the UWB and on-board sensor data
+        :param port: The serial port of the pozyx shield
+        :param anchors: List of pozyx.DeviceCoordinates() of all the anchors
+        :param world_frame_id: The frame id of the world frame
+        :param sensor_frame_id: The frame id of the sensor
+        """
         self._pozyx = pypozyx.PozyxSerial(port)
         self._anchors = [anchor for anchor in anchors]
         self._anchor_ranges = {}
-        self._frame_id = frame_id
+        self._world_frame_id = world_frame_id
+        self._sensor_frame_id = sensor_frame_id
 
         self._setup_anchors()
 
@@ -46,7 +54,8 @@ class ROSPozyx:
         Updates the range information of all anchors to keep track of whether they have been reached
         :return: The active and inactive anchor list
         """
-        active_anchors = inactive_anchors = []
+        active_anchors = []
+        inactive_anchors = []
 
         # Retrieve Range Info for each anchor
         for anchor in self._anchors:
@@ -120,7 +129,7 @@ class ROSPozyx:
                 self._imu_publisher.publish(Imu(
                     header=Header(
                         stamp=rospy.Time.now(),
-                        frame_id=self._frame_id
+                        frame_id=self._sensor_frame_id
                     ),
                     orientation=Quaternion(sensor_data.quaternion.x, sensor_data.quaternion.y,
                                            sensor_data.quaternion.z, sensor_data.quaternion.w),
@@ -134,7 +143,7 @@ class ROSPozyx:
                 self._magnetic_field_publisher.publish(MagneticField(
                     header=Header(
                         stamp=rospy.Time.now(),
-                        frame_id=self._frame_id
+                        frame_id=self._sensor_frame_id
                     ),
                     magnetic_field=Vector3(sensor_data.magnetic.x / 1e3,
                                            sensor_data.magnetic.y / 1e3,
@@ -143,7 +152,7 @@ class ROSPozyx:
                 self._temperature_publisher.publish(Temperature(
                     header=Header(
                         stamp=rospy.Time.now(),
-                        frame_id=self._frame_id
+                        frame_id=self._sensor_frame_id
                     ),
                     temperature=sensor_data.temperature.value
                 ))
@@ -159,8 +168,9 @@ class ROSPozyx:
                     self._odometry_publisher.publish(Odometry(
                         header=Header(
                             stamp=rospy.Time.now(),
-                            frame_id=self._frame_id
+                            frame_id=self._world_frame_id
                         ),
+                        child_frame_id=self._sensor_frame_id,
                         pose=PoseWithCovariance(
                             pose=Pose(position=Point(position.x / 1e3, position.y / 1e3, position.z / 1e3),
                                       orientation=Quaternion(sensor_data.quaternion.x, sensor_data.quaternion.y,
@@ -185,7 +195,8 @@ if __name__ == '__main__':
         rospy.logerr("Missing key {} in anchor specification".format(e))
     else:
         try:
-            ros_pozyx = ROSPozyx(port, anchors, rospy.get_param("frame_id", "map"))
+            ros_pozyx = ROSPozyx(port, anchors, rospy.get_param("world_frame_id", "map"),
+                                 rospy.get_param("sensor_frame_id", "pozyx"))
             ros_pozyx.spin()
         except rospy.ROSInterruptException as e:
             rospy.logwarn(e)
