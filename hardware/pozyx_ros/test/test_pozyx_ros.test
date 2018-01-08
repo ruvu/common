@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <node name="pozyx_ros" pkg="pozyx_ros" type="pozyx_node.py" required="true">
+    <rosparam file="$(find pozyx_ros)/test/test_pozyx_ros.yaml" command="load" />
+  </node>
+</launch>
+

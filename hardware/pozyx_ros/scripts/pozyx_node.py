@@ -187,9 +187,10 @@ if __name__ == '__main__':
     port = rospy.get_param("~port", "/dev/ttyACM0")
 
     try:
-        anchors = [pypozyx.DeviceCoordinates(d['network_id'], d['flag'], pypozyx.Coordinates(d['pos']['x'] * 1e3,
-                                                                                             d['pos']['y'] * 1e3,
-                                                                                             d['pos']['z'] * 1e3))
+        anchors = [pypozyx.DeviceCoordinates(d['network_id'], pypozyx.POZYX_ANCHOR,
+                                             pypozyx.Coordinates(d['position']['x'] * 1e3,
+                                                                 d['position']['y'] * 1e3,
+                                                                 d['position']['z'] * 1e3))
                    for d in rospy.get_param('~anchors', [])]
     except KeyError as e:
         rospy.logerr("Missing key {} in anchor specification".format(e))
