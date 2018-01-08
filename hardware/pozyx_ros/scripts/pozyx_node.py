@@ -116,7 +116,7 @@ class ROSPozyx:
             status &= self._pozyx.getAllSensorData(sensor_data)
 
             if status == pypozyx.POZYX_SUCCESS:
-                # TODO: Check conversions of the various values, apparently the acceleration is in mg? conver tot m/s2
+                # TODO: Check conversions of the various values, apparently the acceleration is in mg? convert to m/s2
                 self._imu_publisher.publish(Imu(
                     header=Header(
                         stamp=rospy.Time.now(),
@@ -127,9 +127,9 @@ class ROSPozyx:
                     angular_velocity=Vector3(sensor_data.angular_vel.x / 1e3,
                                              sensor_data.angular_vel.y / 1e3,
                                              sensor_data.angular_vel.z / 1e3),
-                    linear_acceleration=Vector3((sensor_data.linear_acceleration.x + sensor_data.gravity_vector.x) / 1e3,
-                                                (sensor_data.linear_acceleration.y + sensor_data.gravity_vector.y) / 1e3,
-                                                (sensor_data.linear_acceleration.z + sensor_data.gravity_vector.z) / 1e3)
+                    linear_acceleration=Vector3((sensor_data.linear_acceleration.x + sensor_data.gravity_vector.x)/1e3,
+                                                (sensor_data.linear_acceleration.y + sensor_data.gravity_vector.y)/1e3,
+                                                (sensor_data.linear_acceleration.z + sensor_data.gravity_vector.z)/1e3)
                 ))
                 self._magnetic_field_publisher.publish(MagneticField(
                     header=Header(
