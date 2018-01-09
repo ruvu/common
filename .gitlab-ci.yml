@@ -9,6 +9,8 @@ before_script:
     - git clone git@gitlab.com:ruvu/environment.git ~/.ruvu
 
 kinetic-x86:
+    only:
+        - mergerequests
     variables:
         PACKAGES: "pepper_hardware ruvu_web ruvu_flexbe_states ruvu_gazebo_plugins ruvu_bringup ruvu_rostest ruvu_networkx" # Separate with spaces
         DOCKER_FILE: Dockerfile-kinetic-x86
