@@ -14,6 +14,8 @@
   <depend>roscpp</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>control_msgs</depend>
+  <depend>actionlib</depend>
 
   <test_depend>rostest</test_depend>
   <test_depend>ruvu_rostest</test_depend>

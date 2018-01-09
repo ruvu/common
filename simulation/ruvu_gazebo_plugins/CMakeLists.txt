@@ -4,7 +4,7 @@ project(ruvu_gazebo_plugins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs control_msgs actionlib)
 #include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -37,6 +37,9 @@ target_link_libraries(ruvu_twist_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES}
 add_library(ruvu_twist_move src/twist_move_plugin.cpp src/twist_plugin.cpp src/twist_plugin.h src/util.h)
 target_link_libraries(ruvu_twist_move ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
+add_library(ruvu_single_joint_position_lifter src/single_joint_position_lifter_plugin.cpp src/single_joint_position_lifter_plugin.h src/util.h)
+target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
 ###########
 ## TEST ##
 ###########
@@ -48,6 +51,7 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/twist_move_urdf_world.test)
     add_rostest(test/twist_teleport_urdf_world.test)
     add_rostest(test/twist_teleport_world.test)
+    add_rostest(test/single_joint_position_lifter_world.test)
 endif()
 
 #############
@@ -63,6 +67,7 @@ install(TARGETS
   ruvu_disable_physics
   ruvu_twist_teleport
   ruvu_twist_move
+  ruvu_single_joint_position_lifter
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
