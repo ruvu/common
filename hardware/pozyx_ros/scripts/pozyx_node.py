@@ -1,27 +1,39 @@
 #!/usr/bin/env python
-
 import pypozyx
 import rospy
+import diagnostic_updater
+import collections
+from diagnostic_msgs.msg import DiagnosticStatus
 from sensor_msgs.msg import Imu, MagneticField, Temperature
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
-from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion, Vector3
+from geometry_msgs.msg import Quaternion, Vector3, PoseWithCovariance, Pose, Point
 
 
 class ROSPozyx:
-    def __init__(self, port, anchors, world_frame_id, sensor_frame_id):
+    def __init__(self, port, anchors, world_frame_id, sensor_frame_id, frequency, minimum_fix_factor):
         """
         ROS Pozyx wrapper that publishes the UWB and on-board sensor data
         :param port: The serial port of the pozyx shield
         :param anchors: List of pozyx.DeviceCoordinates() of all the anchors
         :param world_frame_id: The frame id of the world frame
         :param sensor_frame_id: The frame id of the sensor
+        :param frequency: Frequency of the pozyx, we will sleep in between before continuously querying the pozyx device
+        :param minimum_fix_factor: The factor that determines the numbre of positioning failures, used in diagnostics
         """
-        self._pozyx = pypozyx.PozyxSerial(port)
         self._anchors = [anchor for anchor in anchors]
         self._anchor_ranges = {}
+        self._active_anchors = []
+        self._inactive_anchors = []
+        self._positioning_result_last_second = collections.deque(maxlen=frequency)  # Average over 1 second
+        self._minimum_fix_factor = minimum_fix_factor
         self._world_frame_id = world_frame_id
         self._sensor_frame_id = sensor_frame_id
+
+        rospy.logwarn("Connecting via Serial to Pypozyx on port {}. If the connection fails, a syntax "
+                      "error is promted due to a bug in the pypozyx python library.".format(port))
+        self._pozyx = pypozyx.PozyxSerial(port)
+        rospy.loginfo("Succesfully connected to serial pypozyx device on port {}.".format(port))
 
         self._setup_anchors()
 
@@ -29,6 +41,40 @@ class ROSPozyx:
         self._imu_publisher = rospy.Publisher("imu", Imu, queue_size=1)
         self._magnetic_field_publisher = rospy.Publisher("magnetic_field", MagneticField, queue_size=1)
         self._temperature_publisher = rospy.Publisher("temperature", Temperature, queue_size=1)
+
+        # Initialize diagnostics publisher
+        self._frequency = frequency
+        self._rate = rospy.Rate(frequency)
+        self._diagnostic_updater = diagnostic_updater.Updater()
+        self._diagnostic_updater.setHardwareID("pozyx_{}".format(port))
+
+        # Add frequency monitoring
+        self._frequency_status_onboard_sensors = diagnostic_updater.FrequencyStatus(
+            diagnostic_updater.FrequencyStatusParam({'min': frequency, 'max': frequency}))
+        self._diagnostic_updater.add(self._frequency_status_onboard_sensors)
+
+        # Add uwb positioning monitoring
+        self._diagnostic_updater.add("UWB Positioning", self._uwb_positioning_diagnostics)
+
+    def _uwb_positioning_diagnostics(self, stat):
+        # Calculate the fix factor
+        fix_factor = round(self._positioning_result_last_second.count(True) / float(self._frequency), 2)
+
+        if fix_factor < self._minimum_fix_factor:
+            stat.summary(DiagnosticStatus.ERROR, "Fix factor too low: {} < {}".format(fix_factor,
+                                                                                      self._minimum_fix_factor))
+        else:
+            stat.summary(DiagnosticStatus.OK, "Fix factor ok: {}".format(fix_factor))
+
+        stat.add("Fix factor", fix_factor)
+        stat.add("Window size", self._frequency)
+
+        stat.add("Last update number of active anchors", len(self._active_anchors))
+        stat.add("Last update active anchor ids", [a.network_id for a in self._active_anchors])
+        stat.add("Last update number of inactive anchors", len(self._inactive_anchors))
+        stat.add("Last update inactive anchor ids", [a.network_id for a in self._inactive_anchors])
+
+        return stat
 
     @staticmethod
     def _discover_anchors_in_range(pozyx):
@@ -52,10 +98,7 @@ class ROSPozyx:
     def _update_anchor_range_information(self):
         """
         Updates the range information of all anchors to keep track of whether they have been reached
-        :return: The active and inactive anchor list
         """
-        active_anchors = []
-        inactive_anchors = []
 
         # Retrieve Range Info for each anchor
         for anchor in self._anchors:
@@ -68,13 +111,11 @@ class ROSPozyx:
                     # If the timestamp of the measurement hasn't changed
                     # the anchor hasn't been reached during last positioning
                     if anchor_range.timestamp == self._anchor_ranges[anchor].timestamp:
-                        inactive_anchors.append(anchor)
+                        self._inactive_anchors.append(anchor)
                     else:
-                        active_anchors.append(anchor)
+                        self._active_anchors.append(anchor)
 
             self._anchor_ranges[anchor] = anchor_range
-
-        return active_anchors, inactive_anchors
 
     def _setup_anchors(self):
         """
@@ -124,7 +165,13 @@ class ROSPozyx:
             sensor_data = pypozyx.SensorData()
             status &= self._pozyx.getAllSensorData(sensor_data)
 
+            # Reset status of active and inactive anchors
+            self._inactive_anchors = []
+            self._active_anchors = []
+
             if status == pypozyx.POZYX_SUCCESS:
+                self._frequency_status_onboard_sensors.tick()
+
                 # TODO: Check conversions of the various values, apparently the acceleration is in mg? convert to m/s2
                 self._imu_publisher.publish(Imu(
                     header=Header(
@@ -158,13 +205,10 @@ class ROSPozyx:
                 ))
 
                 # Keep track of active and inactive anchors, this affects the positioning outcome
-                active_anchors, inactive_anchors = self._update_anchor_range_information()
+                self._update_anchor_range_information()
 
-                if inactive_anchors:
-                    rospy.logwarn("Anchors {} could not be reached in last positioning"
-                                  .format([a.network_id for a in inactive_anchors]))
-                else:
-                    rospy.loginfo("Update success")
+                # Only publish if we do not have any inactive anchors
+                if not self._inactive_anchors:
                     self._odometry_publisher.publish(Odometry(
                         header=Header(
                             stamp=rospy.Time.now(),
@@ -179,6 +223,13 @@ class ROSPozyx:
                     ))
             else:
                 rospy.logerr("Failed to obtain position or orientation!")
+
+            # Update positioning result
+            self._positioning_result_last_second.append(self._inactive_anchors == [])
+
+            self._diagnostic_updater.update()
+
+            self._rate.sleep()
 
 
 if __name__ == '__main__':
@@ -196,8 +247,10 @@ if __name__ == '__main__':
         rospy.logerr("Missing key {} in anchor specification".format(e))
     else:
         try:
-            ros_pozyx = ROSPozyx(port, anchors, rospy.get_param("world_frame_id", "map"),
-                                 rospy.get_param("sensor_frame_id", "pozyx"))
+            ros_pozyx = ROSPozyx(port, anchors, rospy.get_param("~world_frame_id", "map"),
+                                 rospy.get_param("~sensor_frame_id", "pozyx"),
+                                 rospy.get_param("~frequency", 15.0),
+                                 rospy.get_param("~minimum_fix_factor", 0.33))
             ros_pozyx.spin()
         except rospy.ROSInterruptException as e:
             rospy.logwarn(e)

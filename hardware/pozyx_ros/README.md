@@ -22,6 +22,8 @@ Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag co
 - ~world_frame_id (`default="map"`) - Frame id of the frame attached to the world
 - ~robot_frame_id (`default="pozyx"`) - Frame id of the sensor
 - ~port (`default=/dev/ttyACM0` - Serial port where the pozyx device is connected to
+- ~minimum_fix_factor (`default=0.33`) - Determines how many positioning failures we allow (for diagnostics)
+- ~frequency (`default=15`) - How often per second the pozyx device is queried, we sleep in between
 - ~anchors (`default=[]`) - Anchor set-up: Per anchor an id (network_id) and a position (position (x, y, z))
 
 Example configuration file:
@@ -30,6 +32,8 @@ Example configuration file:
 world_frame_id: world # ID of the frame attached to the world
 sensor_frame_id: sensor # ID of the sensor frame
 port: /dev/ttyACM0 # Serial port where the pozyx device is connected to
+minimum_fix_factor: 0.5
+frequency: 15
 anchors: # Anchors used for localization
     - network_id: 0x6958 # NetworkID of the anchor
       position: # Position of the anchor
