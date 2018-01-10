@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+import rospy
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
+import PyKDL
+
+class P3dToImuNode(object):
+    def __init__(self):
+        rospy.init_node('p3d_to_imu')
+
+        self.odom_sub = rospy.Subscriber('p3d', Odometry, callback=self.callback)
+        self.publisher = rospy.Publisher('imu', Imu, queue_size=10)
+
+        self.vx = 0
+        self.vy = 0
+        self.vz = 0
+
+        self.timestamp = None
+
+    def callback(self, msg):
+        imu = Imu()
+        imu.header = msg.header
+        imu.header.frame_id = msg.child_frame_id
+
+        imu.orientation = msg.pose.pose.orientation
+        imu.orientation_covariance = [0.1, 0, 0,
+                                      0, 0.1, 0,
+                                      0, 0, 0.1]
+
+        imu.angular_velocity = msg.twist.twist.angular
+        imu.orientation_covariance = [0.1, 0, 0,
+                                      0, 0.1, 0,
+                                      0, 0, 0.1]
+        # TODO: Copy covariance
+
+        if self.timestamp is None:
+            imu.linear_acceleration.x = 0
+            imu.linear_acceleration.y = 0
+            imu.linear_acceleration.z = 0
+        else:
+            dt = (msg.header.stamp - self.timestamp).to_sec()
+            imu.linear_acceleration.x = (msg.twist.twist.linear.x - self.vx)/dt
+            imu.linear_acceleration.y = (msg.twist.twist.linear.y - self.vy)/dt
+            imu.linear_acceleration.z = (msg.twist.twist.linear.z - self.vz)/dt
+        # TODO: Calculate acceleration covariance
+
+        self.timestamp = msg.header.stamp
+
+        quat = PyKDL.Rotation.Quaternion(msg.pose.pose.orientation.x,
+                                msg.pose.pose.orientation.y,
+                                msg.pose.pose.orientation.z,
+                                msg.pose.pose.orientation.w)
+
+        gravity_world = PyKDL.Vector(0, 0, 9.81)
+
+        gravity_rotated = quat*gravity_world
+
+        imu.linear_acceleration.x += gravity_rotated.x()
+        imu.linear_acceleration.y += gravity_rotated.y()
+        imu.linear_acceleration.z += gravity_rotated.z()
+
+        self.publisher.publish(imu)
+
+
+if __name__ == '__main__':
+    P3dToImuNode()
+    rospy.spin()
