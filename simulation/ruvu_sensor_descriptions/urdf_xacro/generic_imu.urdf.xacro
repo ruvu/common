@@ -14,7 +14,7 @@
     <link name="${name}_link"/>
   </xacro:macro>
 
-  <xacro:macro name="generic_imu" params="name parent *origin rate">
+  <xacro:macro name="generic_imu" params="name parent *origin rate gaussian_noise">
     <xacro:generic_imu_model name="${name}" parent="${parent}">
       <xacro:insert_block name="origin" />
     </xacro:generic_imu_model>
@@ -30,7 +30,7 @@
           <topicName>${name}</topicName>
           <bodyName>${name}_link</bodyName>
           <updateRateHZ>${rate}</updateRateHZ>
-          <gaussianNoise>0.0</gaussianNoise>
+          <gaussianNoise>${gaussian_noise}</gaussianNoise>
           <xyzOffset>0 0 0</xyzOffset>
           <rpyOffset>0 0 0</rpyOffset>
           <frameName>${name}_link</frameName>
