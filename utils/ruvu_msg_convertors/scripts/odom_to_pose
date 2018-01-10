@@ -4,7 +4,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 
 
-class OdomToPoseNode():
+class OdomToPoseNode(object):
     def __init__(self):
         self.odom_sub = rospy.Subscriber('odom', Odometry, callback=self.callback)
         self.publisher = rospy.Publisher('pose', PoseWithCovarianceStamped, queue_size=10)
