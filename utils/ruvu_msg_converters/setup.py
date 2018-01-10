@@ -4,7 +4,7 @@ from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 d = generate_distutils_setup(
-    packages=['ruvu_msg_convertors'],
+    packages=['ruvu_msg_converters'],
     package_dir={'': 'src'},
 )
 
