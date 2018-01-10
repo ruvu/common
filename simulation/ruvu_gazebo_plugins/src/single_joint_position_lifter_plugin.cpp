@@ -89,7 +89,8 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getLiftModel(double d_positio
   if (e)
   {
     travel_distance = d_position - nearest_distance;
-    ROS_INFO("Lifting model: %s - d_position: %.2f - nearest_distance: %.2f - travel distance: %.2f", e->GetParentModel()->GetName().c_str(), d_position, nearest_distance, travel_distance);
+    ROS_INFO("Lifting model: %s - d_position: %.2f - nearest_distance: %.2f - travel distance: %.2f",
+             e->GetParentModel()->GetName().c_str(), d_position, nearest_distance, travel_distance);
     return e->GetParentModel();
   }
   else
@@ -131,14 +132,14 @@ void SingleJointPositionLifterPlugin::UpdateChild()
         std::cout << lift_model_pose << std::endl;
 
         lift_model_->SetWorldPose(lift_model_pose);
-        lift_model_->SetWorldPose(lift_model_pose);
-        lift_model_->SetWorldPose(lift_model_pose);
+
+        std::cout << "Current:" << std::endl;
+        std::cout << lift_model_->GetWorldPose() << std::endl;
+
         lift_model_ = 0;
       }
     }
 
-    joint_controller_->SetJointPosition(joint_, action_goal_.getGoal()->position);
-    joint_controller_->SetJointPosition(joint_, action_goal_.getGoal()->position);
     joint_controller_->SetJointPosition(joint_, action_goal_.getGoal()->position);
 
     ROS_DEBUG("SingleJointPositionLifterPlugin: Set joint to %.2f", action_goal_.getGoal()->position);
