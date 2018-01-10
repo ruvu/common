@@ -1,2 +1,2 @@
-# RUVU Utils package
-This package contains utility nodes for RUVU.
+# RUVU Message Convertors package
+This package contains nodes for conversions of message types for RUVU.
