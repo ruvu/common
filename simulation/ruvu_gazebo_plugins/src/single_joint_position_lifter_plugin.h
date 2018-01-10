@@ -40,22 +40,12 @@ private:
   //! \brief lift_model_ Pointer to the model we are lifting
   //!
   physics::ModelPtr lift_model_;
-  math::Pose lift_world_pose_relative_to_joint_child_link_;
+  math::Pose lift_world_pose_relative_to_model_;
 
   //!
   //! \brief joint_ Pointer to the joint that needs to be actuated
   //!
   physics::JointPtr joint_;
-
-  //!
-  //! \brief joint_controller Pointer to the joint_controller used for actuation
-  //!
-  physics::JointControllerPtr joint_controller_;
-
-  //!
-  //! \brief joint_child_link_ Pointer to joint child that is being moved
-  //!
-  physics::LinkPtr joint_child_link_;
 
   //!
   //! \brief update_connection_ Connection that triggers the callback function of the model
@@ -77,15 +67,13 @@ private:
   //! \param goal Incoming action goal
   //!
   std::shared_ptr<SingleJointPositionActionServer> action_server_;
-  SingleJointPositionActionServer::GoalHandle action_goal_;
   void goalCallback(SingleJointPositionActionServer::GoalHandle goal);
 
   //!
-  //! \brief getLiftEntity
-  //! \param d_position
-  //! \return
+  //! \brief getModelAboveUs
+  //! \return model above model
   //!
-  physics::ModelPtr getLiftModel(double d_position, double& travel_distance);
+  physics::ModelPtr getModelAboveUs();
 
   //!
   //! \brief UpdateChild Called on every tick of the simulation; updates the position and velocity of the parent

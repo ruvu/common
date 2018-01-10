@@ -17,14 +17,11 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
 
   // Now try to find the joint in the parent model (required)
   joint_ = model_->GetJoint(joint_name);
-  if (!joint_)
+  if (!joint_ || !joint_->GetChild())
   {
     ROS_FATAL("Could not find joint with name %s in model.", joint_name.c_str());
     return;
   }
-  joint_child_link_ = joint_->GetChild();
-  ROS_INFO("Found joint %s with child link %s", joint_name.c_str(), joint_child_link_->GetName().c_str());
-  joint_controller_.reset(new physics::JointController(model));
 
   // Ensure that ROS has been initialized (required for using ROS COM)
   if (!ros::isInitialized())
@@ -51,106 +48,93 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
 
 void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServer::GoalHandle goal)
 {
+  double current_position = joint_->GetAngle(0).Radian();
   double desired_position = goal.getGoal()->position;
   double lower_limit = joint_->GetLowerLimit(0).Radian();
   double upper_limit = joint_->GetUpperLimit(0).Radian();
+  ROS_INFO("Current position: %.2f; Desired position: %.2f", current_position, desired_position);
 
   if (desired_position >= lower_limit && desired_position <= upper_limit)
   {
-    // Update the goalhandle so we can used it in the UpdateChild hook
-    action_goal_ = goal;
-    action_goal_.setAccepted();
+    ROS_INFO("Received valid goal");
+    goal.setAccepted();
+
+    if (desired_position > current_position + 1e-3) // We are lifting
+    {
+      ROS_INFO("SingleJointPositionLifterPlugin: We are lifting");
+      lift_model_ = getModelAboveUs();
+      if (lift_model_)
+      {
+        lift_world_pose_relative_to_model_ = lift_model_->GetWorldPose() - model_->GetWorldPose();
+      }
+    }
+    else if (desired_position < current_position - 1e-3) // dropping (if we are going down, we always drop the model we are lifting)
+    {
+      ROS_INFO("SingleJointPositionLifterPlugin: We are dropping");
+      if (lift_model_)
+      {
+        ROS_INFO("SingleJointPositionLifterPlugin: Dropping model %s", lift_model_->GetName().c_str());
+        lift_model_ = 0;
+      }
+      else
+      {
+        ROS_WARN("SingleJointPositionLifterPlugin: No lift model attached, doing nothing.");
+      }
+    }
+
+    ROS_DEBUG("SingleJointPositionLifterPlugin: Set joint to %.2f", desired_position);
+    joint_->SetPosition(0, desired_position);
+    joint_->Update();
+
+    goal.setSucceeded();
   }
   else
   {
-    goal.setRejected(control_msgs::SingleJointPositionResult(), "Incoming goal " + std::to_string(desired_position) +
-                     " out of bound [" + std::to_string(lower_limit) + ", " + std::to_string(upper_limit) + "]");
+    std::string msg = "Incoming goal " + std::to_string(desired_position) + " out of bound [" +
+        std::to_string(lower_limit) + ", " + std::to_string(upper_limit) + "]";
+    ROS_ERROR_STREAM("Received invalid goal: " << msg);
+    goal.setRejected(control_msgs::SingleJointPositionResult(), msg);
   }
 }
 
-physics::ModelPtr SingleJointPositionLifterPlugin::getLiftModel(double d_position, double& travel_distance)
+physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 {
   physics::RayShapePtr rayShape = boost::dynamic_pointer_cast<physics::RayShape>(
       model_->GetWorld()->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
 
-  ignition::math::Box box = joint_child_link_->GetCollisionBoundingBox().Ign();
-  ignition::math::Vector3d start = joint_child_link_->GetWorldPose().pos.Ign();
-  ignition::math::Vector3d end = start;
-  start.Z() = box.Max().Z() + 0.00001;
-  end.Z() += d_position;
+  math::Box box = model_->GetBoundingBox();
+  math::Vector3 start = model_->GetWorldPose().pos;
+  math::Vector3 end = start;
+  start.z = box.max.z + 0.00001;
+  end.z += 1e3;
+
   std::string lift_entity_name;
   double nearest_distance;
   rayShape->SetPoints(start, end);
+
+  ROS_INFO_STREAM("Shooting ray from " << start << " to " << end);
   rayShape->GetIntersection(nearest_distance, lift_entity_name);
-  nearest_distance -= 0.00001;
 
   physics::EntityPtr e = model_->GetWorld()->GetEntity(lift_entity_name);
 
-  if (e)
+  if (e && e->GetParentModel() && e->GetParentModel()->GetName() != model_->GetName())
   {
-    travel_distance = d_position - nearest_distance;
-    ROS_INFO("Lifting model: %s - d_position: %.2f - nearest_distance: %.2f - travel distance: %.2f",
-             e->GetParentModel()->GetName().c_str(), d_position, nearest_distance, travel_distance);
+    ROS_INFO("getModelAboveUs(): model %s", e->GetParentModel()->GetName().c_str());
     return e->GetParentModel();
   }
   else
   {
-    return nullptr;
+    ROS_WARN("getModelAboveUs(): no model found");
+    return 0;
   }
 }
 
 void SingleJointPositionLifterPlugin::UpdateChild()
 {  
-  if (action_goal_.isValid() && action_goal_.getGoal() != nullptr)
-  {
-    double current_position = joint_->GetAngle(0).Radian();
-    double desired_position = action_goal_.getGoal()->position;
-
-    if (desired_position > current_position) // We are lifting
-    {
-      double d_position = desired_position - current_position;
-      double travel_distance;
-
-      lift_model_ = getLiftModel(d_position, travel_distance);
-      if (lift_model_)
-      {
-        lift_world_pose_relative_to_joint_child_link_ = lift_model_->GetWorldPose() - joint_child_link_->GetWorldPose();
-      }
-    }
-    else // dropping (if we are going down, we always drop the model we are lifting)
-    {
-      if (lift_model_)
-      {
-        math::Pose lift_model_pose = lift_model_->GetWorldPose();
-        std::cout << lift_model_pose << std::endl;
-
-        double dz = lift_world_pose_relative_to_joint_child_link_.pos.z;
-        ROS_INFO("Dropping model %s with dz: %.2f", lift_model_->GetName().c_str(), dz);
-
-        lift_model_pose.pos.z -= dz;
-
-        std::cout << lift_model_pose << std::endl;
-
-        lift_model_->SetWorldPose(lift_model_pose);
-
-        std::cout << "Current:" << std::endl;
-        std::cout << lift_model_->GetWorldPose() << std::endl;
-
-        lift_model_ = 0;
-      }
-    }
-
-    joint_controller_->SetJointPosition(joint_, action_goal_.getGoal()->position);
-
-    ROS_DEBUG("SingleJointPositionLifterPlugin: Set joint to %.2f", action_goal_.getGoal()->position);
-    action_goal_.setSucceeded();
-    action_goal_ = SingleJointPositionActionServer::GoalHandle();
-  }
-
   if (lift_model_)
   {
-    math::Pose joint_child_link_pose = joint_child_link_->GetWorldPose();
-    lift_model_->SetWorldPose(lift_world_pose_relative_to_joint_child_link_ + joint_child_link_pose);
+    math::Pose model_pose = model_->GetWorldPose();
+    lift_model_->SetWorldPose(lift_world_pose_relative_to_model_ + model_pose);
   }
 }
 
