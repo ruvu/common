@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ruvu_msg_convertors</name>
+  <name>ruvu_msg_converters</name>
   <version>0.0.0</version>
-  <description>The ruvu_msg_convertors package</description>
+  <description>The ruvu_msg_converters package</description>
 
   <maintainer email="rokus@ruvu.nl">Rokus Ottervanger</maintainer>
 
