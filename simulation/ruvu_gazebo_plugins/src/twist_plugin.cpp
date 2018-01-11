@@ -45,6 +45,11 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   // Initialize odometry publisher
   odometry_publisher_ = rosnode_->advertise<nav_msgs::Odometry>(odom_topic, 1);
 
+  // Initialize odom state
+  x_ = 0;
+  y_ = 0;
+  yaw_ = 0;
+
   // listen to the update event (broadcast every simulation iteration)
   update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&TwistPlugin::UpdateChild, this));
 }
@@ -80,10 +85,12 @@ void TwistPlugin::UpdateChild()
   math::Pose pose = model_->GetWorldPose();
   geometry_msgs::Twist vel = getCurrentVelocity(now);
 
+  updateOdometryState(vel, now);
+
   if (odometry_rate_ > 0.0) {
     double seconds_since_last_update = (now - common::Time(odom_msg_.header.stamp.toSec())).Double();
     if (seconds_since_last_update > (1.0 / odometry_rate_)) {
-      publishOdometry(pose, vel, now);
+      publishOdometry(vel, now);
     }
   }
 
@@ -96,16 +103,35 @@ void TwistPlugin::UpdateChild()
   last_update_time_ = now;
 }
 
-void TwistPlugin::publishOdometry(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& now)
+void TwistPlugin::updateOdometryState(const geometry_msgs::Twist& velocity, const common::Time& now)
 {
-  odom_msg_.pose.pose.position.x = pose.pos.x;
-  odom_msg_.pose.pose.position.y = pose.pos.y;
-  odom_msg_.pose.pose.position.z = pose.pos.z;
+  double dt = (now - last_update_time_).Double();
+  double sin_yaw = sin(yaw_);
+  double cos_yaw = cos(yaw_);
 
-  odom_msg_.pose.pose.orientation.x = pose.rot.x;
-  odom_msg_.pose.pose.orientation.y = pose.rot.y;
-  odom_msg_.pose.pose.orientation.z = pose.rot.z;
-  odom_msg_.pose.pose.orientation.w = pose.rot.w;
+  // Calculate diffs in body fixed frame
+  double dx = velocity.linear.x * dt;
+  double dy = velocity.linear.y * dt;
+  double dyaw = velocity.angular.z * dt;
+
+  // Convert it to odom frame
+  x_ += cos_yaw * dx - sin_yaw * dy;
+  y_ += sin_yaw * dx + cos_yaw * dy;
+  yaw_ += dyaw;
+}
+
+void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now)
+{
+  math::Quaternion rotation = math::Quaternion(0, 0, yaw_);
+
+  odom_msg_.pose.pose.position.x = x_;
+  odom_msg_.pose.pose.position.y = y_;
+  odom_msg_.pose.pose.position.z = 0;
+
+  odom_msg_.pose.pose.orientation.x = rotation.x;
+  odom_msg_.pose.pose.orientation.y = rotation.y;
+  odom_msg_.pose.pose.orientation.z = rotation.z;
+  odom_msg_.pose.pose.orientation.w = rotation.w;
 
   odom_msg_.twist.twist = velocity;
 
