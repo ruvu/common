@@ -28,9 +28,9 @@ class P3dToImuNode(object):
                                       0, 0, 0.1]
 
         imu.angular_velocity = msg.twist.twist.angular
-        imu.orientation_covariance = [0.1, 0, 0,
-                                      0, 0.1, 0,
-                                      0, 0, 0.1]
+        imu.angular_velocity_covariance = [0.1, 0, 0,
+                                           0, 0.1, 0,
+                                           0, 0, 0.1]
         # TODO: Copy covariance
 
         if self.timestamp is None:
@@ -42,6 +42,9 @@ class P3dToImuNode(object):
             imu.linear_acceleration.x = (msg.twist.twist.linear.x - self.vx)/dt
             imu.linear_acceleration.y = (msg.twist.twist.linear.y - self.vy)/dt
             imu.linear_acceleration.z = (msg.twist.twist.linear.z - self.vz)/dt
+            imu.linear_acceleration_covariance = [0.1, 0, 0,
+                                                  0, 0.1, 0,
+                                                  0, 0, 0.1]
         # TODO: Calculate acceleration covariance
 
         self.timestamp = msg.header.stamp
