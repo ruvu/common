@@ -10,10 +10,11 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
   model_ = model;
 
   //! Parse SDF for parameters
-  std::string robot_namespace = getParameterFromSDF(sdf, "robotNamespace", std::string(""));
+  std::string robot_namespace = getParameterFromSDF(sdf, "robotNamespace", std::strin<g(""));
   std::string tf_prefix = robotNamespaceToTFPrefix(robot_namespace);
-  std::string action_name = getParameterFromSDF(sdf, "action_name", std::string("lifter"));
+  std::string action_name = getParameterFromSDF(sdf, "action_name", std::string("lift"));
   std::string joint_name = getParameterFromSDF(sdf, "joint_name", std::string("lift_joint"));
+  state_publish_rate_ = getParameterFromSDF(sdf, "joint_state_publish_rate", 50.0);
 
   // Now try to find the joint in the parent model (required)
   joint_ = model_->GetJoint(joint_name);
@@ -22,6 +23,7 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
     ROS_FATAL("Could not find joint with name %s in model.", joint_name.c_str());
     return;
   }
+  joint_position_ = joint_->GetAngle(0).Radian();
 
   // Ensure that ROS has been initialized (required for using ROS COM)
   if (!ros::isInitialized())
@@ -44,11 +46,16 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
   // listen to the update event (broadcast every simulation iteration)
   update_connection_ = event::Events::ConnectWorldUpdateBegin(
         boost::bind(&SingleJointPositionLifterPlugin::UpdateChild, this));
+
+  // For publishing joint state
+  joint_state_publisher_ = rosnode_->advertise<sensor_msgs::JointState>(action_name + "/joint_state", 1);
+  joint_state_msg_.name.push_back(joint_->GetName());
+  joint_state_msg_.position.push_back(0);
 }
 
 void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServer::GoalHandle goal)
 {
-  double current_position = joint_->GetAngle(0).Radian();
+  double current_position = joint_position_;
   double desired_position = goal.getGoal()->position;
   double lower_limit = joint_->GetLowerLimit(0).Radian();
   double upper_limit = joint_->GetUpperLimit(0).Radian();
@@ -83,8 +90,7 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
     }
 
     ROS_DEBUG("SingleJointPositionLifterPlugin: Set joint to %.2f", desired_position);
-    joint_->SetPosition(0, desired_position);
-    joint_->Update();
+    joint_position_ = desired_position;
 
     goal.setSucceeded();
   }
@@ -99,6 +105,8 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
 
 physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 {
+  model_->GetWorld()->GetPhysicsEngine()->InitForThread();
+
   physics::RayShapePtr rayShape = boost::dynamic_pointer_cast<physics::RayShape>(
       model_->GetWorld()->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
 
@@ -117,6 +125,11 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 
   physics::EntityPtr e = model_->GetWorld()->GetEntity(lift_entity_name);
 
+  if (e) 
+  {
+    ROS_INFO("Found entity: %s", e->GetName().c_str());
+  }
+
   if (e && e->GetParentModel() && e->GetParentModel()->GetName() != model_->GetName())
   {
     ROS_INFO("getModelAboveUs(): model %s", e->GetParentModel()->GetName().c_str());
@@ -131,6 +144,16 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 
 void SingleJointPositionLifterPlugin::UpdateChild()
 {  
+  common::Time now = model_->GetWorld()->GetSimTime();
+  if (state_publish_rate_ > 0.0) {
+    double seconds_since_last_publish = (now - common::Time(joint_state_msg_.header.stamp.toSec())).Double();
+    if (seconds_since_last_publish > (1.0 / state_publish_rate_)) {
+      joint_state_msg_.header.stamp = ros::Time(now.Double());
+      joint_state_msg_.position[0] = joint_position_; // Constructor allocates mem
+      joint_state_publisher_.publish(joint_state_msg_);
+    }
+  }
+
   if (lift_model_)
   {
     math::Pose model_pose = model_->GetWorldPose();

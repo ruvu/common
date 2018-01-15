@@ -8,14 +8,16 @@
 
 #include <control_msgs/SingleJointPositionAction.h>
 #include <actionlib/server/action_server.h>
+#include <sensor_msgs/JointState.h>
 
 namespace gazebo
 {
 
 //!
-//! \brief The SingleJointPositionLifterPlugin class that exposes an actionlib interface to move a lift joint
+//! \brief The SingleJointPositionLifterPlugin class that exposes an actionlib interface to lift bodies for moving
 //!
-//! And attach a model to the lift body
+//! It will attach a body to the model when lifting, and drop when dropping. Note that it is not moving the actual joint
+//! but it will only attach the body on top of the current model (of the plugin).
 //!
 class SingleJointPositionLifterPlugin : public ModelPlugin
 {
@@ -48,14 +50,21 @@ private:
   physics::JointPtr joint_;
 
   //!
+  //! \brief joint_ Joint position, we do not update the actual position
+  //!
+  double joint_position_;
+
+  //!
+  //! \brief state_publish_rate_ How often do we send out joint state
+  //!
+  double state_publish_rate_;  
+  sensor_msgs::JointState joint_state_msg_;
+  ros::Publisher joint_state_publisher_;
+
+  //!
   //! \brief update_connection_ Connection that triggers the callback function of the model
   //!
   event::ConnectionPtr update_connection_;
-
-  //!
-  //! \brief mutex_ Mutex to make sure the physics thread and the ROS callback queue thread do not collide
-  //!
-  std::mutex mutex_;
 
   //!
   //! \brief rosnode_ Handle to the ROS node
@@ -70,7 +79,7 @@ private:
   void goalCallback(SingleJointPositionActionServer::GoalHandle goal);
 
   //!
-  //! \brief getModelAboveUs
+  //! \brief getModelAboveUs Returns the modelptr
   //! \return model above model
   //!
   physics::ModelPtr getModelAboveUs();
