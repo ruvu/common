@@ -1,0 +1,104 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <model name="dummy_robot">
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="base">
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
+        <visual name="base">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://ruvu_cube/materials/scripts</uri>
+              <uri>model://ruvu_cube/materials/textures</uri>
+              <name>RUVUCube/Diffuse</name>
+            </script>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.0 1.0 1.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+      <link name="lift">
+        <pose>0 0 0.56 0 0 0</pose>
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
+        <visual name="base">
+          <geometry>
+            <box>
+              <size>1.0 1.0 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1.0 1.0 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+      <joint name="lift_joint" type="prismatic">
+          <child>lift</child>
+          <parent>base</parent>
+          <axis>
+              <limit>
+                  <lower>0</lower>
+                  <upper>0.9</upper>
+              </limit>
+              <xyz>0 0 1</xyz>
+          </axis>
+      </joint>
+      <plugin name="single_joint_position_lifter" filename="libruvu_single_joint_position_lifter.so">
+      </plugin>
+      <plugin name="twist_teleport" filename="libruvu_twist_teleport.so">
+      </plugin>
+    </model>
+
+    <model name="cart">
+      <pose>0 0 1.5 0 0 0</pose>
+      <link name="base">
+        <inertial>
+          <mass>0.1</mass>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>2.0 0.7 0.3</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>2.0 0.7 0.3</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <plugin name="disable_physics" filename="libruvu_disable_physics.so"/>
+  </world>
+
+</sdf>
