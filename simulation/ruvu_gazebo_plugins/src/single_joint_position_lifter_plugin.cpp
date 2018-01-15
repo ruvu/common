@@ -10,7 +10,7 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
   model_ = model;
 
   //! Parse SDF for parameters
-  std::string robot_namespace = getParameterFromSDF(sdf, "robotNamespace", std::strin<g(""));
+  std::string robot_namespace = getParameterFromSDF(sdf, "robotNamespace", std::string(""));
   std::string tf_prefix = robotNamespaceToTFPrefix(robot_namespace);
   std::string action_name = getParameterFromSDF(sdf, "action_name", std::string("lift"));
   std::string joint_name = getParameterFromSDF(sdf, "joint_name", std::string("lift_joint"));
