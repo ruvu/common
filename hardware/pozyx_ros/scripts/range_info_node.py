@@ -30,7 +30,14 @@ def pozyx_ranging_pub():
 
     rospy.loginfo("Succesfully connected to serial pypozyx device on port {}.".format(port))
 
+    gain = pypozyx.SingleRegister()
+    pozyx.getUWBGain(gain, source_id)
+
+    rospy.loginfo("Source info:")
+    rospy.loginfo("- gain: %s", gain.value)
+
     while not rospy.is_shutdown():
+        result = "Ranging from source {}".format(hex(source_id) if source_id else hex(frame_id))
         ranges = []
         for remote_id in remote_ids:
             device_range = pypozyx.DeviceRange()
@@ -42,10 +49,17 @@ def pozyx_ranging_pub():
                     distance=float(device_range.distance) / 1e3
                 )
                 ranges.append(device_range_msg)
-                rospy.loginfo("=> Ranging from %s to %s:\t Distance=%.3f\tDB:%i", source_id, remote_id,
-                              device_range_msg.distance, device_range_msg.RSS)
+                result += "\t{} => {:.3f}".format(hex(remote_id), device_range_msg.distance)
             else:
-                rospy.logerr('=> Ranging from %s to %s failed', source_id, remote_id)
+                result += "\t\033[91m'{} => NaN'\033[0m".format(hex(remote_id))
+
+        if len(ranges) == len(remote_ids):
+            result += "\t\033[92mOK!\033[0m"
+        else:
+            result += "\t\033[91mFAIL!\033[0m"
+
+        rospy.loginfo(result)
+
         pub.publish(DeviceRanges(
             header=Header(
                 frame_id=hex(frame_id),
@@ -53,6 +67,7 @@ def pozyx_ranging_pub():
             ),
             ranges=ranges
         ))
+        rospy.Rate(10).sleep()
 
 
 if __name__ == '__main__':

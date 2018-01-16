@@ -3,22 +3,52 @@ import pypozyx
 import rospy
 import diagnostic_updater
 import collections
+
+import tf2_ros
 from diagnostic_msgs.msg import DiagnosticStatus
 from sensor_msgs.msg import Imu, MagneticField, Temperature
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
-from geometry_msgs.msg import Quaternion, Vector3, PoseWithCovariance, Pose, Point
+from geometry_msgs.msg import Quaternion, Vector3, PoseWithCovariance, Pose, Point, TransformStamped, Transform
 from pozyx_ros.msg import DeviceRanges, DeviceRange
 
 
+def _set_gain(pozyx, device_id, set_gain):
+    rospy.loginfo("Setting gain for device id %s", hex(device_id) if device_id is not None else "tag")
+    gain = pypozyx.SingleRegister()
+    while not rospy.is_shutdown():
+        rospy.loginfo("Getting gain ...")
+        if pozyx.getUWBGain(gain, device_id) == pypozyx.POZYX_SUCCESS:
+            break
+        rospy.sleep(.1)
+
+    rospy.loginfo("Current Gain: %s", gain.value)
+
+    # Now set the gain to the specified value
+    while not rospy.is_shutdown():
+        rospy.loginfo("Setting gain to %s ...", set_gain)
+        if pozyx.setUWBGain(set_gain, device_id) == pypozyx.POZYX_SUCCESS:
+            break
+        rospy.sleep(.1)
+
+    while not rospy.is_shutdown():
+        rospy.loginfo("Getting updated gain ...")
+        if pozyx.getUWBGain(gain, device_id) == pypozyx.POZYX_SUCCESS:
+            break
+        rospy.sleep(.1)
+
+    rospy.loginfo("Updated Gain: %s", gain.value)
+
+
 class ROSPozyx:
-    def __init__(self, port, anchors, world_frame_id, sensor_frame_id, frequency, minimum_fix_factor):
+    def __init__(self, port, anchors, world_frame_id, sensor_frame_id, set_gain, frequency, minimum_fix_factor):
         """
         ROS Pozyx wrapper that publishes the UWB and on-board sensor data
         :param port: The serial port of the pozyx shield
         :param anchors: List of pozyx.DeviceCoordinates() of all the anchors
         :param world_frame_id: The frame id of the world frame
         :param sensor_frame_id: The frame id of the sensor
+        :param set_gain: Gain to set for each anchor and tag
         :param frequency: Frequency of the pozyx, we will sleep in between before continuously querying the pozyx device
         :param minimum_fix_factor: The factor that determines the numbre of positioning failures, used in diagnostics
         """
@@ -30,13 +60,18 @@ class ROSPozyx:
         self._minimum_fix_factor = minimum_fix_factor
         self._world_frame_id = world_frame_id
         self._sensor_frame_id = sensor_frame_id
+        self._set_gain = set_gain
 
         rospy.logwarn("Connecting via Serial to Pypozyx on port {}. If the connection fails, a syntax "
                       "error is promted due to a bug in the pypozyx python library.".format(port))
         self._pozyx = pypozyx.PozyxSerial(port)
         rospy.loginfo("Succesfully connected to serial pypozyx device on port {}.".format(port))
 
+        self._tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
         self._setup_anchors()
+
+        # Set the gain of the tag
+        _set_gain(self._pozyx, None, self._set_gain)
 
         self._odometry_publisher = rospy.Publisher("odom", Odometry, queue_size=1)
         self._imu_publisher = rospy.Publisher("imu", Imu, queue_size=1)
@@ -57,6 +92,8 @@ class ROSPozyx:
 
         # Add uwb positioning monitoring
         self._diagnostic_updater.add("UWB Positioning", self._uwb_positioning_diagnostics)
+
+        rospy.loginfo("PozyxROS initialized")
 
     def _uwb_positioning_diagnostics(self, stat):
         # Calculate the fix factor
@@ -136,21 +173,43 @@ class ROSPozyx:
             if len(self._anchors) < 4:
                 raise RuntimeError("Please specify at least 4 anchors, available anchors: {}".format(anchors_in_range))
             elif len(self._anchors) > 4:
-                status = self.pozyx.setSelectionOfAnchors(pypozyx.POZYX_ANCHOR_SEL_AUTO, len(self._anchors))
-
-            # Now verify if the specified anchors are present
-            for anchor in self._anchors:
-                if anchor.network_id not in anchors_in_range:
-                    rospy.logwarn("Anchor {} not present in device list: {}".format(anchor.network_id,
-                                                                                    anchors_in_range))
-                    status = pypozyx.POZYX_FAILURE
-                else:
-                    status &= self._pozyx.addDevice(anchor)
+                status &= self.pozyx.setSelectionOfAnchors(pypozyx.POZYX_ANCHOR_SEL_AUTO, len(self._anchors))
 
             if status == pypozyx.POZYX_SUCCESS:
-                break
+                # Now verify if the specified anchors are present
+                for anchor in self._anchors:
+                    if anchor.network_id not in anchors_in_range:
+                        rospy.logwarn("Anchor {} not present in device list: {}".format(hex(anchor.network_id)  ,
+                                                                                        anchors_in_range))
+                        status = pypozyx.POZYX_FAILURE
+                    else:
+                        status &= self._pozyx.addDevice(anchor)
+
+                if status == pypozyx.POZYX_SUCCESS:
+                    break
 
             rospy.sleep(1.0)
+
+        # Set the gains of the anchors
+        for anchor in self._anchors:
+            _set_gain(self._pozyx, anchor.network_id, self._set_gain)
+            
+        # Broadcast the transforms
+        self._tf_broadcaster.sendTransform([TransformStamped(
+                header=Header(
+                    stamp=rospy.Time.now(),
+                    frame_id=self._world_frame_id
+                ),
+                child_frame_id="anchor_{}".format(hex(anchor.network_id)),
+                transform=Transform(
+                    translation=Vector3(
+                        x=float(anchor.pos.x) / 1e3,
+                        y=float(anchor.pos.y) / 1e3,
+                        z=float(anchor.pos.z) / 1e3
+                    ),
+                    rotation=Quaternion(w=1)
+                )
+            ) for anchor in self._anchors])
 
         rospy.loginfo("Succesfully initialized PozyxROS with {} anchors".format(len(self._anchors)))
 
@@ -268,6 +327,7 @@ if __name__ == '__main__':
         try:
             ros_pozyx = ROSPozyx(port, anchors, rospy.get_param("~world_frame_id", "map"),
                                  rospy.get_param("~sensor_frame_id", "pozyx"),
+                                 rospy.get_param("~set_gain", 33),
                                  rospy.get_param("~frequency", 15.0),
                                  rospy.get_param("~minimum_fix_factor", 0.33))
             ros_pozyx.spin()

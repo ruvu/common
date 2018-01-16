@@ -22,6 +22,7 @@
   <exec_depend>diagnostic_msgs</exec_depend>
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
 
   <exec_depend>python-pypozyx</exec_depend>
 </package>
