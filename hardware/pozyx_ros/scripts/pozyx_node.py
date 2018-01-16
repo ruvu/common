@@ -8,6 +8,7 @@ from sensor_msgs.msg import Imu, MagneticField, Temperature
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
 from geometry_msgs.msg import Quaternion, Vector3, PoseWithCovariance, Pose, Point
+from pozyx_ros.msg import DeviceRanges, DeviceRange
 
 
 class ROSPozyx:
@@ -41,6 +42,7 @@ class ROSPozyx:
         self._imu_publisher = rospy.Publisher("imu", Imu, queue_size=1)
         self._magnetic_field_publisher = rospy.Publisher("magnetic_field", MagneticField, queue_size=1)
         self._temperature_publisher = rospy.Publisher("temperature", Temperature, queue_size=1)
+        self._ranges_publisher = rospy.Publisher("ranges", DeviceRanges, queue_size=1)
 
         # Initialize diagnostics publisher
         self._frequency = frequency
@@ -206,6 +208,23 @@ class ROSPozyx:
 
                 # Keep track of active and inactive anchors, this affects the positioning outcome
                 self._update_anchor_range_information()
+
+                # Loop over the active anchors and publish ranges w.r.t. our tag
+                ranges_msg = DeviceRanges(
+                    header=Header(
+                        stamp=rospy.Time.now(),
+                        frame_id=self._sensor_frame_id
+                    )
+                )
+                for active_anchor in self._active_anchors:
+                    device_range = self._anchor_ranges[active_anchor]
+                    ranges_msg.ranges.append(DeviceRange(
+                        remote_device_id=hex(active_anchor.network_id),
+                        stamp=rospy.Time.from_seconds(float(device_range.timestamp) / 1e3),
+                        RSS=device_range.RSS,
+                        distance=float(device_range.distance) / 1e3
+                    ))
+                self._ranges_publisher.publish(ranges_msg)
 
                 # Only publish if we do not have any inactive anchors
                 if not self._inactive_anchors:
