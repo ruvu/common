@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:property name="M_PI" value="3.1415926535897931" />
+
+    <xacro:macro name="zed_camera_model" params="name parent *origin">
+        <joint name="${name}_joint" type="fixed">
+            <xacro:insert_block name="origin" />
+            <parent link="${parent}"/>
+            <child link="${name}_center"/>
+        </joint>
+
+        <gazebo reference="${name}_center">
+            <material>Gazebo/Grey</material>
+        </gazebo>
+
+        <link name="${name}_left_camera">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 1.57 0"/>
+                <geometry>
+                    <cylinder radius="0.007" length=".031"/>
+                </geometry>
+                <material name="dark_grey">
+                    <color rgba="0.1 0.1 0.1 1"/>
+                </material>
+            </visual>
+        </link>
+        <link name="${name}_center">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://ruvu_sensor_descriptions/meshes/ZED.stl" />
+                </geometry>
+                <material name="light_grey">
+                    <color rgba="0.8 0.8 0.8 1.0"/>
+                </material>
+            </visual>
+        </link>
+        <link name="${name}_right_camera">
+            <visual>
+                <origin xyz="0 0 0" rpy="0 1.57 0"/>
+                <geometry>
+                    <cylinder radius="0.007" length=".031"/>
+                </geometry>
+                <material name="dark_grey">
+                    <color rgba="0.1 0.1 0.1 1"/>
+                </material>
+            </visual>
+        </link>
+        <link name="${name}_depth_camera" />
+
+        <joint name="${name}_left_camera_joint" type="fixed">
+            <parent link="${name}_center"/>
+            <child link="${name}_left_camera"/>
+            <origin xyz="0 0.06 0" rpy="0 0 0" />
+        </joint>
+        <joint name="${name}_depth_camera_joint" type="fixed">
+            <parent link="${name}_left_camera"/>
+            <child link="${name}_depth_camera"/>
+            <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
+        </joint>
+
+        <joint name="${name}_right_camera_joint" type="fixed">
+            <parent link="${name}_center"/>
+            <child link="${name}_right_camera"/>
+            <origin xyz="0 -0.06 0" rpy="0 0 0" />
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="zed_camera" params="name parent *origin robot_namespace width height update_rate">
+      <xacro:zed_camera_model name="${name}" parent="${parent}">
+        <xacro:insert_block name="origin" />
+      </xacro:zed_camera_model>
+
+      <gazebo reference="${name}_left_camera">
+          <sensor type="depth" name="camera">
+              <always_on>true</always_on>
+              <update_rate>${update_rate}</update_rate>
+              <camera>
+                  <horizontal_fov>1.6755160819145563</horizontal_fov>
+                  <image>
+                      <format>B8G8R8</format>
+                      <width>${width}</width>
+                      <height>${height}</height>
+                  </image>
+                  <clip>
+                      <near>0.02</near>
+                      <far>100</far>
+                  </clip>
+              </camera>
+              <plugin name="${name}_controller" filename="libgazebo_ros_openni_kinect.so">
+                <imageTopicName>${robot_namespace}${name}/rgb/image_raw</imageTopicName>
+                <cameraInfoTopicName>${robot_namespace}${name}/depth/camera_info</cameraInfoTopicName>
+                <depthImageTopicName>${robot_namespace}${name}/depth/image_raw</depthImageTopicName>
+                <depthImageInfoTopicName>${robot_namespace}${name}/depth/camera_info</depthImageInfoTopicName>
+                <pointCloudTopicName>${robot_namespace}${name}/depth/points</pointCloudTopicName>
+                <frameName>${robot_namespace}${name}_depth_camera</frameName>
+                <pointCloudCutoff>0.5</pointCloudCutoff>
+                <pointCloudCutoffMax>20</pointCloudCutoffMax>
+              </plugin>
+          </sensor>
+      </gazebo>
+    </xacro:macro>
+</robot>
