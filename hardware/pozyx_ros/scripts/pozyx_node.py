@@ -67,11 +67,11 @@ class ROSPozyx:
         self._pozyx = pypozyx.PozyxSerial(port)
         rospy.loginfo("Succesfully connected to serial pypozyx device on port {}.".format(port))
 
-        self._tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
-        self._setup_anchors()
-
         # Set the gain of the tag
         _set_gain(self._pozyx, None, self._set_gain)
+
+        self._tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
+        self._setup_anchors()
 
         self._odometry_publisher = rospy.Publisher("odom", Odometry, queue_size=1)
         self._imu_publisher = rospy.Publisher("imu", Imu, queue_size=1)
