@@ -40,6 +40,9 @@ target_link_libraries(ruvu_twist_move ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${c
 add_library(ruvu_single_joint_position_lifter src/single_joint_position_lifter_plugin.cpp src/single_joint_position_lifter_plugin.h src/util.h)
 target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
+add_library(ruvu_rgb_led_visual src/rgb_led_visual_plugin.cpp src/rgb_led_visual_plugin.h src/util.h)
+target_link_libraries(ruvu_rgb_led_visual ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
 ###########
 ## TEST ##
 ###########

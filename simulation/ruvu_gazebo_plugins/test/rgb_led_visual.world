@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <model name="ledstrip">
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="mount">
+        <visual name="visual1">
+          <geometry>
+            <box>
+              <size>3.0 1.0 1.0</size>
+            </box>
+          </geometry>
+          <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so">
+          </plugin>
+        </visual>
+        <visual name="led1">
+          <geometry>
+            <box>
+              <size>1.0 1.0 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <plugin name="disable_physics" filename="libruvu_disable_physics.so"/>
+  </world>
+
+</sdf>

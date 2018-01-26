@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<robot name="robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="robot_namespace" default=""/>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="1.0 1.0 1.0"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.5"/>
+      <gazebo>
+        <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so"></plugin>
+      </gazebo>
+    </visual>
+  </link>
+</robot>
