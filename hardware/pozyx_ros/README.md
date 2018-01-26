@@ -13,6 +13,7 @@ Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag co
 ##### Publishers
 
 - odom ([nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)) - Visualization of the graph for RVIZ
+- ranges (pozyx_ros/Ranges) - Range information of the anchors
 - magnetic_field ([sensor_msgs/MagneticField](http://docs.ros.org/api/sensor_msgs/html/msg/MagneticField.html)) - Planned path output, also primarily for RVIZ
 - imu ([sensor_msgs/Imu](http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)) - Planned path output, also primarily for RVIZ
 - temperature ([sensor_msgs/Temperature](http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html)) - Planned path output, also primarily for RVIZ
@@ -44,3 +45,8 @@ anchors: # Anchors used for localization
     - {network_id: 0x691e, position: {x: 0, y: -1, z: 0}}
     - {network_id: 0x6979, position: {x: 1.0, y: 0, z: 0}}
 ```
+
+### [range_info_node.py](scripts/pozyx_node.py)
+
+Publishes the UWB ranges
+
