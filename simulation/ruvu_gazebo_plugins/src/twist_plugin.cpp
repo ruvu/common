@@ -46,9 +46,7 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   odometry_publisher_ = rosnode_->advertise<nav_msgs::Odometry>(odom_topic, 1);
 
   // Initialize odom state
-  x_ = 0;
-  y_ = 0;
-  yaw_ = 0;
+  odom_pose_ = math::Pose::Zero;
 
   // listen to the update event (broadcast every simulation iteration)
   update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&TwistPlugin::UpdateChild, this));
@@ -85,7 +83,7 @@ void TwistPlugin::UpdateChild()
   math::Pose pose = model_->GetWorldPose();
   geometry_msgs::Twist vel = getCurrentVelocity(now);
 
-  updateOdometryState(vel, now);
+  updateOdometryPose(pose, vel, dt);
 
   if (odometry_rate_ > 0.0) {
     double seconds_since_last_update = (now - common::Time(odom_msg_.header.stamp.toSec())).Double();
@@ -103,35 +101,21 @@ void TwistPlugin::UpdateChild()
   last_update_time_ = now;
 }
 
-void TwistPlugin::updateOdometryState(const geometry_msgs::Twist& velocity, const common::Time& now)
+void TwistPlugin::updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt)
 {
-  double dt = (now - last_update_time_).Double();
-  double sin_yaw = sin(yaw_);
-  double cos_yaw = cos(yaw_);
-
-  // Calculate diffs in body fixed frame
-  double dx = velocity.linear.x * dt;
-  double dy = velocity.linear.y * dt;
-  double dyaw = velocity.angular.z * dt;
-
-  // Convert it to odom frame
-  x_ += cos_yaw * dx - sin_yaw * dy;
-  y_ += sin_yaw * dx + cos_yaw * dy;
-  yaw_ += dyaw;
+  odom_pose_ = pose;
 }
 
 void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now)
 {
-  math::Quaternion rotation = math::Quaternion(0, 0, yaw_);
+  odom_msg_.pose.pose.position.x = odom_pose_.pos.x;
+  odom_msg_.pose.pose.position.y = odom_pose_.pos.y;
+  odom_msg_.pose.pose.position.z = odom_pose_.pos.z;
 
-  odom_msg_.pose.pose.position.x = x_;
-  odom_msg_.pose.pose.position.y = y_;
-  odom_msg_.pose.pose.position.z = 0;
-
-  odom_msg_.pose.pose.orientation.x = rotation.x;
-  odom_msg_.pose.pose.orientation.y = rotation.y;
-  odom_msg_.pose.pose.orientation.z = rotation.z;
-  odom_msg_.pose.pose.orientation.w = rotation.w;
+  odom_msg_.pose.pose.orientation.x = odom_pose_.rot.x;
+  odom_msg_.pose.pose.orientation.y = odom_pose_.rot.y;
+  odom_msg_.pose.pose.orientation.z = odom_pose_.rot.z;
+  odom_msg_.pose.pose.orientation.w = odom_pose_.rot.w;
 
   odom_msg_.twist.twist = velocity;
 

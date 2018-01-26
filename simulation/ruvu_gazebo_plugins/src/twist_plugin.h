@@ -40,6 +40,11 @@ protected:
                       const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity,
                       double dt, physics::ModelPtr model) = 0;
 
+  //!
+  //! \brief odom_pose_ The state of the robot according to odometry
+  //!
+  math::Pose odom_pose_;
+
 private:
 
   //!
@@ -101,12 +106,9 @@ private:
   //!
   //! \brief updateOdometryState Update the odometry state variables (x, y, yaw)
   //! \param velocity Current (command) velocity
-  //! \param now Current time
+  //! \param dt Time delta since last update
   //!
-  double x_;  // Odometry state x variable
-  double y_;  // Odometry state y variable
-  double yaw_;  // Odometry state yaw variable
-  void updateOdometryState(const geometry_msgs::Twist& velocity, const common::Time& now);
+  void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt);
 
   //!
   //! \brief publishOdometry Publish the odometry via ROS
