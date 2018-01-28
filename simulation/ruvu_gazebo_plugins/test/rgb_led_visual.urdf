@@ -3,15 +3,115 @@
 <robot name="robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="robot_namespace" default=""/>
 
-  <link name="base_link">
+  <gazebo>
+    <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so">
+      <names>
+        <name>led1</name>
+        <name>led2</name>
+        <name>led3</name>
+        <name>led4</name>
+        <name>led5</name>
+      </names>
+      <defaultColor>
+        <r>1.0</r>
+        <g>0</g>
+        <b>1.0</b>
+        <a>1.0</a>
+      </defaultColor>
+    </plugin>
+  </gazebo>
+
+  <link name="mount">
     <visual>
       <geometry>
-        <box size="1.0 1.0 1.0"/>
+        <box size="3.0 1.0 1.0"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.5"/>
-      <gazebo>
-        <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so"></plugin>
-      </gazebo>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="3.0 1.0 1.0"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.5"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.01"/>
+      <inertia
+        ixx="0.01" ixy="0.0" ixz="0.0"
+        iyy="0.01" iyz="0.0"
+        izz="0.01"/>
+    </inertial>
+  </link>
+
+  <link name="led1">
+    <visual name="led1">
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
     </visual>
   </link>
+  <joint name="led1_joint" type="revolute">
+    <limit effort="0" lower="0" upper="0" velocity="0" />
+    <origin xyz="-1.5 0 1.0" rpy="0 0 0"/>
+    <parent link="mount"/>
+    <child link="led1"/>
+  </joint>
+
+  <link name="led2">
+    <visual name="led2">
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
+    </visual>
+  </link>
+  <joint name="led2_joint" type="revolute">
+    <limit effort="0" lower="0" upper="0" velocity="0" />
+    <origin xyz="-0.75 0 1.0" rpy="0 0 0"/>
+    <parent link="mount"/>
+    <child link="led2"/>
+  </joint>
+
+  <link name="led3">
+    <visual name="led3">
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
+    </visual>
+  </link>
+  <joint name="led3_joint" type="revolute">
+    <limit effort="0" lower="0" upper="0" velocity="0" />
+    <origin xyz="0 0 1.0" rpy="0 0 0"/>
+    <parent link="mount"/>
+    <child link="led3"/>
+  </joint>
+
+  <link name="led4">
+    <visual name="led4">
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
+    </visual>
+  </link>
+  <joint name="led4_joint" type="revolute">
+    <limit effort="0" lower="0" upper="0" velocity="0" />
+    <origin xyz="0.75 0 1.0" rpy="0 0 0"/>
+    <parent link="mount"/>
+    <child link="led4"/>
+  </joint>
+
+  <link name="led5">
+    <visual name="led5">
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
+    </visual>
+  </link>
+  <joint name="led5_joint" type="revolute">
+    <limit effort="0" lower="0" upper="0" velocity="0" />
+    <origin xyz="1.5 0 1.0" rpy="0 0 0"/>
+    <parent link="mount"/>
+    <child link="led5"/>
+  </joint>
+
 </robot>

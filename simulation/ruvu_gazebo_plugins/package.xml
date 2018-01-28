@@ -13,6 +13,7 @@
   <depend>gazebo_ros</depend>
   <depend>roscpp</depend>
   <depend>geometry_msgs</depend>
+  <depend>ruvu_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>control_msgs</depend>

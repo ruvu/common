@@ -7,27 +7,78 @@
     </include>
 
     <model name="ledstrip">
+      <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so">
+        <link>mount</link>
+        <leds>
+          <name>led1</name>
+          <name>led2</name>
+          <name>led3</name>
+          <name>led4</name>
+          <name>led5</name>
+        </leds>
+        <defaultColor>
+          <r>1.0</r>
+          <g>0</g>
+          <b>1.0</b>
+          <a>1.0</a>
+        </defaultColor>
+      </plugin>
       <pose>0 0 0.5 0 0 0</pose>
       <link name="mount">
-        <visual name="visual1">
+        <visual name="mount">
           <geometry>
             <box>
               <size>3.0 1.0 1.0</size>
             </box>
           </geometry>
-          <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so">
-          </plugin>
         </visual>
+
         <visual name="led1">
+          <pose>-1.5 0 0.5 0 0 0</pose>
           <geometry>
             <box>
-              <size>1.0 1.0 0.1</size>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+
+        <visual name="led2">
+          <pose>-0.75 0 0.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+
+        <visual name="led3">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+
+        <visual name="led4">
+          <pose>0.75 0 0.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+
+        <visual name="led5">
+          <pose>1.5 0 0.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
             </box>
           </geometry>
         </visual>
       </link>
     </model>
-    
 
     <!-- A global light source -->
     <include>

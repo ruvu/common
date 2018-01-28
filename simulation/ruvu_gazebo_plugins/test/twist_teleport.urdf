@@ -4,7 +4,7 @@
   <xacro:arg name="robot_namespace" default=""/>
 
   <gazebo>
-    <plugin name="twist_teleport " filename="libruvu_twist_teleport.so">
+    <plugin name="twist_teleport" filename="libruvu_twist_teleport.so">
       <robotNamespace>$(arg robot_namespace)</robotNamespace>
       <commandTopic>cmd_vel</commandTopic>
       <commandTimeout>0.5</commandTimeout>
