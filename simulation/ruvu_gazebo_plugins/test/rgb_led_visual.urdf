@@ -5,13 +5,14 @@
 
   <gazebo>
     <plugin name="rgb_led" filename="libruvu_rgb_led_visual.so">
-      <names>
+      <link>mount</link>
+      <leds>
         <name>led1</name>
         <name>led2</name>
         <name>led3</name>
         <name>led4</name>
         <name>led5</name>
-      </names>
+      </leds>
       <defaultColor>
         <r>1.0</r>
         <g>0</g>
@@ -51,8 +52,7 @@
       </geometry>
     </visual>
   </link>
-  <joint name="led1_joint" type="revolute">
-    <limit effort="0" lower="0" upper="0" velocity="0" />
+  <joint name="led1_joint" type="fixed">
     <origin xyz="-1.5 0 1.0" rpy="0 0 0"/>
     <parent link="mount"/>
     <child link="led1"/>
@@ -65,8 +65,7 @@
       </geometry>
     </visual>
   </link>
-  <joint name="led2_joint" type="revolute">
-    <limit effort="0" lower="0" upper="0" velocity="0" />
+  <joint name="led2_joint" type="fixed">
     <origin xyz="-0.75 0 1.0" rpy="0 0 0"/>
     <parent link="mount"/>
     <child link="led2"/>
@@ -79,8 +78,7 @@
       </geometry>
     </visual>
   </link>
-  <joint name="led3_joint" type="revolute">
-    <limit effort="0" lower="0" upper="0" velocity="0" />
+  <joint name="led3_joint" type="fixed">
     <origin xyz="0 0 1.0" rpy="0 0 0"/>
     <parent link="mount"/>
     <child link="led3"/>
@@ -93,8 +91,7 @@
       </geometry>
     </visual>
   </link>
-  <joint name="led4_joint" type="revolute">
-    <limit effort="0" lower="0" upper="0" velocity="0" />
+  <joint name="led4_joint" type="fixed">
     <origin xyz="0.75 0 1.0" rpy="0 0 0"/>
     <parent link="mount"/>
     <child link="led4"/>
@@ -107,8 +104,7 @@
       </geometry>
     </visual>
   </link>
-  <joint name="led5_joint" type="revolute">
-    <limit effort="0" lower="0" upper="0" velocity="0" />
+  <joint name="led5_joint" type="fixed">
     <origin xyz="1.5 0 1.0" rpy="0 0 0"/>
     <parent link="mount"/>
     <child link="led5"/>

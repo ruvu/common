@@ -13,15 +13,15 @@ void setLinkVisualColor(physics::LinkPtr link, std::string name, transport::Publ
 {
   // Setup material
   gazebo::msgs::Material* material_msg = new gazebo::msgs::Material;
-  gazebo::msgs::Color *colorMsg = new gazebo::msgs::Color(gazebo::msgs::Convert(color));
-  gazebo::msgs::Color *diffuseMsg = new gazebo::msgs::Color(*colorMsg);
+  gazebo::msgs::Color* colorMsg = new gazebo::msgs::Color(gazebo::msgs::Convert(color));
+  gazebo::msgs::Color* diffuseMsg = new gazebo::msgs::Color(*colorMsg);
   material_msg->set_allocated_ambient(colorMsg);
   material_msg->set_allocated_diffuse(diffuseMsg);
 
   gazebo::msgs::Visual visual_msg;
   visual_msg.set_allocated_material(material_msg);
 
-  visual_msg.set_name(name);
+  visual_msg.set_name(link->GetScopedName() + "::" + name);
   visual_msg.set_parent_name(link->GetScopedName());
 
   pub->Publish(visual_msg);
