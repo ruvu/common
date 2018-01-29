@@ -37,8 +37,6 @@ protected:
               const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity,
               double /*dt*/, physics::ModelPtr model)
   {
-
-
     math::Vector3 linear_velocity = model->GetWorldLinearVel();
     linear_velocity.x = world_linear_velocity.x; // constrain
     linear_velocity.y = world_linear_velocity.y; // z

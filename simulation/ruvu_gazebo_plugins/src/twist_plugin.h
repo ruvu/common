@@ -108,7 +108,7 @@ private:
   //! \param velocity Current (command) velocity
   //! \param dt Time delta since last update
   //!
-  void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt);
+  virtual void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt);
 
   //!
   //! \brief publishOdometry Publish the odometry via ROS
