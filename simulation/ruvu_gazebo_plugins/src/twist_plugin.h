@@ -40,6 +40,11 @@ protected:
                       const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity,
                       double dt, physics::ModelPtr model) = 0;
 
+  //!
+  //! \brief odom_pose_ The state of the robot according to odometry
+  //!
+  math::Pose odom_pose_;
+
 private:
 
   //!
@@ -99,15 +104,21 @@ private:
   void UpdateChild();
 
   //!
+  //! \brief updateOdometryState Update the odometry state variables (x, y, yaw)
+  //! \param velocity Current (command) velocity
+  //! \param dt Time delta since last update
+  //!
+  virtual void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt);
+
+  //!
   //! \brief publishOdometry Publish the odometry via ROS
-  //! \param pose Gazebo pose
   //! \param velocity Current velocity
   //! \param now Current time
   //!
   double odometry_rate_; // Rate of the odometry publisher
   ros::Publisher odometry_publisher_; // Odometry publisher
   nav_msgs::Odometry odom_msg_; // The odom message to be published
-  void publishOdometry(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& now);
+  void publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now);
 
   //!
   //! \brief FiniChild Called on shutdown
