@@ -7,6 +7,8 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
+#include <tf2_ros/transform_broadcaster.h>
+
 
 namespace gazebo
 {
@@ -115,9 +117,12 @@ private:
   //! \param velocity Current velocity
   //! \param now Current time
   //!
+  bool publish_tf_;
   double odometry_rate_; // Rate of the odometry publisher
   ros::Publisher odometry_publisher_; // Odometry publisher
   nav_msgs::Odometry odom_msg_; // The odom message to be published
+  geometry_msgs::TransformStamped transform_stamped_;
+  tf2_ros::TransformBroadcaster odom_broadcaster_;
   void publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now);
 
   //!

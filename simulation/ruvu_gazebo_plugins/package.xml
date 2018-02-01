@@ -17,6 +17,7 @@
   <depend>sensor_msgs</depend>
   <depend>control_msgs</depend>
   <depend>actionlib</depend>
+  <depend>tf2_ros</depend>
 
   <test_depend>rostest</test_depend>
   <test_depend>ruvu_rostest</test_depend>
