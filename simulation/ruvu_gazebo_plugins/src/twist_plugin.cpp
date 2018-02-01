@@ -13,11 +13,14 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string robot_namespace = getParameterFromSDF(sdf, "robotNamespace", std::string(""));
   std::string tf_prefix = robotNamespaceToTFPrefix(robot_namespace);
   std::string command_topic = getParameterFromSDF(sdf, "commandTopic", std::string("cmd_vel"));
+  publish_tf_ = getParameterFromSDF(sdf, "publishTF", false);
   cmd_timeout_ = getParameterFromSDF(sdf, "commandTimeout", 0.5);
   std::string odom_topic = getParameterFromSDF(sdf, "odometryTopic",  std::string("odom"));
   odom_msg_.header.frame_id = tf_prefix + getParameterFromSDF(sdf, "odometryFrame",  std::string("odom"));
   odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
   odom_msg_.child_frame_id = tf_prefix + getParameterFromSDF(sdf, "robotFrame",  std::string("base_link"));
+  transform_stamped_.header.frame_id = odom_msg_.header.frame_id;
+  transform_stamped_.child_frame_id = odom_msg_.child_frame_id;
 
   //! Store last update, required for calculating the dt
   last_update_time_ = model_->GetWorld()->GetSimTime();
@@ -121,6 +124,18 @@ void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const co
 
   odom_msg_.header.stamp = ros::Time(now.Double());
   odometry_publisher_.publish(odom_msg_);
+
+  // Publish transform
+  transform_stamped_.header.stamp = ros::Time(now.Double());
+  transform_stamped_.transform.translation.x = odom_pose_.pos.x;
+  transform_stamped_.transform.translation.y = odom_pose_.pos.y;
+  transform_stamped_.transform.translation.z = odom_pose_.pos.z;
+  transform_stamped_.transform.rotation = odom_msg_.pose.pose.orientation;
+
+  if (publish_tf_)
+  {
+    odom_broadcaster_.sendTransform(transform_stamped_);
+  }
 }
 
 void TwistPlugin::FiniChild() {

@@ -4,7 +4,7 @@ project(ruvu_gazebo_plugins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs control_msgs actionlib sensor_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs control_msgs actionlib sensor_msgs tf2_ros)
 #include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
