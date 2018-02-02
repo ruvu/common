@@ -58,5 +58,5 @@ kinetic-release:
         - docker:dind
     script:
         - docker pull $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
-        - docker tag $IMAGE_PATH/$IMAGE_NAME:${CI_COMMIT_REF_NAME//\//-} $IMAGE_PATH/${CI_JOB_NAME/-*/}:latest
+        - docker tag $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} $IMAGE_PATH/${CI_JOB_NAME/-*/}:latest
         - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:latest
