@@ -12,11 +12,11 @@ Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag co
 
 ##### Publishers
 
-- odom ([nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html)) - Visualization of the graph for RVIZ
+- pose ([geometry_msgs/PoseWithCovarianceStamped](http://docs.ros.org/api/geometry_msgs/html/msg/PoseWithCovarianceStamped.html)) - Estimated UWB pose
 - ranges (pozyx_ros/Ranges) - Range information of the anchors
-- magnetic_field ([sensor_msgs/MagneticField](http://docs.ros.org/api/sensor_msgs/html/msg/MagneticField.html)) - Planned path output, also primarily for RVIZ
-- imu ([sensor_msgs/Imu](http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html)) - Planned path output, also primarily for RVIZ
-- temperature ([sensor_msgs/Temperature](http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html)) - Planned path output, also primarily for RVIZ
+- magnetic_field ([sensor_msgs/MagneticField](http://docs.ros.org/api/sensor_msgs/html/msg/MagneticField.html))
+- imu ([sensor_msgs/Imu](http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html))
+- temperature ([sensor_msgs/Temperature](http://docs.ros.org/api/sensor_msgs/html/msg/Temperature.html))
 
 #### Parameters
 
@@ -30,7 +30,7 @@ Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag co
 Example configuration file:
 
 ```
-world_frame_id: world # ID of the frame attached to the world
+world_frame_id: world # ID of the frame attached to the wor ld
 sensor_frame_id: sensor # ID of the sensor frame
 port: /dev/ttyACM0 # Serial port where the pozyx device is connected to
 minimum_fix_factor: 0.5

@@ -7,9 +7,8 @@ import diagnostic_updater
 import collections
 from diagnostic_msgs.msg import DiagnosticStatus
 from sensor_msgs.msg import Imu, MagneticField, Temperature
-from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
-from geometry_msgs.msg import Quaternion, Vector3, PoseWithCovariance, Pose, Point
+from geometry_msgs.msg import Quaternion, Vector3, PoseWithCovariance, PoseWithCovarianceStamped, Pose, Point
 from pozyx_ros.msg import DeviceRanges, DeviceRange
 
 
@@ -40,7 +39,7 @@ class ROSPozyx:
 
         self._setup_anchors()
 
-        self._odometry_publisher = rospy.Publisher("odom", Odometry, queue_size=1)
+        self._pose_publisher = rospy.Publisher("pose", PoseWithCovarianceStamped, queue_size=1)
         self._imu_publisher = rospy.Publisher("imu", Imu, queue_size=1)
         self._magnetic_field_publisher = rospy.Publisher("magnetic_field", MagneticField, queue_size=1)
         self._temperature_publisher = rospy.Publisher("temperature", Temperature, queue_size=1)
@@ -230,12 +229,11 @@ class ROSPozyx:
 
                 # Only publish if we do not have any inactive anchors
                 if not self._inactive_anchors:
-                    self._odometry_publisher.publish(Odometry(
+                    self._pose_publisher.publish(PoseWithCovarianceStamped(
                         header=Header(
                             stamp=rospy.Time.now(),
                             frame_id=self._world_frame_id
                         ),
-                        child_frame_id=self._sensor_frame_id,
                         pose=PoseWithCovariance(
                             pose=Pose(position=Point(position.x / 1e3, position.y / 1e3, position.z / 1e3),
                                       orientation=Quaternion(sensor_data.quaternion.x, sensor_data.quaternion.y,
