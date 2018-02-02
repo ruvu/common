@@ -23,5 +23,5 @@
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>message_runtime</exec_depend>
 
-  <exec_depend>python-pypozyx</exec_depend>
+  <exec_depend>python-pypozyx-pip</exec_depend>
 </package>
