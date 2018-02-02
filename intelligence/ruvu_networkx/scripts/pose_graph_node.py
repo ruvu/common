@@ -119,8 +119,8 @@ class PoseGraphNode(object):
         if os.path.isfile(file_path):
             self._graph = nx.read_yaml(file_path)
             rospy.loginfo("Loaded graph with {} nodes and {} edges from {}".format(
-                len(self._graph.nodes),
-                len(self._graph.edges),
+                len(self._graph.nodes()),
+                len(self._graph.edges()),
                 file_path
             ))
 
@@ -187,7 +187,7 @@ class PoseGraphNode(object):
         :param tolerance: Maximum tolerance
         :return: The closes node id, None if no node was found
         """
-        if len(self._graph.nodes) == 0:
+        if len(self._graph.nodes()) == 0:
             return None
 
         closest_node, closest_node_data = min(self._graph.nodes(data=True),
@@ -203,7 +203,7 @@ class PoseGraphNode(object):
         Creates an unique node name to be added to the graph
         :return: The node name
         """
-        return max(self._graph.nodes) + 1 if len(self._graph.nodes) != 0 else 1
+        return max(self._graph.nodes()) + 1 if len(self._graph.nodes()) != 0 else 1
 
     def _add_node_cb(self, pose):
         """
@@ -283,7 +283,7 @@ class PoseGraphNode(object):
             elif goal.target_pose.header.frame_id != self._frame_id:
                 result.outcome = GetPathResult.INVALID_GOAL
                 result.message = "target_pose frame_id != {}".format(self._frame_id)
-            elif len(self._graph.nodes) == 0:
+            elif len(self._graph.nodes()) == 0:
                 result.outcome = GetPathResult.NOT_INITIALIZED
                 result.message = "no nodes in the graph, is it initialized properly?"
             start_node = self._get_closest_node(goal.start_pose.pose.position, goal.tolerance)
