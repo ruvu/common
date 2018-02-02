@@ -1,5 +1,10 @@
+image: docker:git
+
+variables:
+    PACKAGES: "ruvu_bringup pozyx_ros ruvu_networkx pepper_hardware ruvu_gazebo_plugins ruvu_sensor_descriptions ruvu_rostest ruvu_msg_converters" # Separate with spaces
+    IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH
+
 before_script:
-    # Make sure we can access the docker images repository
     - mkdir ~/.ssh 
     - ssh-keyscan -t rsa gitlab.com > ~/.ssh/known_hosts
     - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
@@ -7,18 +12,51 @@ before_script:
 
     # Clone the ruvu-env for the docker images
     - git clone git@gitlab.com:ruvu/environment.git ~/.ruvu
-
-kinetic-x86:
-    only:
-        - master
-    variables:
-        PACKAGES: "pepper_hardware ruvu_web ruvu_flexbe_states ruvu_gazebo_plugins ruvu_bringup ruvu_rostest ruvu_networkx" # Separate with spaces
-        DOCKER_FILE: Dockerfile-kinetic-x86
-    image: docker:git
+    - cd ~/.ruvu
+    
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    
+stages:
+    - build
+    - test
+    - release
+    
+kinetic-build-on-schedule:
+    stage: build
+    # only:
+    #     - schedules
     services:
         - docker:dind
     script:
-        - cd ~/.ruvu
-        - docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg PACKAGES="$PACKAGES" --build-arg WORKSPACE="$CI_PROJECT_NAME" -t registry.gitlab.com/ruvu/$CI_PROJECT_NAME/$CI_JOB_NAME -f ~/.ruvu/docker/$DOCKER_FILE .
-        - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-        - docker push registry.gitlab.com/ruvu/$CI_PROJECT_NAME/$CI_JOB_NAME:latest
+        - docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="ros:${CI_JOB_NAME/-*/}-ros-base" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" -t $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} -f docker/Dockerfile .
+        - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
+
+# kinetic-build:
+#     stage: build
+#     except:
+#         - schedules
+#     services:
+#         - docker:dind
+#     script:
+#         - docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="$IMAGE_PATH/${CI_JOB_NAME/-*/}:latest" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" -t $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} -f docker/DockerFile .
+#         - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
+        
+kinetic-test:
+    stage: test
+    services:
+        - docker:dind
+    script:
+        - docker pull $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
+        - docker run $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} catkin test -w "$CI_PROJECT_NAME"
+        
+kinetic-release:
+    stage: release
+    # only:
+    #     refs:
+    #       - master
+    services:
+        - docker:dind
+    script:
+        - docker pull $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
+        - docker tag $IMAGE_PATH/$IMAGE_NAME:${CI_COMMIT_REF_NAME//\//-} $IMAGE_PATH/${CI_JOB_NAME/-*/}:latest
+        - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:latest
