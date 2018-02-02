@@ -23,23 +23,23 @@ stages:
     
 kinetic-build-on-schedule:
     stage: build
-    # only:
-    #     - schedules
+    only:
+        - schedules
     services:
         - docker:dind
     script:
         - docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="ros:${CI_JOB_NAME/-*/}-ros-base" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" -t $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} -f docker/Dockerfile .
         - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
 
-# kinetic-build:
-#     stage: build
-#     except:
-#         - schedules
-#     services:
-#         - docker:dind
-#     script:
-#         - docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="$IMAGE_PATH/${CI_JOB_NAME/-*/}:latest" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" -t $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} -f docker/DockerFile .
-#         - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
+kinetic-build:
+    stage: build
+    except:
+        - schedules
+    services:
+        - docker:dind
+    script:
+        - docker build --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="$IMAGE_PATH/${CI_JOB_NAME/-*/}:latest" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" -t $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} -f docker/Dockerfile .
+        - docker push $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
         
 kinetic-test:
     stage: test
@@ -51,9 +51,9 @@ kinetic-test:
         
 kinetic-release:
     stage: release
-    # only:
-    #     refs:
-    #       - master
+    only:
+        refs:
+          - master
     services:
         - docker:dind
     script:
