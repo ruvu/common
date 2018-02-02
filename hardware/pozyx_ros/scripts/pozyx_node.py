@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import os
+
 import pypozyx
 import rospy
 import diagnostic_updater
@@ -254,7 +256,7 @@ class ROSPozyx:
 if __name__ == '__main__':
     rospy.init_node('pozyx_ros_node')
 
-    port = rospy.get_param("~port", "/dev/ttyACM0")
+    port = os.path.realpath(rospy.get_param("~port", "/dev/ttyACM0"))
 
     try:
         anchors = [pypozyx.DeviceCoordinates(d['network_id'], pypozyx.POZYX_ANCHOR,
