@@ -18,5 +18,5 @@
   <exec_depend>actionlib</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
 
-  <test_depend>rostest</test_depend>
+  <test_depend>python-mock</test_depend>
 </package>

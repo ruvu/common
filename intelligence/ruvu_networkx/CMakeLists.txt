@@ -11,6 +11,5 @@ catkin_package()
 ###########
 
 if (CATKIN_ENABLE_TESTING)
-    find_package(rostest REQUIRED)
-    # TODO
+  catkin_add_nosetests(test)
 endif()
