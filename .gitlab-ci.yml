@@ -47,7 +47,7 @@ kinetic-test:
         - docker:dind
     script:
         - docker pull $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-}
-        - docker run $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} catkin test -w "$CI_PROJECT_NAME"
+        - docker run --entrypoint /.ruvu/docker/entrypoint_run_tests.sh $IMAGE_PATH/${CI_JOB_NAME/-*/}:${CI_COMMIT_REF_NAME//\//-} catkin_test_results
         
 kinetic-release:
     stage: release
