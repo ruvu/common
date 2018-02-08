@@ -3,7 +3,7 @@ from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
 
 # example import of required action
-from move_base_flex_msgs.msg import ExePathAction, ExePathGoal
+from mbf_msgs.msg import ExePathAction, ExePathGoal
 from actionlib_msgs.msg import GoalStatus
 import rospy
 
