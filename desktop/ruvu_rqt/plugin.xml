@@ -1,0 +1,13 @@
+<library path="src">
+  <class name="Navigation Graph Tool" type="ruvu_rqt.publish_pose_button.PublishPoseButton"
+         base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Python RQt plugin with a button to publish the current robot pose
+    </description>
+    <qtgui>
+      <label>Button to publish robot pose.</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Button to publish the current robot pose.</statustip>
+    </qtgui>
+  </class>
+</library>
