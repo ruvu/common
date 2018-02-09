@@ -89,12 +89,12 @@
                   </clip>
               </camera>
               <plugin name="${name}_controller" filename="libgazebo_ros_openni_kinect.so">
-                <imageTopicName>${robot_namespace}${name}/rgb/image_raw</imageTopicName>
-                <cameraInfoTopicName>${robot_namespace}${name}/depth/camera_info</cameraInfoTopicName>
-                <depthImageTopicName>${robot_namespace}${name}/depth/image_raw</depthImageTopicName>
-                <depthImageInfoTopicName>${robot_namespace}${name}/depth/camera_info</depthImageInfoTopicName>
-                <pointCloudTopicName>${robot_namespace}${name}/depth/points</pointCloudTopicName>
-                <frameName>${robot_namespace}${name}_depth_camera</frameName>
+                <imageTopicName>${robot_namespace}/rgb/image_rect_color</imageTopicName>
+                <cameraInfoTopicName>${robot_namespace}/rgb/camera_info</cameraInfoTopicName>
+                <depthImageTopicName>${robot_namespace}/depth/depth_registered</depthImageTopicName>
+                <depthImageInfoTopicName>${robot_namespace}/depth/camera_info</depthImageInfoTopicName>
+                <pointCloudTopicName>${robot_namespace}/point_cloud/cloud_registereds</pointCloudTopicName>
+                <frameName>${robot_namespace}_depth_camera</frameName>
                 <pointCloudCutoff>0.5</pointCloudCutoff>
                 <pointCloudCutoffMax>20</pointCloudCutoffMax>
               </plugin>
