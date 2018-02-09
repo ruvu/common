@@ -93,8 +93,8 @@
                 <cameraInfoTopicName>${robot_namespace}/rgb/camera_info</cameraInfoTopicName>
                 <depthImageTopicName>${robot_namespace}/depth/depth_registered</depthImageTopicName>
                 <depthImageInfoTopicName>${robot_namespace}/depth/camera_info</depthImageInfoTopicName>
-                <pointCloudTopicName>${robot_namespace}/point_cloud/cloud_registereds</pointCloudTopicName>
-                <frameName>${robot_namespace}_depth_camera</frameName>
+                <pointCloudTopicName>${robot_namespace}/point_cloud/cloud_registered</pointCloudTopicName>
+                <frameName>zed_depth_camera</frameName>
                 <pointCloudCutoff>0.5</pointCloudCutoff>
                 <pointCloudCutoffMax>20</pointCloudCutoffMax>
               </plugin>
