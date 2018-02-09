@@ -27,3 +27,28 @@ myawesomerobotname-robot-interfaces () --> roslaunch myawesomerobotname_simulati
 myawesomerobotname-test () --> roslaunch myawesomerobotname_simulation_bringup test.launch
 
 ```
+
+## set_ros_ip_from_network_interface.bash
+
+Script for setting the ROS_IP based on a network interface. Usage:
+
+	source set_ros_ip_from_network_interface.bash network_interface, e.g. eth0, eno1, wlan1]
+
+This will then export the ROS_IP to the found IP address, or print and error.
+
+## systemd_service_from_launch_file.py
+
+```
+usage: systemd_service_from_launch_file.py [-h]
+                                           launch_file user environment_bash
+
+systemd_service_from_launch_file
+
+positional arguments:
+  launch_file       Launch file to generate a service from
+  user              The user that should execute the launch file
+  environment_bash  Bash environment to run before
+
+optional arguments:
+  -h, --help        show this help message and exit
+```
