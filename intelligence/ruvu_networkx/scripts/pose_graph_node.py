@@ -40,13 +40,13 @@ def _get_interpolated_pose(pose1, pose2, fraction):
     )
 
 
-def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance):
+def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance=0):
     """
     Convert a path in the graph to a nav_msgs/Path
     :param graph: The graph
     :param path: The path
     :param frame_id: The frame id that should be used in the resulting message
-    :param interpolation_distance: Step size (position) that is used for interpolation
+    :param interpolation_distance: Step size (position) that is used for interpolation, zero means no interpolation
     :return: The nav_msgs/Path
     """
     graph_poses = nx.get_node_attributes(graph, "pose")
@@ -60,7 +60,7 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance):
     last_idx = None
     for idx in path:
         pose = graph_poses[idx]
-        if last_idx is not None:
+        if last_idx is not None and interpolation_distance:
             last_pose = graph_poses[last_idx]
 
             step_size = 1. / int(math.hypot(pose.position.x - last_pose.position.x,
@@ -69,7 +69,6 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance):
             # Perform interpolation
             msg.poses += [PoseStamped(header=header, pose=_get_interpolated_pose(last_pose, pose, f))
                           for f in np.arange(step_size, 1.0, step_size)]
-
         else:
             msg.poses.append(PoseStamped(
                 header=header,
@@ -259,11 +258,29 @@ class PoseGraphNode(object):
                 except nx.NetworkXNoPath as _:
                     self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
                 else:
-                    path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
-                                                     self._interpolation_distance)
+                    path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id)
                     self._last_planner_path_pub.publish(path)
 
         self._last_get_path_clicked_point = point
+
+    def _check_goal_validity(self, goal, result):
+        if goal.planner not in ['topological', 'interpolated']:
+            result.message = "The specified planner should be either 'topological' or 'interpolated'. " \
+                             "It is now {}".format(goal.planner)
+            result.outcome = GetPathResult.INVALID_GOAL
+            return False
+
+        if goal.use_start_pose and goal.start_pose.header.frame_id != self._frame_id:
+            result.outcome = GetPathResult.INVALID_START
+            result.message = "start_pose frame_id != {}".format(self._frame_id)
+            return False
+
+        if goal.target_pose.header.frame_id != self._frame_id:
+            result.outcome = GetPathResult.INVALID_GOAL
+            result.message = "target_pose frame_id != {}".format(self._frame_id)
+            return False
+
+        return True
 
     def _get_path_action_cb(self, goal):
         """
@@ -276,16 +293,25 @@ class PoseGraphNode(object):
         end_node = None
 
         # Check whether the goal is valid before planning the path
+        if not self._check_goal_validity(goal, result):
+            self._get_path_as.set_aborted(result, result.message)
+            return
+
+        # Check if the graph is valid
+        if len(self._graph.nodes()) == 0:
+            result.outcome = GetPathResult.NOT_INITIALIZED
+            result.message = "no nodes in the graph, is it initialized properly?"
+            self._get_path_as.set_aborted(result, result.message)
+            return
+
+        # Set interpolation distance based on selected planner
+        if goal.planner == "topological":
+            interpolation_distance = 0
+        else:  # We can safely assume goal.planner == "interpolated", as we checked the goal validity already.
+            interpolation_distance = self._interpolation_distance
+
+        # Select start and end nodes
         if goal.use_start_pose:
-            if goal.start_pose.header.frame_id != self._frame_id:
-                result.outcome = GetPathResult.INVALID_START
-                result.message = "start_pose frame_id != {}".format(self._frame_id)
-            elif goal.target_pose.header.frame_id != self._frame_id:
-                result.outcome = GetPathResult.INVALID_GOAL
-                result.message = "target_pose frame_id != {}".format(self._frame_id)
-            elif len(self._graph.nodes()) == 0:
-                result.outcome = GetPathResult.NOT_INITIALIZED
-                result.message = "no nodes in the graph, is it initialized properly?"
             start_node = self._get_closest_node(goal.start_pose.pose.position, goal.tolerance)
             end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
         else:
@@ -298,7 +324,7 @@ class PoseGraphNode(object):
                 start_node = self._get_closest_node(transform.transform.translation, goal.tolerance)
                 end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
 
-        # Goal seems valid, try planning
+        # Plan the path if start and end nodes are valid
         if start_node and end_node:
             try:
                 shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
@@ -308,11 +334,17 @@ class PoseGraphNode(object):
                 self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
             else:
                 result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
-                                                        self._interpolation_distance)
+                                                        interpolation_distance)
+                end_pose = goal.target_pose
+                # If orientation not set (zero quaternion is invalid), use orientation from graph node pose
+                if end_pose.pose.orientation == Quaternion():
+                    end_pose.pose.orientation = result.path.poses[-1].pose.orientation
+
+                result.path.poses.append(goal.target_pose)
                 self._last_planner_path_pub.publish(result.path)
         else:
             result.outcome = GetPathResult.NO_PATH_FOUND
-            result.message = "no start or end node could be found, with tolerance {}".format(goal.tolerance)
+            result.message = "Either start or end node could not be found, with tolerance {}".format(goal.tolerance)
 
         if result.outcome == GetPathResult.SUCCESS:
             self._get_path_as.set_succeeded(result, result.message)
