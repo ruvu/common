@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+echo "Installing systemd services"
+sudo cp -v "$DIR/../systemd/"* "/etc/systemd/system/"
+
+echo "Reloading daemon ..."
+sudo systemctl daemon-reload
+
+echo "You can start the service using 'sudo systemctl start $NAME'"
+echo "You can enable the service (on start-up) using 'sudo systemctl enable $NAME'"
+
