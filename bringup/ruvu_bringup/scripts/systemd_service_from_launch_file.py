@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import sys
 import os.path
-import pwd, grp
-
+import pwd
 from argparse import ArgumentParser
+
+from ruvu_bringup.systemd import template
 
 
 def is_valid_file(parser, arg):
@@ -13,11 +13,13 @@ def is_valid_file(parser, arg):
     else:
         return arg
 
+
 def is_valid_user(parser, arg):
     if arg not in pwd.getpwall():
         parser.error("The user %s does not exist!" % arg)
     else:
         return arg
+
 
 def get_package_name(launch_file):
     launch_file_folders = launch_file.split("/")[:-1]
@@ -30,7 +32,8 @@ def get_package_name(launch_file):
 
 
 parser = ArgumentParser(description="systemd_service_from_launch_file")
-parser.add_argument("launch_file", help="Launch file to generate a service from", type=lambda x: is_valid_file(parser, x))
+parser.add_argument("launch_file", help="Launch file to generate a service from",
+                    type=lambda x: is_valid_file(parser, x))
 parser.add_argument("user", help="The user that should execute the launch file", type=str)
 parser.add_argument("environment_bash", help="Bash environment to run before", type=lambda x: is_valid_file(parser, x))
 args = parser.parse_args()
@@ -38,19 +41,7 @@ args = parser.parse_args()
 launch_file = os.path.abspath(args.launch_file)
 environment_bash = os.path.abspath(args.environment_bash)
 user = args.user
-description = "Launch file %s of package %s for user %s" % (os.path.basename(launch_file), get_package_name(launch_file), user)
+description = "Launch file %s of package %s for user %s" % (
+os.path.basename(launch_file), get_package_name(launch_file), user)
 
-SERVICE_FILE = """
-[Unit]
-Description=%s
-[Install]
-WantedBy=multi-user.target
-[Service]
-Restart=on-abort
-User=%s
-ExecStart=/bin/bash -c "source %s && roslaunch %s --wait"
-""" % (description, user, environment_bash, launch_file)
-
-print SERVICE_FILE
-
-sys.exit(0)
+print template(description, user, environment_bash, launch_file)
