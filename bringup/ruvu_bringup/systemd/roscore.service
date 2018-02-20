@@ -1,0 +1,10 @@
+[Unit]
+Description=Launch roscore
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Restart=on-abort
+User=ruvu
+ExecStart=/bin/bash -c "source /home/ruvu/.config/ros-get/workspace/devel/setup.bash && roscore"
