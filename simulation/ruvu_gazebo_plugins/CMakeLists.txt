@@ -46,12 +46,12 @@ target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZ
 
 if (CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
-    add_rostest(test/disable_physics_world.test)
-    add_rostest(test/twist_move_world.test)
-    add_rostest(test/twist_move_urdf_world.test)
-    add_rostest(test/twist_teleport_urdf_world.test)
-    add_rostest(test/twist_teleport_world.test)
-    add_rostest(test/single_joint_position_lifter_world.test)
+    #add_rostest(test/disable_physics_world.test)
+    #add_rostest(test/twist_move_world.test)
+    #add_rostest(test/twist_move_urdf_world.test)
+    #add_rostest(test/twist_teleport_urdf_world.test)
+    #add_rostest(test/twist_teleport_world.test)
+    #add_rostest(test/single_joint_position_lifter_world.test)
 endif()
 
 #############
