@@ -52,6 +52,7 @@ if len(matches):
         unit = get_template(args.pkg, f)
         unit_name = args.prefix + '-' + os.path.basename(f).replace('_', '-')
         output_file = os.path.join(systemd_path, unit_name)
+        output_file = os.path.splitext(output_file)[0] + '.service'
 
         print('writing to:', output_file)
         p = Popen(['sudo', 'tee', output_file], stdin=PIPE, stdout=PIPE)
