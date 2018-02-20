@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+import fnmatch
+import os
+from argparse import ArgumentParser
+from subprocess import Popen, PIPE
+
+from rospkg import RosPack, ResourceNotFound
+from ruvu_bringup.systemd import template
+
+systemd_path = '/etc/systemd/system'
+
+
+def is_valid_file(parser, arg):
+    if not os.path.exists(arg):
+        parser.error("The file %s does not exist!" % arg)
+    else:
+        return arg
+
+
+parser = ArgumentParser(description='Generate systemd services from launch files')
+parser.add_argument('pkg', help='Package name')
+parser.add_argument('prefix', help='Prefix to give the service name')
+parser.add_argument("user", help="The user that should execute the launch file", type=str)
+parser.add_argument("environment_bash", help="Bash environment to run before", type=lambda x: is_valid_file(parser, x))
+
+args = parser.parse_args()
+
+
+def get_template(pkg, launch_file):
+    environment_bash = os.path.abspath(args.environment_bash)
+    user = args.user
+    description = "Launch file %s of package %s for user %s" % (
+        os.path.basename(launch_file), pkg, user)
+    return template(description, user, environment_bash, launch_file)
+
+
+rp = RosPack()
+try:
+    path = rp.get_path(args.pkg)
+except ResourceNotFound as e:
+    exit("Package not found: %s" % e)
+
+matches = []
+for root, dirnames, filenames in os.walk(path):
+    for filename in fnmatch.filter(filenames, '*.launch'):
+        matches.append(os.path.join(root, filename))
+
+if len(matches):
+    for f in matches:
+        unit = get_template(args.pkg, f)
+        unit_name = args.prefix + '-' + os.path.basename(f).replace('_', '-')
+        output_file = os.path.join(systemd_path, unit_name)
+
+        print('writing to:', output_file)
+        p = Popen(['sudo', 'tee', output_file], stdin=PIPE, stdout=PIPE)
+        stdout, stderr = p.communicate(unit)
+else:
+    exit("No launch files found")
