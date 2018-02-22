@@ -1,21 +1,18 @@
-#!/usr/bin/env python
+import rospy
+from actionlib_msgs.msg import GoalStatus
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
-
-# example import of required action
 from mbf_msgs.msg import ExePathAction, ExePathGoal
-from actionlib_msgs.msg import GoalStatus
-import rospy
 
 
 class ExecutePathState(EventState):
     """
     Execute a navigation path.
 
-    -- action       string          The action topic namespace of the GetPath action
+    -- action       string          The action topic namespace of the ExePath action
     -- exec_timeout int             Number of seconds to wait for execution before preempting
 
-    ># path         nav_msgs/Path   The sentence retrieved from the HMI server
+    ># path         nav_msgs/Path   The path that will be executed
 
     <= succeeded                    Goal reached
     <= failed                       Failed to reach the goal

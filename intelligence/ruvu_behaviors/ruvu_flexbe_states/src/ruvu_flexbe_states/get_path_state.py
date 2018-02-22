@@ -1,21 +1,18 @@
-#!/usr/bin/env python
+import rospy
+from actionlib_msgs.msg import GoalStatus
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
-
-# example import of required action
 from mbf_msgs.msg import GetPathAction, GetPathGoal
-from actionlib_msgs.msg import GoalStatus
-import rospy
 
 
 class GetPathState(EventState):
     """
     Request a path from a path planner.
 
-    -- action       string                      The action topic namespace of the GetPath action
+    -- action       string                      The action topic namespace of the ExePath action
     -- exec_timeout int                         Number of seconds to wait for execution before preempting
 
-    ># target       geometry_msgs/PoseStamped   The sentence retrieved from the HMI server
+    ># target       geometry_msgs/PoseStamped   The calculated path
 
     #> path         nav_msgs/Path               The planned path to the target position
 
