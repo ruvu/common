@@ -24,6 +24,12 @@ PoseGraphNode that holds a pose graph that can be created and modified by the us
 - add_edge ([geometry_msgs/PointStamped](http://docs.ros.org/api/geometry_msgs/html/msg/PointStamped.html)) - Add an edge (select two consecutive closest poses)
 - get_path ([geometry_msgs/PointStamped](http://docs.ros.org/api/geometry_msgs/html/msg/PointStamped.html)) - Plan a path (select two consecutive closest poses)
 
+##### Actions
+- get_path ([GetPathAction](https://github.com/magazino/move_base_flex/blob/master/mbf_msgs/action/GetPath.action)) - Plan a path
+  * There are two planners available:
+    - `topological` just plan along the graph
+    - `interpolated` interpolate between points
+
 ##### Services
 
 - clear ([std_srvs/Empty](http://docs.ros.org/api/std_srvs/html/msg/Empty.html)) - Clear the graph
