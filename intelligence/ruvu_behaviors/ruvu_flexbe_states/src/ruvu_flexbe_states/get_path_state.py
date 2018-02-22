@@ -11,6 +11,8 @@ class GetPathState(EventState):
 
     -- action       string                      The action topic namespace of the ExePath action
     -- exec_timeout int                         Number of seconds to wait for execution before preempting
+    -- tolerance    float                       How many meters the planner can relax the constraint before failing
+    -- planner      string                      Which planner to use
 
     ># target       geometry_msgs/PoseStamped   The calculated path
 
@@ -22,18 +24,20 @@ class GetPathState(EventState):
     <= error                                    Failed to send the goal to the planner
     """
 
-    def __init__(self, action, exec_timeout=None):
-        super(GetPathState, self).__init__(outcomes=['succeeded', 'failed', 'preempted', 'error'],
-                                           input_keys=['target'],
-                                           output_keys=['path'])
+    def __init__(self, action, exec_timeout=None, tolerance=None, planner=None):
+        super(GetPathState, self).__init__(
+            outcomes=['succeeded', 'failed', 'preempted', 'error'], input_keys=['target'], output_keys=['path'])
+
+        self._action = action
+        self._client = ProxyActionClient({self._action: GetPathAction})
 
         if exec_timeout is not None:
             self._exec_timeout = rospy.Duration(exec_timeout)
         else:
             self._exec_timeout = None
 
-        self._action = action
-        self._client = ProxyActionClient({self._action: GetPathAction})
+        self._tolerance = tolerance
+        self._planner = planner
 
         self._error = False
         self._start_time = rospy.get_rostime()
@@ -44,14 +48,15 @@ class GetPathState(EventState):
             return 'error'
 
         state = self._client.get_state(self._action)
-
         if self._client.has_result(self._action):
-            Logger.loginfo('state is now %s' % state)
+            rospy.loginfo('%s: state is now %s' % (__name__, GoalStatus.to_string(state)))
+
+            result = self._client.get_result(self._action)
+            if result.message:
+                Logger.logwarn(result.message)
             if state == GoalStatus.SUCCEEDED:
-                result = self._client.get_result(self._action)
                 userdata['path'] = result.path
                 return 'succeeded'
-
             elif state == GoalStatus.PREEMPTED:
                 return 'preempted'
             else:
@@ -67,7 +72,7 @@ class GetPathState(EventState):
         self._start_time = rospy.get_rostime()
 
         # Create the goal
-        goal = GetPathGoal(target_pose=userdata['target'])
+        goal = GetPathGoal(target_pose=userdata['target'], tolerance=self._tolerance, planner=self._planner)
 
         # Send the goal
         try:
@@ -81,4 +86,3 @@ class GetPathState(EventState):
         if not self._client.has_result(self._action):
             self._client.cancel(self._action)
             Logger.loginfo('Cancelled active GetPathAction goal.')
-
