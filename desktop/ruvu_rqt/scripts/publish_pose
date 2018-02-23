@@ -1,0 +1,4 @@
+#!/bin/bash
+
+rqt -s ruvu_rqt.publish_pose.PublishPose
+

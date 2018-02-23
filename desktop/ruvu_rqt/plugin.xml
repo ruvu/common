@@ -1,0 +1,17 @@
+<library path="src">
+  <class name="Publish pose" type="ruvu_rqt.publish_pose.PublishPose" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Publish a PoseStamped to a topic
+    </description>
+    <qtgui>
+      <group>
+        <label>RUVU</label>
+        <icon type="file">icons/ruvu.png</icon>
+        <statustip>RUVU RQT Plugins</statustip>
+      </group>
+      <label>Publish pose</label>
+      <icon type="file">icons/pose.png</icon>
+      <statustip>Publish a PoseStamped to a topic</statustip>
+    </qtgui>
+  </class>
+</library>
