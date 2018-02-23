@@ -1,0 +1,19 @@
+<package>
+  <name>behavior_simple_navigation</name>
+  <version>1.0.0</version>
+  <description>
+     Simple navigation state machine using Move Base Flex
+  </description>
+  <maintainer email="todo@todo.com">Rokus Ottervanger</maintainer>
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/behavior_simple_navigation</url>
+  <author>Rokus Ottervanger</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>flexbe_core</run_depend>
+  <run_depend>flexbe_states</run_depend>
+
+</package>

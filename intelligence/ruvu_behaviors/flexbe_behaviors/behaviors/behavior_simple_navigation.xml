@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Simple_Navigation">
+
+	<executable package_path="behavior_simple_navigation.simple_navigation_sm" class="Simple_NavigationSM" />
+	<tagstring>navigation</tagstring>
+	<author>Rokus Ottervanger</author>
+	<date>Tue Nov 21 2017</date>
+	<description>
+		Simple navigation state machine using Move Base Flex
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>
