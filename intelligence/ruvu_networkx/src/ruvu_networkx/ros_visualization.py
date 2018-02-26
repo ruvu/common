@@ -21,11 +21,6 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
         frame_id=frame_id,
         stamp=rospy.Time.now()
     )
-    marker_array.markers.append(Marker(
-        header=header,
-        action=Marker.DELETEALL,
-        pose=Pose(orientation=Quaternion(w=1))
-    ))
 
     node_scale = 0.2
     marker_array.markers.append(Marker(
