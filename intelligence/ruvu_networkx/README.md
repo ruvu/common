@@ -43,6 +43,12 @@ PoseGraphNode that holds a pose graph that can be created and modified by the us
 - ~click_timeout (`default=5.0` - When adding and edge or planning a path using the corresponding topic interfaces, this timeout is used for selecting consecutive poses.
 - ~interpolation_distance (`default=0.2`) - Path interpolation
 
+## Internal data structure
+he representation of the graph on disk is a networkx graph. Each node is a unique integer. Each node has the following attributes:
+```
+pose: geometry_msgs/Pose
+```
+
 ## Tests
 
 ### [draw_pose_graph.py](test/draw_pose_graph.py)
