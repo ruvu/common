@@ -397,11 +397,17 @@ class PoseGraphNode(object):
 
 if __name__ == "__main__":
     rospy.init_node("pose_graph_node")
-    pgn = PoseGraphNode(
-        rospy.get_param("~frame_id", "map"),
-        rospy.get_param("~robot_frame_id", "base_link"),
-        rospy.get_param("~file_path", "/tmp/pose_graph.yaml"),
-        rospy.get_param("~click_timeout", 5.0),
-        rospy.get_param("~interpolation_distance", 0.2)
-    )
-    rospy.spin()
+    try:
+        pgn = PoseGraphNode(
+            rospy.get_param("~frame_id", "map"),
+            rospy.get_param("~robot_frame_id", "base_link"),
+            rospy.get_param("~file_path", "/tmp/pose_graph.yaml"),
+            rospy.get_param("~click_timeout", 5.0),
+            rospy.get_param("~interpolation_distance", 0.2)
+        )
+    except Exception:
+        # if we don't catch this exception, the node hangs because other threads have been started
+        rospy.signal_shutdown('exception during initialization')
+        raise
+    else:
+        rospy.spin()
