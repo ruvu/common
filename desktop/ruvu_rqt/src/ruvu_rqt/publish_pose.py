@@ -3,50 +3,18 @@ import tf2_ros
 
 from qt_gui.plugin import Plugin
 from python_qt_binding.QtWidgets import QWidget, QVBoxLayout, QPushButton, QMessageBox, QInputDialog, QLineEdit
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QMessageBox, QInputDialog, QLineEdit
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QMessageBox
 from geometry_msgs.msg import PoseStamped, Pose, Point
 
-
-def _get_double_from_input(parent, label, initial_value, min_value, max_value):
-    """
-    Get a double from user input
-    :param parent: Parent widget
-    :param label: Label of the value
-    :param initial_value: Initial value
-    :param min_value: Minimum bound
-    :param max_value: Maximum bound
-    :return: The chosen value
-    """
-    value, ok_pressed = QInputDialog.getDouble(parent, "Please enter the {}".format(label), "{}:".format(label),
-                                               initial_value, min_value, max_value)
-    if ok_pressed:
-        return value
-    else:
-        return initial_value
+from dialogs import get_double_from_input, get_string_from_input
 
 
-def _get_string_from_input(parent, label, initial_value):
-    """
-    Get a string from use input
-    :param parent: Parent widget
-    :param label: Label of the value
-    :param initial_value: Initial value
-    :return: The chosen value
-    """
-    value, ok_pressed = QInputDialog.getText(parent, "Please enter the {}".format(label), "{}:".format(label),
-                                            QLineEdit.Normal, initial_value)
-    if ok_pressed:
-        return value
-    else:
-        return initial_value
-
-
-class PublishPose(Plugin):
+class PublishPosePlugin(Plugin):
     def __init__(self, context):
         """
         Publishes pose from a specified frame to another
         """
-        super(PublishPose, self).__init__(context)
+        super(PublishPosePlugin, self).__init__(context)
 
         # Create QWidget
         self._widget = QWidget()
@@ -121,7 +89,7 @@ class PublishPose(Plugin):
         """
         Triggered when the gear wheel configuration is triggered
         """
-        self._setup(_get_string_from_input(self._widget, "TF source frame", self._source_frame),
-                    _get_string_from_input(self._widget, "TF target frame", self._target_frame),
-                    _get_double_from_input(self._widget, "TF timeout", self._timeout, 0, 1e3),
-                    _get_string_from_input(self._widget, "Output topic", self._pub.name))
+        self._setup(get_string_from_input(self._widget, "TF source frame", self._source_frame),
+                    get_string_from_input(self._widget, "TF target frame", self._target_frame),
+                    get_double_from_input(self._widget, "TF timeout", self._timeout, 0, 1e3),
+                    get_string_from_input(self._widget, "Output topic", self._pub.name))

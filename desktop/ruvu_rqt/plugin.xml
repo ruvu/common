@@ -1,5 +1,5 @@
 <library path="src">
-  <class name="Publish pose" type="ruvu_rqt.publish_pose.PublishPose" base_class_type="rqt_gui_py::Plugin">
+  <class name="Publish pose" type="ruvu_rqt.publish_pose.PublishPosePlugin" base_class_type="rqt_gui_py::Plugin">
     <description>
       Publish a PoseStamped to a topic
     </description>
@@ -12,6 +12,21 @@
       <label>Publish pose</label>
       <icon type="file">icons/pose.png</icon>
       <statustip>Publish a PoseStamped to a topic</statustip>
+    </qtgui>
+  </class>
+  <class name="Single joint position action" type="ruvu_rqt.single_joint_position_action.SingleJointPositionActionPlugin" base_class_type="rqt_gui_py::Plugin">
+    <description>
+      Send a single joint position action goal
+    </description>
+    <qtgui>
+      <group>
+        <label>RUVU</label>
+        <icon type="file">icons/ruvu.png</icon>
+        <statustip>RUVU RQT Plugins</statustip>
+      </group>
+      <label>Single joint position action</label>
+      <icon type="file">icons/single_joint_position_action.png</icon>
+      <statustip>Send a single joint position action goal</statustip>
     </qtgui>
   </class>
 </library>
