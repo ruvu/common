@@ -1,0 +1,9 @@
+<library path="lib/libruvu_rviz_plugins">
+  <class name="ruvu_rviz_plugins/Pick"
+         type="ruvu_rviz_plugins::PickTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for planting flags on the ground plane in rviz.
+    </description>
+  </class>
+</library>
