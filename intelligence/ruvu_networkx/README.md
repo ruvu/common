@@ -43,8 +43,14 @@ PoseGraphNode that holds a pose graph that can be created and modified by the us
 - ~click_timeout (`default=5.0` - When adding and edge or planning a path using the corresponding topic interfaces, this timeout is used for selecting consecutive poses.
 - ~interpolation_distance (`default=0.2`) - Path interpolation
 
+### [generate_grid_graph](scripts/generate_grid_graph)
+This script can be used to generate a grid of nodes. Several arguments can be given to the script to modify the resulting grid. Run the script with `--help` to see how to use it:
+```bash
+generate_grid_graph --help
+```
+
 ## Internal data structure
-he representation of the graph on disk is a networkx graph. Each node is a unique integer. Each node has the following attributes:
+The representation of the graph on disk is a networkx graph. Each node is a unique integer. Each node has the following attributes:
 ```
 pose: geometry_msgs/Pose
 ```
