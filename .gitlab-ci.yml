@@ -1,7 +1,20 @@
 image: docker:git
 
 variables:
-    PACKAGES: "ruvu_bringup pozyx_ros ruvu_networkx ruvu_gazebo_plugins ruvu_sensor_descriptions ruvu_rostest ruvu_msg_converters" # Separate with spaces
+    PACKAGES: >
+        pepper_hardware
+        pozyx_ros
+        ruvu_bringup
+        ruvu_flexbe_states
+        ruvu_gazebo_plugins
+        ruvu_msg_converters
+        ruvu_networkx
+        ruvu_rostest
+        ruvu_rqt
+        ruvu_rviz_plugins
+        ruvu_sensor_descriptions
+        ruvu_teleop
+        ruvu_web
     IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH
 
 before_script:
