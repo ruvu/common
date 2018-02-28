@@ -2,7 +2,6 @@ image: docker:git
 
 variables:
     PACKAGES: >
-        pepper_hardware
         pozyx_ros
         ruvu_bringup
         ruvu_flexbe_states
