@@ -9,11 +9,11 @@ class StringProperty;
 
 namespace ruvu_rviz_plugins
 {
-class PickTool : public rviz::PoseTool
+class BasePoseTool : public rviz::PoseTool
 {
   Q_OBJECT
 public:
-  PickTool();
+  BasePoseTool(std::string name);
 
   virtual void onInitialize();
 
@@ -29,5 +29,6 @@ private:
   ros::Publisher pub_;
 
   rviz::StringProperty* topic_property_;
+  std::string name;
 };
 }

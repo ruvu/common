@@ -1,9 +1,16 @@
 <library path="lib/libruvu_rviz_plugins">
-  <class name="ruvu_rviz_plugins/Pick"
-         type="ruvu_rviz_plugins::PickTool"
+  <class name="ruvu_rviz_plugins/Pickup"
+         type="ruvu_rviz_plugins::PickupTool"
          base_class_type="rviz::Tool">
     <description>
-      Tool for planting flags on the ground plane in rviz.
+      Give a PoseStamped goal to pick something up
+    </description>
+  </class>
+  <class name="ruvu_rviz_plugins/Placedown"
+         type="ruvu_rviz_plugins::PlacedownTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Give a PoseStamped goal to place something down
     </description>
   </class>
 </library>

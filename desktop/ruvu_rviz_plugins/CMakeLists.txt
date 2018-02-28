@@ -43,6 +43,8 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 
 add_library(${PROJECT_NAME}
-  src/pick_tool.cpp
+  src/base_pose_tool.cpp
+  src/pickup_tool.cpp
+  src/placedown_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})

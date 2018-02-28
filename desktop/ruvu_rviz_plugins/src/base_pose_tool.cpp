@@ -1,4 +1,4 @@
-#include "pick_tool.h"
+#include "base_pose_tool.h"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
@@ -7,26 +7,27 @@
 
 namespace ruvu_rviz_plugins
 {
-PickTool::PickTool()
+BasePoseTool::BasePoseTool(std::string name)
 {
   // shortcut_key_ = 'l';
   topic_property_ = new rviz::StringProperty("Topic", "pick", "The topic on which to publish pick goals.",
                                              getPropertyContainer(), SLOT(updateTopic()), this);
+  this->name = name;
 }
 
-void PickTool::onInitialize()
+void BasePoseTool::onInitialize()
 {
   PoseTool::onInitialize();
-  setName("Pick");
+  setName(this->name.c_str());
   updateTopic();
 }
 
-void PickTool::updateTopic()
+void BasePoseTool::updateTopic()
 {
   pub_ = nh_.advertise<geometry_msgs::PoseStamped>(topic_property_->getStdString(), 1);
 }
 
-void PickTool::onPoseSet(double x, double y, double theta)
+void BasePoseTool::onPoseSet(double x, double y, double theta)
 {
   std::string fixed_frame = context_->getFixedFrame().toStdString();
   tf::Quaternion quat;
@@ -40,6 +41,3 @@ void PickTool::onPoseSet(double x, double y, double theta)
   pub_.publish(goal);
 }
 }
-
-#include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::PickTool, rviz::Tool)
