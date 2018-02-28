@@ -10,7 +10,7 @@ namespace ruvu_rviz_plugins
 BasePoseTool::BasePoseTool(std::string name)
 {
   // shortcut_key_ = 'l';
-  topic_property_ = new rviz::StringProperty("Topic", "pick", "The topic on which to publish pick goals.",
+  topic_property_ = new rviz::StringProperty("Topic", "goal", "The topic on which to publish pick goals.",
                                              getPropertyContainer(), SLOT(updateTopic()), this);
   this->name = name;
 }

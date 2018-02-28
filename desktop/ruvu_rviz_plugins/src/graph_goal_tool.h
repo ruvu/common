@@ -4,10 +4,10 @@
 
 namespace ruvu_rviz_plugins
 {
-class PickupTool : public BasePoseTool
+class GraphGoalTool : public BasePoseTool
 {
   Q_OBJECT
 public:
-  PickupTool();
+  GraphGoalTool();
 };
 }

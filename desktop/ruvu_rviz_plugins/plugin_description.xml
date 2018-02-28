@@ -1,16 +1,16 @@
 <library path="lib/libruvu_rviz_plugins">
-  <class name="ruvu_rviz_plugins/Pickup"
-         type="ruvu_rviz_plugins::PickupTool"
+  <class name="ruvu_rviz_plugins/DockGoal"
+         type="ruvu_rviz_plugins::DockGoalTool"
          base_class_type="rviz::Tool">
     <description>
-      Give a PoseStamped goal to pick something up
+      Give a PoseStamped goal for docking
     </description>
   </class>
-  <class name="ruvu_rviz_plugins/Placedown"
-         type="ruvu_rviz_plugins::PlacedownTool"
+  <class name="ruvu_rviz_plugins/GraphGoal"
+         type="ruvu_rviz_plugins::GraphGoalTool"
          base_class_type="rviz::Tool">
     <description>
-      Give a PoseStamped goal to place something down
+      Give a PoseStamped goal for graph navigation
     </description>
   </class>
 </library>
