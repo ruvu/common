@@ -264,11 +264,8 @@ class PoseGraphNode(object):
         self._last_get_path_clicked_point = point
 
     def _check_goal_validity(self, goal, result):
-        if goal.planner not in ['topological', 'interpolated']:
-            result.message = "The specified planner should be either 'topological' or 'interpolated'. " \
-                             "It is now {}".format(goal.planner)
-            result.outcome = GetPathResult.INVALID_GOAL
-            return False
+        if not goal.planner:
+            goal.planner = 'topological'
 
         if goal.use_start_pose and goal.start_pose.header.frame_id != self._frame_id:
             result.outcome = GetPathResult.INVALID_START
