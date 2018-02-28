@@ -252,7 +252,7 @@ class PoseGraphNode(object):
                 and (rospy.Time.now() - self._last_get_path_clicked_point.header.stamp).to_sec() < self._click_timeout:
             start_node = self._get_closest_node(self._last_get_path_clicked_point.point, tolerance=1.0)
             end_node = self._get_closest_node(point.point, tolerance=1.0)
-            if start_node and end_node:
+            if start_node is not None and end_node is not None:
                 try:
                     shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
                 except nx.NetworkXNoPath as _:
@@ -325,7 +325,7 @@ class PoseGraphNode(object):
                 end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
 
         # Plan the path if start and end nodes are valid
-        if start_node and end_node:
+        if start_node is not None and end_node is not None:
             try:
                 shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
             except nx.NetworkXNoPath as e:
@@ -371,7 +371,7 @@ class PoseGraphNode(object):
         """
         n1 = self._get_closest_node(p1, tolerance=1.0)
         n2 = self._get_closest_node(p2, tolerance=1.0)
-        if n1 and n2:
+        if n1 is not None and n2 is not None:
             self._graph.add_edge(n1, n2, weight=_get_squared_distance(p1, p2))
             rospy.loginfo("Adding edge between {} and {}".format(n1, n2))
             self._publish_graph_visualization()
@@ -382,7 +382,7 @@ class PoseGraphNode(object):
         :param point: Point (we will look for the closes pose within a tolerance region of 1.0)
         """
         n = self._get_closest_node(point, tolerance=1.0)
-        if n:
+        if n is not None:
             self._graph.remove_node(n)
             rospy.loginfo("Removed node {}".format(n))
             self._publish_graph_visualization()
@@ -397,11 +397,17 @@ class PoseGraphNode(object):
 
 if __name__ == "__main__":
     rospy.init_node("pose_graph_node")
-    pgn = PoseGraphNode(
-        rospy.get_param("~frame_id", "map"),
-        rospy.get_param("~robot_frame_id", "base_link"),
-        rospy.get_param("~file_path", "/tmp/pose_graph.yaml"),
-        rospy.get_param("~click_timeout", 5.0),
-        rospy.get_param("~interpolation_distance", 0.2)
-    )
-    rospy.spin()
+    try:
+        pgn = PoseGraphNode(
+            rospy.get_param("~frame_id", "map"),
+            rospy.get_param("~robot_frame_id", "base_link"),
+            rospy.get_param("~file_path", "/tmp/pose_graph.yaml"),
+            rospy.get_param("~click_timeout", 5.0),
+            rospy.get_param("~interpolation_distance", 0.2)
+        )
+    except Exception:
+        # if we don't catch this exception, the node hangs because other threads have been started
+        rospy.signal_shutdown('exception during initialization')
+        raise
+    else:
+        rospy.spin()
