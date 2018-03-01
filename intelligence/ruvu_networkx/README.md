@@ -28,7 +28,7 @@ PoseGraphNode that holds a pose graph that can be created and modified by the us
 - get_path ([GetPathAction](https://github.com/magazino/move_base_flex/blob/master/mbf_msgs/action/GetPath.action)) - Plan a path
   * There are two planners available:
     - `topological` just plan along the graph
-    - `interpolated` interpolate between points
+    - `global` interpolate between points and include the last pose
 
 ##### Services
 

@@ -304,7 +304,7 @@ class PoseGraphNode(object):
         # Set interpolation distance based on selected planner
         if goal.planner == "topological":
             interpolation_distance = 0
-        else:  # We can safely assume goal.planner == "interpolated", as we checked the goal validity already.
+        else:  # We can safely assume goal.planner == "global", as we checked the goal validity already.
             interpolation_distance = self._interpolation_distance
 
         # Select start and end nodes
@@ -332,12 +332,14 @@ class PoseGraphNode(object):
             else:
                 result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
                                                         interpolation_distance)
-                end_pose = goal.target_pose
-                # If orientation not set (zero quaternion is invalid), use orientation from graph node pose
-                if end_pose.pose.orientation == Quaternion():
-                    end_pose.pose.orientation = result.path.poses[-1].pose.orientation
 
-                result.path.poses.append(goal.target_pose)
+                if goal.planner == "global":
+                    end_pose = goal.target_pose
+                    # If orientation not set (zero quaternion is invalid), use orientation from graph node pose
+                    if end_pose.pose.orientation == Quaternion():
+                        end_pose.pose.orientation = result.path.poses[-1].pose.orientation
+                    result.path.poses.append(end_pose)
+
                 self._last_planner_path_pub.publish(result.path)
         else:
             result.outcome = GetPathResult.NO_PATH_FOUND
