@@ -341,9 +341,12 @@ class PoseGraphNode(object):
                     result.path.poses.append(end_pose)
 
                 self._last_planner_path_pub.publish(result.path)
+        elif start_node is None:
+            result.outcome = GetPathResult.NO_PATH_FOUND
+            result.message = "Start node could not be found, with tolerance {}".format(goal.tolerance)
         else:
             result.outcome = GetPathResult.NO_PATH_FOUND
-            result.message = "Either start or end node could not be found, with tolerance {}".format(goal.tolerance)
+            result.message = "End node could not be found, with tolerance {}".format(goal.tolerance)
 
         if result.outcome == GetPathResult.SUCCESS:
             self._get_path_as.set_succeeded(result, result.message)
