@@ -2,8 +2,10 @@
 set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo "Installing systemd services"
-sudo cp -v "$DIR/../systemd/"* "/etc/systemd/system/"
+echo "Installing roscore systemd service for user "`whoami`
+cp $DIR/../systemd/roscore.service /tmp/roscore.service
+echo User=`whoami` >> /tmp/roscore.service
+sudo cp "/tmp/roscore.service" "/etc/systemd/system/"
 
 echo "Reloading daemon ..."
 sudo systemctl daemon-reload
