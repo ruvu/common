@@ -38,6 +38,14 @@
           </geometry>
         </collision>
       </link>
+
+      <link name="${name}_optical_frame" />
+
+      <joint name="${name}_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="${M_PI} 0 0" />
+        <parent link="${name}_frame"/>
+        <child link="${name}_optical_frame"/>
+      </joint>
     </xacro:macro>
 
     <xacro:macro name="omron_os32c_bp" params="name parent *origin ros_topic update_rate ray_count min_angle max_angle">
