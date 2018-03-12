@@ -46,5 +46,6 @@ add_library(${PROJECT_NAME}
   src/base_pose_tool.cpp
   src/graph_goal_tool.cpp
   src/dock_goal_tool.cpp
+  src/configurable_goal_pose_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
