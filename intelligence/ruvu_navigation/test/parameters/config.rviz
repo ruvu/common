@@ -8,9 +8,11 @@ Panels:
         - /Status1
         - /ControllerCommon1/Map1
         - /Planners1
+        - /Planners1/GlobalPlanner1/Path1
         - /Controllers1
         - /Controllers1/DWA1/CostCloud1
         - /Controllers1/SimpleLocalPlanner1
+        - /Path1
       Splitter Ratio: 0.545706391
     Tree Height: 775
   - Class: rviz/Selection
@@ -160,7 +162,7 @@ Visualization Manager:
                 Y: 0
                 Z: 0
               Pose Color: 255; 85; 255
-              Pose Style: None
+              Pose Style: Axes
               Radius: 0.0299999993
               Shaft Diameter: 0.100000001
               Shaft Length: 0.100000001
@@ -187,7 +189,7 @@ Visualization Manager:
                 Y: 0
                 Z: 0
               Pose Color: 255; 85; 255
-              Pose Style: None
+              Pose Style: Axes
               Radius: 0.0299999993
               Shaft Diameter: 0.100000001
               Shaft Length: 0.100000001
@@ -204,7 +206,7 @@ Visualization Manager:
           Displays: ~
           Enabled: true
           Name: CarrotPlanner
-      Enabled: true
+      Enabled: false
       Name: Planners
     - Class: rviz/Group
       Displays:
@@ -382,6 +384,29 @@ Visualization Manager:
       Topic: /odom
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.300000012
+      Line Style: Billboards
+      Line Width: 0.0299999993
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: Arrows
+      Radius: 0.0299999993
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
+      Topic: /costmap_navigation/ftc/local_plan
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -398,25 +423,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 9.02828503
+      Distance: 3.24688315
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.85080886
-        Y: -2.0334549
-        Z: -1.09577486e-05
+        X: -0.473861814
+        Y: -0.358220935
+        Z: -1.23882601e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.21479654
+      Pitch: 1.02979672
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.77728176
+      Yaw: 3.42228413
     Saved: ~
 Window Geometry:
   Displays:
