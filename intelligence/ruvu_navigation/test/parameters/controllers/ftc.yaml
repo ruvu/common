@@ -1,0 +1,12 @@
+rotation_accuracy: 0.1 # Accuracy of the orientation to the goal orientation.
+position_accuracy: 0.1 # Maximal distance to the goal position.
+max_rotation_vel: 0.8 # The absolute value of the maximum rotational velocity for the robot in rad/s.
+min_rotation_vel: 0.2 # The absolute value of the minimum rotational velocity for the robot in rad/s.
+max_x_vel: 0.05 # The maximum x velocity for the robot in m/s.
+sim_time: 0.4 # The time in seconds which look along the global plan with maximal velocity, to calulate the path.
+acceleration_x: 0.1 # The acceleration limit of the robot in the x direction.
+acceleration_z: 0.1 # The acceleration limit of the robot for rotation.
+slow_down_factor: 1 # Factor to scale when the robot should slow down by in place rotation.
+local_planner_frequence: 10, # Need to set to the same value as the local planner frequence (controller frequence) in move base.
+
+restore_defaults: false # Restore to the original configuration

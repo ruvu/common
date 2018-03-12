@@ -36,7 +36,8 @@ def goal_cb(planner_client, controller_pub, planner, controller, msg):
         controller_pub.publish(ExePathActionGoal(
             header=msg.header,
             goal=ExePathGoal(
-                path=result.path
+                path=result.path,
+                controller=controller
             )
         ))
     else:

@@ -7,7 +7,10 @@ Panels:
         - /Global Options1
         - /Status1
         - /ControllerCommon1/Map1
+        - /Planners1
+        - /Controllers1
         - /Controllers1/DWA1/CostCloud1
+        - /Controllers1/SimpleLocalPlanner1
       Splitter Ratio: 0.545706391
     Tree Height: 775
   - Class: rviz/Selection
@@ -27,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: TrajectoryCloud
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -193,6 +196,14 @@ Visualization Manager:
               Value: true
           Enabled: true
           Name: GlobalPlanner
+        - Class: rviz/Group
+          Displays: ~
+          Enabled: true
+          Name: GoalPasser
+        - Class: rviz/Group
+          Displays: ~
+          Enabled: true
+          Name: CarrotPlanner
       Enabled: true
       Name: Planners
     - Class: rviz/Group
@@ -214,7 +225,7 @@ Visualization Manager:
               Enabled: true
               Invert Rainbow: false
               Max Color: 255; 255; 255
-              Max Intensity: 560
+              Max Intensity: 565.599976
               Min Color: 0; 0; 0
               Min Intensity: 0
               Name: CostCloud
@@ -261,6 +272,80 @@ Visualization Manager:
               Value: true
           Enabled: true
           Name: DWA
+        - Class: rviz/Group
+          Displays: ~
+          Enabled: true
+          Name: SimpleLocalPlanner
+        - Class: rviz/Group
+          Displays: ~
+          Enabled: true
+          Name: FTC
+        - Class: rviz/Group
+          Displays:
+            - Class: rviz/Marker
+              Enabled: true
+              Marker Topic: /costmap_navigation/eband/eband_visualization
+              Name: Marker
+              Namespaces:
+                {}
+              Queue Size: 100
+              Value: true
+            - Class: rviz/MarkerArray
+              Enabled: true
+              Marker Topic: /costmap_navigation/eband/eband_visualization_array
+              Name: MarkerArray
+              Namespaces:
+                {}
+              Queue Size: 100
+              Value: true
+            - Alpha: 1
+              Buffer Length: 1
+              Class: rviz/Path
+              Color: 25; 255; 0
+              Enabled: true
+              Head Diameter: 0.300000012
+              Head Length: 0.200000003
+              Length: 0.300000012
+              Line Style: Lines
+              Line Width: 0.0299999993
+              Name: GlobalPlan
+              Offset:
+                X: 0
+                Y: 0
+                Z: 0
+              Pose Color: 255; 85; 255
+              Pose Style: None
+              Radius: 0.0299999993
+              Shaft Diameter: 0.100000001
+              Shaft Length: 0.100000001
+              Topic: /costmap_navigation/eband/global_plan
+              Unreliable: false
+              Value: true
+            - Alpha: 1
+              Buffer Length: 1
+              Class: rviz/Path
+              Color: 25; 255; 0
+              Enabled: true
+              Head Diameter: 0.300000012
+              Head Length: 0.200000003
+              Length: 0.300000012
+              Line Style: Lines
+              Line Width: 0.0299999993
+              Name: LocalPlan
+              Offset:
+                X: 0
+                Y: 0
+                Z: 0
+              Pose Color: 255; 85; 255
+              Pose Style: None
+              Radius: 0.0299999993
+              Shaft Diameter: 0.100000001
+              Shaft Length: 0.100000001
+              Topic: /costmap_navigation/eband/local_plan
+              Unreliable: false
+              Value: true
+          Enabled: true
+          Name: Eband
       Enabled: true
       Name: Controllers
     - Angle Tolerance: 0.100000001
@@ -313,25 +398,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 10.2594147
+      Distance: 9.02828503
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.316185236
-        Y: 4.08565044
+        X: 3.85080886
+        Y: -2.0334549
         Z: -1.09577486e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.864796698
+      Pitch: 1.21479654
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 0.96409595
+      Yaw: 4.77728176
     Saved: ~
 Window Geometry:
   Displays:

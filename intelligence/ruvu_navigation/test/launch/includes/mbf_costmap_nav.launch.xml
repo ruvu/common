@@ -11,10 +11,15 @@
 
     <!-- controllers -->
     <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/controllers/dwa.yaml" command="load" ns="dwa" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/controllers/simple_local_planner.yaml" command="load" ns="simple_local_planner" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/controllers/ftc.yaml" command="load" ns="ftc" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/controllers/eband.yaml" command="load" ns="eband" />
 
     <!-- planners -->
     <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/planners/navfn.yaml" command="load" ns="navfn" />
     <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/planners/global_planner.yaml" command="load" ns="global_planner" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/planners/goal_passer.yaml" command="load" ns="goal_passer" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/planners/carrot_planner.yaml" command="load" ns="carrot_planner" />
   </node>
 
   <node name="pose_stamped_move_base_goal" pkg="ruvu_costmap_navigation" type="pose_stamped_move_base_goal" required="true" output="screen" />
