@@ -1,0 +1,9 @@
+planners:
+  - name: global_planner
+    type: global_planner/GlobalPlanner
+  - name: navfn
+    type: navfn/NavfnROS
+
+controllers:
+  - name: dwa
+    type: dwa_local_planner/DWAPlannerROS

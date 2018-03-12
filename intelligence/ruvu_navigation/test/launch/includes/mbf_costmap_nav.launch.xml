@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<launch>
+  <!-- Costmap navigation for global planning and local execution -->
+  <node name="costmap_navigation" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/move_base.yaml" command="load" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/common_costmap.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/common_costmap.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/local_costmap.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/global_costmap.yaml" command="load" ns="global_costmap" />
+
+    <!-- controllers -->
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/controllers/dwa.yaml" command="load" ns="dwa" />
+
+    <!-- planners -->
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/planners/navfn.yaml" command="load" ns="navfn" />
+    <rosparam file="$(find ruvu_costmap_navigation)/test/parameters/planners/global_planner.yaml" command="load" ns="global_planner" />
+  </node>
+
+  <node name="pose_stamped_move_base_goal" pkg="ruvu_costmap_navigation" type="pose_stamped_move_base_goal" required="true" output="screen" />
+</launch>
