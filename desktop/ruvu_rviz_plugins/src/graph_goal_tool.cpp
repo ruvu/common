@@ -2,7 +2,7 @@
 
 namespace ruvu_rviz_plugins
 {
-GraphGoalTool::GraphGoalTool() : BasePoseTool("Graph goal")
+GraphGoalTool::GraphGoalTool() : BasePointTool("Graph goal")
 {
 }
 }

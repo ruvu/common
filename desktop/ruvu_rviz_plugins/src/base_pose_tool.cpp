@@ -15,6 +15,10 @@ BasePoseTool::BasePoseTool(std::string name)
   this->name = name;
 }
 
+BasePoseTool::~BasePoseTool()
+{
+}
+
 void BasePoseTool::onInitialize()
 {
   PoseTool::onInitialize();

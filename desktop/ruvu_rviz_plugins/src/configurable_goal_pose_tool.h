@@ -9,12 +9,11 @@ class StringProperty;
 
 namespace ruvu_rviz_plugins
 {
-class BasePoseTool : public rviz::PoseTool
+class ConfigurableGoalPoseTool : public rviz::PoseTool
 {
   Q_OBJECT
 public:
-  BasePoseTool(std::string name);
-  virtual ~BasePoseTool();
+  ConfigurableGoalPoseTool();
 
   virtual void onInitialize();
 
@@ -22,13 +21,15 @@ protected:
   virtual void onPoseSet(double x, double y, double theta);
 
 private Q_SLOTS:
-  void updateTopic();
+  void updatePublishers();
 
 private:
   ros::NodeHandle nh_;
-  ros::Publisher pub_;
+  rviz::StringProperty* namespace_;
 
-  rviz::StringProperty* topic_property_;
-  std::string name;
+  std::map<std::string, ros::Publisher> publisher_map_;
+
+  int selected_index_;
 };
+
 }
