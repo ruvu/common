@@ -55,6 +55,7 @@ if (CATKIN_ENABLE_TESTING)
 
     # ROS Lint
     find_package(catkin REQUIRED roslint)
+    set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     roslint_cpp()
     roslint_add_test()
 endif()
