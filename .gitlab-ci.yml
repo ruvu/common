@@ -2,18 +2,20 @@ image: docker:git
 
 variables:
     PACKAGES: >
-        pozyx_ros
-        ruvu_bringup
         ruvu_flexbe_states
-        ruvu_gazebo_plugins
-        ruvu_msg_converters
-        ruvu_networkx
-        ruvu_rostest
-        ruvu_rqt
-        ruvu_rviz_plugins
-        ruvu_sensor_descriptions
-        ruvu_teleop
         ruvu_web
+        ruvu_rqt
+        ruvu_gazebo_plugins
+        ruvu_sensor_descriptions
+        ruvu_bringup
+        ruvu_rostest
+        ruvu_networkx
+        ruvu_msg_converters
+        ruvu_costmap_navigation
+        ruvu_rviz_plugins
+        ruvu_teleop
+        pepper_hardware
+        pozyx_ros
     IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH
 
 before_script:
