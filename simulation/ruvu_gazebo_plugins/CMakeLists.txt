@@ -4,7 +4,7 @@ project(ruvu_gazebo_plugins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs control_msgs actionlib sensor_msgs tf2_ros)
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs control_msgs actionlib sensor_msgs tf2_ros roslint nav_msgs gazebo_ros)
 #include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -19,9 +19,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 include_directories(${Boost_INCLUDE_DIRS})
 
 catkin_package(
-    CATKIN_DEPENDS roscpp geometry_msgs
-    #    INCLUDE_DIRS include
-    LIBRARIES
+    CATKIN_DEPENDS roscpp geometry_msgs control_msgs actionlib sensor_msgs tf2_ros nav_msgs gazebo_ros
 )
 
 ###########
@@ -54,7 +52,6 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/single_joint_position_lifter_world.test)
 
     # ROS Lint
-    find_package(catkin REQUIRED COMPONENTS roslint)
     set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     roslint_cpp()
     roslint_add_test()
