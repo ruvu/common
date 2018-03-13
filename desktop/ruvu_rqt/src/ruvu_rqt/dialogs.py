@@ -28,7 +28,7 @@ def get_string_from_input(parent, label, initial_value):
     :return: The chosen value
     """
     value, ok_pressed = QInputDialog.getText(parent, "Please enter the {}".format(label), "{}:".format(label),
-                                            QLineEdit.Normal, initial_value)
+                                             QLineEdit.Normal, initial_value)
     if ok_pressed:
         return value
     else:

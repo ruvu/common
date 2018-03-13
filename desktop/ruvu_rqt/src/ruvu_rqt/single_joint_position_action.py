@@ -51,7 +51,7 @@ class SingleJointPositionActionPlugin(Plugin):
 
     def save_settings(self, plugin_settings, instance_settings):
         """
-        Saves the settings the perspective cfg 
+        Saves the settings the perspective cfg
         """
         instance_settings.set_value("position", self._position)
         instance_settings.set_value("action_name", self._action_name)
@@ -59,7 +59,7 @@ class SingleJointPositionActionPlugin(Plugin):
 
     def restore_settings(self, plugin_settings, instance_settings):
         """
-        Restores the settings the perspective cfg 
+        Restores the settings the perspective cfg
         """
         action_name = instance_settings.value("action_name")
         position = instance_settings.value("position")
