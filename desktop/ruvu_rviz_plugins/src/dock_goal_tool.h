@@ -6,7 +6,6 @@ namespace ruvu_rviz_plugins
 {
 class DockGoalTool : public BasePoseTool
 {
-  Q_OBJECT
 public:
   DockGoalTool();
 };

@@ -44,6 +44,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 add_library(${PROJECT_NAME}
   src/base_pose_tool.cpp
+  src/base_point_tool.cpp
   src/graph_goal_tool.cpp
   src/dock_goal_tool.cpp
 )

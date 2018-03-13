@@ -14,6 +14,7 @@ class BasePoseTool : public rviz::PoseTool
   Q_OBJECT
 public:
   BasePoseTool(std::string name);
+  virtual ~BasePoseTool();
 
   virtual void onInitialize();
 
@@ -21,7 +22,6 @@ protected:
   virtual void onPoseSet(double x, double y, double theta);
 
 private Q_SLOTS:
-  void updateName();
   void updateTopic();
 
 private:
