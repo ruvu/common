@@ -1,6 +1,14 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
 #pragma once
 
 #include <rviz/default_plugin/tools/pose_tool.h>
+#include <map>
+#include <string>
 
 namespace rviz
 {
@@ -31,5 +39,4 @@ private:
 
   int selected_index_;
 };
-
-}
+}  // namespace ruvu_rviz_plugins

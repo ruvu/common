@@ -1,13 +1,20 @@
-#include "base_point_tool.h"
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
 
-#include <OgreVector3.h>
+#include "./base_point_tool.h"
+
 #include <geometry_msgs/PoseStamped.h>
-#include <rviz/properties/string_property.h>
-#include <rviz/properties/bool_property.h>
+#include <OgreVector3.h>
+#include <rviz/display_context.h>
 #include <rviz/load_resource.h>
+#include <rviz/properties/bool_property.h>
+#include <rviz/properties/string_property.h>
+#include <rviz/selection/selection_manager.h>
 #include <rviz/viewport_mouse_event.h>
-#include "rviz/display_context.h"
-#include "rviz/selection/selection_manager.h"
+#include <string>
 
 namespace ruvu_rviz_plugins
 {
@@ -91,4 +98,4 @@ int BasePointTool::processMouseEvent(rviz::ViewportMouseEvent& event)
 
   return flags;
 }
-}
+}  // namespace ruvu_rviz_plugins

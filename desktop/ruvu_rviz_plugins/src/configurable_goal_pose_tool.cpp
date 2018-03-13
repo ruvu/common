@@ -1,4 +1,10 @@
-#include "configurable_goal_pose_tool.h"
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
+#include "./configurable_goal_pose_tool.h"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
@@ -9,10 +15,11 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <string>
+#include <vector>
 
 namespace ruvu_rviz_plugins
 {
-
 const std::string TYPE = "geometry_msgs/PoseStamped";
 
 //!
@@ -25,9 +32,9 @@ std::vector<std::string> getTopics(const std::string& ns, const std::string type
 {
   ROS_INFO("Querying master for topics of geometry_msgs/PoseStamped within namespace %s", ns.c_str());
 
-//  NOTE: This call did not work
-//  ros::master::V_TopicInfo master_topics;
-//  ros::master::getTopics(master_topics);
+  //  NOTE: This call did not work
+  //  ros::master::V_TopicInfo master_topics;
+  //  ros::master::getTopics(master_topics);
 
   std::vector<std::string> topics;
 
@@ -35,21 +42,21 @@ std::vector<std::string> getTopics(const std::string& ns, const std::string type
   XmlRpc::XmlRpcValue results;
   XmlRpc::XmlRpcValue r;
 
-  if(ros::master::execute("getTopicTypes", params, results, r, false) == true)
+  if (ros::master::execute("getTopicTypes", params, results, r, false) == true)
   {
-    if(results.getType() == XmlRpc::XmlRpcValue::TypeArray)
+    if (results.getType() == XmlRpc::XmlRpcValue::TypeArray)
     {
       int32_t i = 2;
-      if(results[i].getType() == XmlRpc::XmlRpcValue::TypeArray)
+      if (results[i].getType() == XmlRpc::XmlRpcValue::TypeArray)
       {
         for (int32_t j = 0; j < results[i].size(); ++j)
         {
-          if(results[i][j].getType() == XmlRpc::XmlRpcValue::TypeArray)
+          if (results[i][j].getType() == XmlRpc::XmlRpcValue::TypeArray)
           {
-            if(results[i][j].size() == 2)
+            if (results[i][j].size() == 2)
             {
-              if(results[i][j][0].getType() == XmlRpc::XmlRpcValue::TypeString
-                 && results[i][j][1].getType() == XmlRpc::XmlRpcValue::TypeString)
+              if (results[i][j][0].getType() == XmlRpc::XmlRpcValue::TypeString &&
+                  results[i][j][1].getType() == XmlRpc::XmlRpcValue::TypeString)
               {
                 std::string topic = static_cast<std::string>(results[i][j][0]);
                 std::string datatype = static_cast<std::string>(results[i][j][1]);
@@ -81,20 +88,21 @@ public:
 
     box = new QComboBox;
     box->addItems(items);
-    if (selected_index < items.size()) {
+    if (selected_index < items.size())
+    {
       box->setCurrentIndex(selected_index);
     }
     layout()->addWidget(box);
 
     QPushButton* ok = new QPushButton("Publish");
     layout()->addWidget(ok);
-    connect(ok, &QPushButton::clicked, this, [this]()
-    {
-      accept();
-    });
+    connect(ok, &QPushButton::clicked, this, [this]() { accept(); });
   }
 
-  QComboBox* comboBox() { return box; }
+  QComboBox* comboBox()
+  {
+    return box;
+  }
 
 private:
   QComboBox* box;
@@ -102,10 +110,10 @@ private:
 
 ConfigurableGoalPoseTool::ConfigurableGoalPoseTool() : selected_index_(0)
 {
-  std::string msg = "This namespace will be scanned for topics with type "
-      + TYPE + ". The user can select the desired topic when a pose has been set.";
-  namespace_ = new rviz::StringProperty("Pose Stamped namespace", "/", QString(msg.c_str()),
-                                        getPropertyContainer(), SLOT(updatePublishers()), this);
+  std::string msg = "This namespace will be scanned for topics with type " + TYPE + ". The user can select the desired "
+                                                                                    "topic when a pose has been set.";
+  namespace_ = new rviz::StringProperty("Pose Stamped namespace", "/", QString(msg.c_str()), getPropertyContainer(),
+                                        SLOT(updatePublishers()), this);
 }
 
 void ConfigurableGoalPoseTool::updatePublishers()
@@ -160,8 +168,7 @@ void ConfigurableGoalPoseTool::onPoseSet(double x, double y, double theta)
     publisher_map_[dialog.comboBox()->currentText().toStdString()].publish(goal);
   }
 }
-
-}
+}  // namespace ruvu_rviz_plugins
 
 #include <pluginlib/class_list_macros.h>
 PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::ConfigurableGoalPoseTool, rviz::Tool)

@@ -1,8 +1,15 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
+
 #pragma once
 
 #include <rviz/tool.h>
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
+#include <string>
 
 // forward declare
 namespace rviz
@@ -17,7 +24,7 @@ class BasePointTool : public rviz::Tool
 {
   Q_OBJECT
 public:
-  BasePointTool(std::string name);
+  explicit BasePointTool(std::string name);
   virtual ~BasePointTool();
   virtual void onInitialize();
 
@@ -42,4 +49,4 @@ private:
 
   std::string name;
 };
-}
+}  // namespace ruvu_rviz_plugins

@@ -53,6 +53,7 @@ target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 # Tests
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
+    set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     roslint_cpp()
     roslint_add_test()
 
