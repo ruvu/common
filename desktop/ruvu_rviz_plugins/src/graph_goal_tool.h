@@ -1,12 +1,11 @@
 #pragma once
 
-#include "base_pose_tool.h"
+#include "base_point_tool.h"
 
 namespace ruvu_rviz_plugins
 {
-class GraphGoalTool : public BasePoseTool
+class GraphGoalTool : public BasePointTool
 {
-  Q_OBJECT
 public:
   GraphGoalTool();
 };

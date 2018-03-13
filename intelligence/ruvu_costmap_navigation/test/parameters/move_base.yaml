@@ -1,0 +1,19 @@
+planners:
+  - name: global_planner
+    type: global_planner/GlobalPlanner
+  - name: navfn
+    type: navfn/NavfnROS
+  - name: goal_passer
+    type: goal_passer/GoalPasser
+  - name: carrot_planner
+    type: carrot_planner/CarrotPlanner
+
+controllers:
+  - name: dwa
+    type: dwa_local_planner/DWAPlannerROS
+  - name: simple_local_planner
+    type: simple_local_planner/PurePlannerROS
+  - name: ftc
+    type: ftc_local_planner/FTCPlanner
+  - name: eband
+    type: eband_local_planner/EBandPlannerROS

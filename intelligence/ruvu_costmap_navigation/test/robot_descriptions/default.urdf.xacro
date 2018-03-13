@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<robot name="robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="robot_namespace" default=""/>
+
+  <gazebo>
+    <plugin name="twist_teleport" filename="libruvu_twist_teleport.so">
+      <robotNamespace>$(arg robot_namespace)</robotNamespace>
+      <publishTF>true</publishTF>
+      <commandTopic>cmd_vel</commandTopic>
+      <commandTimeout>0.5</commandTimeout>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometryRate>20</odometryRate>
+      <robotFrame>base_link</robotFrame>
+    </plugin>
+  </gazebo>
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="1.0 0.5 0.5"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.25"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="1.0 0.5 0.5"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.25"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.01"/>
+      <inertia
+        ixx="0.01" ixy="0.0" ixz="0.0"
+        iyy="0.01" iyz="0.0"
+        izz="0.01"/>
+    </inertial>
+  </link>
+</robot>
