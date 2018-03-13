@@ -12,15 +12,22 @@ catkin_package()
 
 # Tests
 if (CATKIN_ENABLE_TESTING)
+  # ROS lint
   file(GLOB_RECURSE PYTHON_SRCS src/*.py)
   file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
-  file(GLOB_RECURSE PYTHON_TESTS test/*)
-  roslint_python(${PYTHON_SRCS} ${PYTHON_SCRIPTS} ${PYTHON_TESTS})
+  roslint_python(${PYTHON_SRCS} ${PYTHON_SCRIPTS})
   roslint_add_test()
 
   # Launch check
   find_package(roslaunch REQUIRED)
   roslaunch_add_file_check(launch)
+
+  # Catkin lint
+  find_program(CATKIN_LINT catkin_lint REQUIRED)
+  execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+  if(NOT ${lint_result} EQUAL 0)
+    message(FATAL_ERROR "catkin_lint failed")
+  endif()
 endif()
 
 install(PROGRAMS

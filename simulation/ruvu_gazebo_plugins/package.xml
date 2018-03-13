@@ -22,6 +22,7 @@
   <depend>sensor_msgs</depend>
   <depend>tf2_ros</depend>
 
+  <test_depend>python-catkin-lint</test_depend>
   <test_depend>rospy</test_depend>
   <test_depend>rostest</test_depend>
   <test_depend>ruvu_rostest</test_depend>

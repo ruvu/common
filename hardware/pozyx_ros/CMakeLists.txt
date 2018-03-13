@@ -28,6 +28,13 @@ if (CATKIN_ENABLE_TESTING)
     find_package(roslaunch REQUIRED)
     file(GLOB_RECURSE TEST_LAUNCH_FILES test/*.test)
     roslaunch_add_file_check(${TEST_LAUNCH_FILES})
+
+    # Catkin lint
+    find_program(CATKIN_LINT catkin_lint REQUIRED)
+    execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+    if(NOT ${lint_result} EQUAL 0)
+    message(FATAL_ERROR "catkin_lint failed")
+    endif()
 endif()
 
 install(PROGRAMS

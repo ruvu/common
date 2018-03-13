@@ -25,5 +25,6 @@
 
   <depend>std_msgs</depend>
 
+  <test_depend>python-catkin-lint</test_depend>
   <test_depend>roslaunch</test_depend>
 </package>

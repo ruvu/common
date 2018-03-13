@@ -55,6 +55,13 @@ if (CATKIN_ENABLE_TESTING)
     set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     roslint_cpp()
     roslint_add_test()
+
+    # Catkin lint
+    find_program(CATKIN_LINT catkin_lint REQUIRED)
+    execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+    if(NOT ${lint_result} EQUAL 0)
+        message(FATAL_ERROR "catkin_lint failed")
+    endif()
 endif()
 
 #############
