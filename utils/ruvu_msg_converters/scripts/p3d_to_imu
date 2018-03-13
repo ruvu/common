@@ -4,6 +4,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 import PyKDL
 
+
 class P3dToImuNode(object):
     def __init__(self):
         rospy.init_node('p3d_to_imu')
@@ -39,9 +40,9 @@ class P3dToImuNode(object):
             imu.linear_acceleration.z = 0
         else:
             dt = (msg.header.stamp - self.timestamp).to_sec()
-            imu.linear_acceleration.x = (msg.twist.twist.linear.x - self.vx)/dt
-            imu.linear_acceleration.y = (msg.twist.twist.linear.y - self.vy)/dt
-            imu.linear_acceleration.z = (msg.twist.twist.linear.z - self.vz)/dt
+            imu.linear_acceleration.x = (msg.twist.twist.linear.x - self.vx) / dt
+            imu.linear_acceleration.y = (msg.twist.twist.linear.y - self.vy) / dt
+            imu.linear_acceleration.z = (msg.twist.twist.linear.z - self.vz) / dt
             imu.linear_acceleration_covariance = [0.1, 0, 0,
                                                   0, 0.1, 0,
                                                   0, 0, 0.1]
@@ -50,13 +51,13 @@ class P3dToImuNode(object):
         self.timestamp = msg.header.stamp
 
         quat = PyKDL.Rotation.Quaternion(msg.pose.pose.orientation.x,
-                                msg.pose.pose.orientation.y,
-                                msg.pose.pose.orientation.z,
-                                msg.pose.pose.orientation.w)
+                                         msg.pose.pose.orientation.y,
+                                         msg.pose.pose.orientation.z,
+                                         msg.pose.pose.orientation.w)
 
         gravity_world = PyKDL.Vector(0, 0, 9.81)
 
-        gravity_rotated = quat*gravity_world
+        gravity_rotated = quat * gravity_world
 
         imu.linear_acceleration.x += gravity_rotated.x()
         imu.linear_acceleration.y += gravity_rotated.y()
