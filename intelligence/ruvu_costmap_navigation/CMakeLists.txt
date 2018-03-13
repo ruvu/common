@@ -10,6 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   mbf_costmap_core
   mbf_costmap_nav
+  roslint
 )
 
 catkin_package(
@@ -18,13 +19,26 @@ catkin_package(
   CATKIN_DEPENDS mbf_costmap_core mbf_costmap_nav
 )
 
-###########
-## Build ##
-###########
+# Tests
+if (CATKIN_ENABLE_TESTING)
+	# ROS Lint
+	roslint_python(scripts/pose_stamped_move_base_goal)
+	roslint_add_test()
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+	# Launch check
+	find_package(roslaunch REQUIRED)
+	file(GLOB_RECURSE TEST_LAUNCH_FILES test/launch/*.test)
+	roslaunch_add_file_check(${TEST_LAUNCH_FILES})
+
+	# Catkin lint
+	find_program(CATKIN_LINT catkin_lint REQUIRED)
+	execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+	if(NOT ${lint_result} EQUAL 0)
+		message(FATAL_ERROR "catkin_lint failed")
+	endif()
+endif()
+
+install(PROGRAMS
+	scripts/pose_stamped_move_base_goal
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

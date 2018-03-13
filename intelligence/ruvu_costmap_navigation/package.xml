@@ -10,6 +10,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>roslint</build_depend>
+
   <depend>mbf_costmap_core</depend>
   <depend>mbf_costmap_nav</depend>
 
@@ -30,4 +32,6 @@
   <test_depend>tf2_ros</test_depend>
   <test_depend>xacro</test_depend>
 
+  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>roslaunch</test_depend>
 </package>
