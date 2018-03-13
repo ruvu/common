@@ -50,7 +50,7 @@ target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 # Tests
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
-    find_package(catkin REQUIRED roslint)
+    find_package(catkin REQUIRED COMPONENTS roslint)
     roslint_cpp()
     roslint_add_test()
 endif()

@@ -13,7 +13,7 @@ catkin_package()
 # Tests
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
-	find_package(catkin REQUIRED roslint)
+	find_package(catkin REQUIRED COMPONENTS roslint)
 	file(GLOB_RECURSE PYTHON_SRCS src/*.py)
 	file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
 	file(GLOB_RECURSE PYTHON_TESTS test/*)

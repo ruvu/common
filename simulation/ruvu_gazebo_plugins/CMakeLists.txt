@@ -54,7 +54,7 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/single_joint_position_lifter_world.test)
 
     # ROS Lint
-    find_package(catkin REQUIRED roslint)
+    find_package(catkin REQUIRED COMPONENTS roslint)
     set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     roslint_cpp()
     roslint_add_test()

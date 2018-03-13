@@ -8,7 +8,7 @@ catkin_package()
 # Tests
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
-    find_package(catkin REQUIRED roslint)
+    find_package(catkin REQUIRED COMPONENTS roslint)
     file(GLOB_RECURSE PYTHON_SRCS *.py)
     roslint_python(${PYTHON_SRCS} scripts/install_systemd_launch_files)
     roslint_add_test()

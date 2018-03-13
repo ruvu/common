@@ -21,7 +21,7 @@ catkin_package(
 # Tests
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
-    find_package(catkin REQUIRED roslint)
+    find_package(catkin REQUIRED COMPONENTS roslint)
     roslint_python()
     roslint_add_test()
 endif()
