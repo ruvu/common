@@ -22,8 +22,7 @@ if (CATKIN_ENABLE_TESTING)
 
     # Launch check
     find_package(roslaunch REQUIRED)
-    file(GLOB_RECURSE LAUNCH_FILES launch/*.launch)
-    roslaunch_add_file_check(${LAUNCH_FILES})
+    roslaunch_add_file_check(launch)
 endif()
 
 install(PROGRAMS
