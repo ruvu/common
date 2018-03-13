@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+
+import rospy
+from mbf_msgs.msg import ExePathActionGoal, ExePathGoal
+from geometry_msgs.msg import PoseStamped
+from functools import partial
+import mbf_msgs.msg as mbf_msgs
+import actionlib
+
+
+def goal_cb(planner_client, controller_pub, planner, controller, msg):
+    """
+    geometry_msgs.PoseStamped callback received from, for example, rviz
+    :param planner_client: Reference to the actionlib server that has to be queried for the plan
+    :param controller_pub: Local planner goal publisher
+    :param planner: Planner string
+    :param controller: Controller string
+    :param msg: Incoming pose stamped
+    """
+
+    rospy.loginfo("Sending goal to '%s' for planner '%s'", planner_client.action_client.ns, planner)
+    planner_client.send_goal(mbf_msgs.GetPathGoal(target_pose=msg,
+                                                  use_start_pose=False,
+                                                  planner=planner,
+                                                  tolerance=rospy.get_param("~tolerance", 1.0)))
+    planner_client.wait_for_result()
+    result = planner_client.get_result()
+
+    if result is None:
+        rospy.logerr("Failed to call the planner")
+        return
+
+    if result.outcome == mbf_msgs.GetPathResult.SUCCESS:
+        rospy.loginfo("Got plan of length %d, publishing to '%s' for controller '%s'",
+                      len(result.path.poses), controller_pub.name, controller)
+        controller_pub.publish(ExePathActionGoal(
+            header=msg.header,
+            goal=ExePathGoal(
+                path=result.path,
+                controller=controller
+            )
+        ))
+    else:
+        rospy.logerr("Controller failed: {}".format(result.message))
+
+
+if __name__ == '__main__':
+    rospy.init_node("pose_stamped_move_base_goal")
+
+    # Available planners and controllers
+    controllers = [c['name'] for c in rospy.get_param('costmap_navigation/controllers')]
+    planners = [p['name'] for p in rospy.get_param('costmap_navigation/planners')]
+
+    # Get interfaces to both
+    costmap_global_planner_client = actionlib.SimpleActionClient("costmap_navigation/get_path", mbf_msgs.GetPathAction)
+    costmap_local_planner_pub = rospy.Publisher("costmap_navigation/exe_path/goal", ExePathActionGoal, queue_size=1)
+
+    # Create interfaces for all planner and controller combinations
+    subscribers = []
+    for planner in planners:
+        for controller in controllers:
+            topic = 'pose_stamped_move_base_goal/{}/{}'.format(planner, controller)
+            rospy.loginfo("Creating pose stamped interface for planner controller combination on topic '%s'", topic)
+            subscribers.append(rospy.Subscriber(topic, PoseStamped, partial(goal_cb, costmap_global_planner_client,
+                                                                            costmap_local_planner_pub,
+                                                                            planner, controller)))
+
+    rospy.spin()

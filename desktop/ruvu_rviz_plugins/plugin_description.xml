@@ -13,4 +13,11 @@
       Give a PoseStamped goal for graph navigation
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/ConfigurableGoal"
+         type="ruvu_rviz_plugins::ConfigurableGoalPoseTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Give a PoseStamped goal for a subscriber within a namespace
+    </description>
+  </class>
 </library>
