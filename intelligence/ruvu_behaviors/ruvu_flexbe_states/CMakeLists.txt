@@ -18,10 +18,10 @@ catkin_package(
     INCLUDE_DIRS src
     LIBRARIES ${PROJECT_NAME})
 
-# use add_library() or add_executable() as required
-#add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
-
-# install executables
-#install(PROGRAMS bin/hello
-#        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    find_package(catkin REQUIRED roslint)
+    roslint_python()
+    roslint_add_test()
+endif()

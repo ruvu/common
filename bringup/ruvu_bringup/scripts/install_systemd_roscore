@@ -12,4 +12,3 @@ sudo systemctl daemon-reload
 
 echo "You can start the service using 'sudo systemctl start roscore.service'"
 echo "You can enable the service (on start-up) using 'sudo systemctl enable roscore.service'"
-

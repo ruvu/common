@@ -13,6 +13,8 @@
   <depend>qtbase5-dev</depend>
   <depend>rviz</depend>
 
+  <test_depend>roslint</test_depend>
+
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
   </export>

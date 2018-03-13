@@ -10,6 +10,22 @@ catkin_python_setup()
 
 catkin_package()
 
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+	find_package(catkin REQUIRED roslint)
+	file(GLOB_RECURSE PYTHON_SRCS src/*.py)
+	file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
+	file(GLOB_RECURSE PYTHON_TESTS test/*)
+	roslint_python(${PYTHON_SRCS} ${PYTHON_SCRIPTS} ${PYTHON_TESTS})
+    roslint_add_test()
+
+    # Launch check
+    find_package(roslaunch REQUIRED)
+    file(GLOB_RECURSE LAUNCH_FILES launch/*.launch)
+    roslaunch_add_file_check(${LAUNCH_FILES})
+endif()
+
 install(PROGRAMS
   scripts/base_controller
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

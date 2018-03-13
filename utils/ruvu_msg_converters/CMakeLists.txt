@@ -5,3 +5,12 @@ find_package(catkin)
 catkin_python_setup()
 
 catkin_package()
+
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    find_package(catkin REQUIRED roslint)
+    file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
+    roslint_python(${PYTHON_SCRIPTS})
+    roslint_add_test()
+endif()

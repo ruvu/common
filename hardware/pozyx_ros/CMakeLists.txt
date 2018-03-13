@@ -15,3 +15,16 @@ generate_messages(
 )
 
 catkin_package()
+
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    find_package(catkin REQUIRED roslint)
+    roslint_python()
+    roslint_add_test()
+
+    # Launch check
+    find_package(roslaunch REQUIRED)
+    file(GLOB_RECURSE TEST_LAUNCH_FILES test/*.test)
+    roslaunch_add_file_check(${TEST_LAUNCH_FILES})
+endif()

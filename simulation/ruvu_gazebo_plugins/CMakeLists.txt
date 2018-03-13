@@ -52,6 +52,11 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/twist_teleport_urdf_world.test)
     add_rostest(test/twist_teleport_world.test)
     add_rostest(test/single_joint_position_lifter_world.test)
+
+    # ROS Lint
+    find_package(catkin REQUIRED roslint)
+    roslint_cpp()
+    roslint_add_test()
 endif()
 
 #############

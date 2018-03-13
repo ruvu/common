@@ -3,3 +3,11 @@ project(ruvu_rqt)
 find_package(catkin)
 catkin_python_setup()
 catkin_package()
+
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    find_package(catkin REQUIRED roslint)
+    roslint_python()
+    roslint_add_test()
+endif()

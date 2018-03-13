@@ -40,11 +40,17 @@ endif()
 ## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
 add_definitions(-DQT_NO_KEYWORDS)
 
-
-
 add_library(${PROJECT_NAME}
   src/base_pose_tool.cpp
   src/graph_goal_tool.cpp
   src/dock_goal_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    find_package(catkin REQUIRED roslint)
+    roslint_cpp()
+    roslint_add_test()
+endif()
