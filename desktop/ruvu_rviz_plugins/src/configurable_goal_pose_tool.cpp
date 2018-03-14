@@ -96,7 +96,7 @@ public:
 
     QPushButton* ok = new QPushButton("Publish");
     layout()->addWidget(ok);
-    connect(ok, &QPushButton::clicked, this, [this]() { accept(); });
+    connect(ok, SIGNAL(&QPushButton::clicked), this, SLOT(accept()));
   }
 
   QComboBox* comboBox()

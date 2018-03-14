@@ -31,7 +31,7 @@ public:
   virtual void activate();
   virtual void deactivate();
 
-  virtual int processMouseEvent(rviz::ViewportMouseEvent& event);
+  virtual int processMouseEvent(rviz::ViewportMouseEvent& event);  // NOLINT
 
 private Q_SLOTS:
   void updateTopic();
