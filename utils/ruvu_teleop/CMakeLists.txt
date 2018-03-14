@@ -7,14 +7,15 @@ catkin_package()
 # Tests
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
-    roslint_python(scripts/*)
+    file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
+    roslint_python(${PYTHON_SCRIPTS})
     roslint_add_test()
 
     # Catkin lint
     find_program(CATKIN_LINT catkin_lint REQUIRED)
     execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
     if(NOT ${lint_result} EQUAL 0)
-    message(FATAL_ERROR "catkin_lint failed")
+        message(FATAL_ERROR "catkin_lint failed")
     endif()
 endif()
 
