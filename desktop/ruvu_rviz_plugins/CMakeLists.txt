@@ -5,6 +5,7 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   rviz
+  roslint
 )
 
 catkin_package()
@@ -40,8 +41,6 @@ endif()
 ## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
 add_definitions(-DQT_NO_KEYWORDS)
 
-
-
 add_library(${PROJECT_NAME}
   src/base_pose_tool.cpp
   src/base_point_tool.cpp
@@ -50,3 +49,23 @@ add_library(${PROJECT_NAME}
   src/configurable_goal_pose_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
+    roslint_cpp()
+    roslint_add_test()
+
+    # Catkin lint
+    find_program(CATKIN_LINT catkin_lint REQUIRED)
+    execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+    if(NOT ${lint_result} EQUAL 0)
+      message(FATAL_ERROR "catkin_lint failed")
+    endif()
+endif()
+
+install(FILES
+  plugin_description.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

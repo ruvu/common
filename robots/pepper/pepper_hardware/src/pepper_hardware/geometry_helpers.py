@@ -23,6 +23,3 @@ def get_ros_pose_from_pose_array_azimuth(pose_array, azimuth):
             w=q.w
         )
     )
-
-
-

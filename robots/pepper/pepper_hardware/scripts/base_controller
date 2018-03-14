@@ -41,8 +41,7 @@ SENSOR_SPEED_KEY = "Device/SubDeviceList/%s/Speed/Sensor/Value"
 
 
 class BaseController(object):
-
-    def __init__(self): 
+    def __init__(self):
         """
         Base Controller for the Pepper Robot, decouples Twist to Joint velocities
         """
@@ -68,8 +67,8 @@ class BaseController(object):
         #
         # q_dot = m * v
         l = WHEEL_TO_CENTER_OF_MASS_DISTANCE
-        self._decoupling_matrix = [.5*sqrt(3), .5, l,
-                                   -.5*sqrt(3), .5, l,
+        self._decoupling_matrix = [.5 * sqrt(3), .5, l,
+                                   -.5 * sqrt(3), .5, l,
                                    0, -1, l]
 
         self._reference_timeout = rospy.Duration(rospy.get_param("~reference_timeout", 1.0))
@@ -88,7 +87,7 @@ class BaseController(object):
         self._publish_joint_states()
 
     def _publish_odometry(self):
-        position_x, position_y, position_yaw = self._motion.getRobotPosition(True) # True for sensors
+        position_x, position_y, position_yaw = self._motion.getRobotPosition(True)  # True for sensors
         velocity_x, velocity_y, velocity_yaw = self._motion.getRobotVelocity()
 
         self._odometry_publisher.publish(Odometry(

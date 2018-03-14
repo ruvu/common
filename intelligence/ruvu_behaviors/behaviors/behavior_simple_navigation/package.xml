@@ -16,4 +16,5 @@
   <run_depend>flexbe_core</run_depend>
   <run_depend>flexbe_states</run_depend>
 
+  <test_depend>python-catkin-lint</test_depend>
 </package>

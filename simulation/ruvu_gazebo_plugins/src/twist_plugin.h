@@ -1,3 +1,11 @@
+//
+// Copyright (c) 2017 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
+#pragma once
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
@@ -9,18 +17,14 @@
 #include <nav_msgs/Odometry.h>
 #include <tf2_ros/transform_broadcaster.h>
 
-
 namespace gazebo
 {
-
 //!
 //! \brief The TwistPlugin class that alters a model based on a twist command
 //!
 class TwistPlugin : public ModelPlugin
 {
-
 public:
-
   //!
   //! \brief Load Register update function
   //! \param ptr Pointer to the world
@@ -28,7 +32,6 @@ public:
   void Load(physics::ModelPtr model, sdf::ElementPtr sdf);
 
 protected:
-
   //!
   //! \brief Update Update function that needs to be implemented by the child class
   //! \param pose The current pose of the model
@@ -48,7 +51,6 @@ protected:
   math::Pose odom_pose_;
 
 private:
-
   //!
   //! \brief model_ Pointer to the parent model
   //!
@@ -72,19 +74,19 @@ private:
   //!
   //! \brief QueueThread Custom callback queue thread in order to not block the physics engine
   //!
-  bool alive_; //! To ensure we shutdown the thread when the plugin dies
-  ros::CallbackQueue queue_; // The ROS callback queue
-  boost::thread callback_queue_thread_; // The ROS message handler thread
+  bool alive_;                           //! To ensure we shutdown the thread when the plugin dies
+  ros::CallbackQueue queue_;             // The ROS callback queue
+  boost::thread callback_queue_thread_;  // The ROS message handler thread
   void QueueThread();
 
   //!
   //! \brief twistCmdCallback Callback of the twist cmd
   //! \param cmd_msg Twist command
   //!
-  geometry_msgs::TwistConstPtr cmd_msg_; // Last received cmd_msg
-  common::Time last_cmd_time_; // Time last received cmd_msg
-  double cmd_timeout_; // Base controller timeout
-  ros::Subscriber twist_subscriber_; // The ROS subcriber on the Twist msg
+  geometry_msgs::TwistConstPtr cmd_msg_;  // Last received cmd_msg
+  common::Time last_cmd_time_;            // Time last received cmd_msg
+  double cmd_timeout_;                    // Base controller timeout
+  ros::Subscriber twist_subscriber_;      // The ROS subcriber on the Twist msg
   void twistCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
 
   //!
@@ -102,7 +104,7 @@ private:
   //!
   //! Also publishes the odometry if we exceed the step time of the odom
   //!
-  common::Time last_update_time_; // Keep track of the last update time in order to calculate the dt
+  common::Time last_update_time_;  // Keep track of the last update time in order to calculate the dt
   void UpdateChild();
 
   //!
@@ -118,9 +120,9 @@ private:
   //! \param now Current time
   //!
   bool publish_tf_;
-  double odometry_rate_; // Rate of the odometry publisher
-  ros::Publisher odometry_publisher_; // Odometry publisher
-  nav_msgs::Odometry odom_msg_; // The odom message to be published
+  double odometry_rate_;               // Rate of the odometry publisher
+  ros::Publisher odometry_publisher_;  // Odometry publisher
+  nav_msgs::Odometry odom_msg_;        // The odom message to be published
   geometry_msgs::TransformStamped transform_stamped_;
   tf2_ros::TransformBroadcaster odom_broadcaster_;
   void publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now);
@@ -129,7 +131,5 @@ private:
   //! \brief FiniChild Called on shutdown
   //!
   void FiniChild();
-
 };
-
-}
+}  // namespace gazebo

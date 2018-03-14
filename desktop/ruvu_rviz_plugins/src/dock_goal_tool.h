@@ -1,6 +1,12 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
+
 #pragma once
 
-#include "base_pose_tool.h"
+#include "./base_pose_tool.h"
 
 namespace ruvu_rviz_plugins
 {

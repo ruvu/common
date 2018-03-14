@@ -1,54 +1,31 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ruvu_bringup)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roslint)
 catkin_python_setup()
 catkin_package()
 
-#############
-## Install ##
-#############
+# Tests
+if (CATKIN_ENABLE_TESTING)
+    # ROS Lint
+    file(GLOB_RECURSE PYTHON_SRCS *.py)
+    roslint_python(${PYTHON_SRCS} scripts/install_systemd_launch_files)
+    roslint_add_test()
 
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
+    # Catkin lint
+    find_program(CATKIN_LINT catkin_lint REQUIRED)
+    execute_process(COMMAND "${CATKIN_LINT}" "-q" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+    if(NOT ${lint_result} EQUAL 0)
+    message(FATAL_ERROR "catkin_lint failed")
+    endif()
+endif()
 
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables and/or libraries for installation
-# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ruvu_bringup.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+install(PROGRAMS
+    scripts/generate_functions_for_launch_files_in_package.bash
+    scripts/install_systemd_launch_files
+    scripts/install_systemd_roscore
+    scripts/set_ros_ip_from_network_interface.bash
+    scripts/set_ros_master_uri.bash
+    scripts/systemd_service_from_launch_file.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

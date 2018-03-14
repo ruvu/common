@@ -41,7 +41,7 @@ args = parser.parse_args()
 launch_file = os.path.abspath(args.launch_file)
 environment_bash = os.path.abspath(args.environment_bash)
 user = args.user
-description = "Launch file %s of package %s for user %s" % (
-os.path.basename(launch_file), get_package_name(launch_file), user)
+description = "Launch file %s of package %s for user %s" % \
+              (os.path.basename(launch_file), get_package_name(launch_file), user)
 
 print template(description, user, environment_bash, launch_file)

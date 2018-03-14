@@ -10,13 +10,16 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>roslint</build_depend>
+
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>mbf_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
   <exec_depend>python-networkx</exec_depend>
   <exec_depend>python-numpy</exec_depend>
   <exec_depend>rospy</exec_depend>
-  <exec_depend>mbf_msgs</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>actionlib</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
 
+  <test_depend>python-catkin-lint</test_depend>
   <test_depend>python-mock</test_depend>
 </package>

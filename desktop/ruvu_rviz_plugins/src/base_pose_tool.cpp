@@ -1,9 +1,16 @@
-#include "base_pose_tool.h"
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
+
+#include "./base_pose_tool.h"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
 #include <rviz/properties/string_property.h>
 #include <rviz/visualization_manager.h>
+#include <string>
 
 namespace ruvu_rviz_plugins
 {
@@ -44,4 +51,4 @@ void BasePoseTool::onPoseSet(double x, double y, double theta)
            goal.pose.orientation.x, goal.pose.orientation.y, goal.pose.orientation.z, goal.pose.orientation.w, theta);
   pub_.publish(goal);
 }
-}
+}  // namespace ruvu_rviz_plugins

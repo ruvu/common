@@ -17,4 +17,5 @@
   <run_depend>flexbe_states</run_depend>
   <run_depend>ruvu_flexbe_states</run_depend>
 
+  <test_depend>python-catkin-lint</test_depend>
 </package>

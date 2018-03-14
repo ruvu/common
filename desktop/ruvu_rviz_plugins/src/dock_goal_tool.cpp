@@ -1,4 +1,10 @@
-#include "dock_goal_tool.h"
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
+
+#include "./dock_goal_tool.h"
 
 namespace ruvu_rviz_plugins
 {

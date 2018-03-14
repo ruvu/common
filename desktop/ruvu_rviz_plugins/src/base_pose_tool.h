@@ -1,6 +1,13 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
+
 #pragma once
 
 #include <rviz/default_plugin/tools/pose_tool.h>
+#include <string>
 
 namespace rviz
 {
@@ -13,7 +20,7 @@ class BasePoseTool : public rviz::PoseTool
 {
   Q_OBJECT
 public:
-  BasePoseTool(std::string name);
+  explicit BasePoseTool(std::string name);
   virtual ~BasePoseTool();
 
   virtual void onInitialize();
@@ -31,4 +38,4 @@ private:
   rviz::StringProperty* topic_property_;
   std::string name;
 };
-}
+}  // namespace ruvu_rviz_plugins

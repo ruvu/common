@@ -93,4 +93,3 @@ class HMICastState(EventState):
         if not self._client.has_result(self._topic):
             self._client.cancel(self._topic)
             Logger.loginfo('Cancelled active HMI Cast action goal.')
-

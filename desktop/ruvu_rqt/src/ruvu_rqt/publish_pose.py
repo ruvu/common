@@ -67,7 +67,7 @@ class PublishPosePlugin(Plugin):
 
     def save_settings(self, plugin_settings, instance_settings):
         """
-        Saves the settings the perspective cfg 
+        Saves the settings the perspective cfg
         """
         instance_settings.set_value("source_frame", self._source_frame)
         instance_settings.set_value("target_frame", self._target_frame)
@@ -76,7 +76,7 @@ class PublishPosePlugin(Plugin):
 
     def restore_settings(self, plugin_settings, instance_settings):
         """
-        Restores the settings the perspective cfg 
+        Restores the settings the perspective cfg
         """
         source_frame = instance_settings.value("source_frame")
         target_frame = instance_settings.value("target_frame")

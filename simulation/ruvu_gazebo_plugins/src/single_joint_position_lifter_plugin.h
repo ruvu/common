@@ -1,3 +1,10 @@
+//
+// Copyright (c) 2017 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+#pragma once
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
@@ -12,7 +19,6 @@
 
 namespace gazebo
 {
-
 //!
 //! \brief The SingleJointPositionLifterPlugin class that exposes an actionlib interface to lift bodies for moving
 //!
@@ -21,9 +27,7 @@ namespace gazebo
 //!
 class SingleJointPositionLifterPlugin : public ModelPlugin
 {
-
 public:
-
   //!
   //! \brief Load Register update function
   //! \param ptr Pointer to the world
@@ -57,7 +61,7 @@ private:
   //!
   //! \brief state_publish_rate_ How often do we send out joint state
   //!
-  double state_publish_rate_;  
+  double state_publish_rate_;
   sensor_msgs::JointState joint_state_msg_;
   ros::Publisher joint_state_publisher_;
 
@@ -93,7 +97,5 @@ private:
   //! \brief FiniChild Called on shutdown
   //!
   void FiniChild();
-
 };
-
-}
+}  // namespace gazebo

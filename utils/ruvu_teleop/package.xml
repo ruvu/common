@@ -10,8 +10,12 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>roslint</build_depend>
+
   <exec_depend>actionlib</exec_depend>
   <exec_depend>control_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+
+  <test_depend>python-catkin-lint</test_depend>
 </package>

@@ -22,14 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import rospy, actionlib
+import rospy
+import actionlib
 from hmi_msgs.msg import CastAction
 
 from pepper_hardware import QiSession
 
 
 class TextToSpeechServer(object):
-
     def __init__(self):
         """
         TextToSpeechServer Text to speech server for the Pepper Robot

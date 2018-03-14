@@ -10,18 +10,22 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>roslint</build_depend>
+
+  <depend>actionlib</depend>
+  <depend>control_msgs</depend>
   <depend>gazebo_ros</depend>
-  <depend>roscpp</depend>
+  <depend>gazebo</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>control_msgs</depend>
-  <depend>actionlib</depend>
   <depend>tf2_ros</depend>
 
+  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>rospy</test_depend>
   <test_depend>rostest</test_depend>
   <test_depend>ruvu_rostest</test_depend>
-  <test_depend>rospy</test_depend>
   <test_depend>xacro</test_depend>
 
   <export>

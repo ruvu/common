@@ -31,7 +31,6 @@ from pepper_hardware import QiSession
 
 
 class FaceDetector(object):
-
     def __init__(self):
         self._session = QiSession()
         self._face_detection = self._session.get_service("ALFaceDetection")
@@ -56,12 +55,6 @@ class FaceDetector(object):
                 self._camera_model = PinholeCameraModel()
 
                 x_angle, y_angle, width_angle, height_angle = shape_info
-
-
-
-
-            # print "PERSON_DATA:", person_data
-            # print "CAMERA_POSE_TORSO_FRAME:", camera_pose_in_torso_frame
 
 
 if __name__ == "__main__":

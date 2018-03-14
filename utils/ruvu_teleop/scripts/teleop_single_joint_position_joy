@@ -5,6 +5,7 @@ from control_msgs.msg import SingleJointPositionAction, SingleJointPositionGoal
 from sensor_msgs.msg import Joy
 import actionlib
 
+
 def callback(msg):
     for button, position in button_mapping.iteritems():
         if button < len(msg.buttons) and msg.buttons[button] == 1:
@@ -33,4 +34,3 @@ if __name__ == "__main__":
     client.wait_for_server()
     rospy.loginfo("Connected")
     rospy.spin()
-

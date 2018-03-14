@@ -1,8 +1,15 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Ramon Wijnands
+//
+
 #pragma once
 
 #include <rviz/tool.h>
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
+#include <string>
 
 // forward declare
 namespace rviz
@@ -17,14 +24,14 @@ class BasePointTool : public rviz::Tool
 {
   Q_OBJECT
 public:
-  BasePointTool(std::string name);
+  explicit BasePointTool(std::string name);
   virtual ~BasePointTool();
   virtual void onInitialize();
 
   virtual void activate();
   virtual void deactivate();
 
-  virtual int processMouseEvent(rviz::ViewportMouseEvent& event);
+  virtual int processMouseEvent(rviz::ViewportMouseEvent& event);  // NOLINT
 
 private Q_SLOTS:
   void updateTopic();
@@ -42,4 +49,4 @@ private:
 
   std::string name;
 };
-}
+}  // namespace ruvu_rviz_plugins

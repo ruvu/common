@@ -1,9 +1,15 @@
-#include "single_joint_position_lifter_plugin.h"
-#include "util.h"
+//
+// Copyright (c) 2017 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
+#include <string>
+#include "./single_joint_position_lifter_plugin.h"
+#include "./util.h"
 
 namespace gazebo
 {
-
 void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
 {
   //! Store the model so that we can use it later
@@ -28,24 +34,24 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
   // Ensure that ROS has been initialized (required for using ROS COM)
   if (!ros::isInitialized())
   {
-    ROS_FATAL_STREAM_NAMED("single_joing_position_lifter", "SingleJointPositionLifterPlugin"
-      << ": A ROS node for Gazebo has not been initialized, "
-      << "unable to load plugin. Load the Gazebo system plugin "
-      << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+    ROS_FATAL_STREAM_NAMED("single_joing_position_lifter",
+                           "SingleJointPositionLifterPlugin"
+                               << ": A ROS node for Gazebo has not been initialized, "
+                               << "unable to load plugin. Load the Gazebo system plugin "
+                               << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
     return;
   }
 
   // Setup the ROS connection
   rosnode_.reset(new ros::NodeHandle(robot_namespace));
-  action_server_.reset(
-        new SingleJointPositionActionServer(*rosnode_, action_name,
-                                            boost::bind(&SingleJointPositionLifterPlugin::goalCallback, this, _1),
-                                            false)); // No autostart
+  action_server_.reset(new SingleJointPositionActionServer(
+      *rosnode_, action_name, boost::bind(&SingleJointPositionLifterPlugin::goalCallback, this, _1),
+      false));  // No autostart
   action_server_->start();
 
   // listen to the update event (broadcast every simulation iteration)
-  update_connection_ = event::Events::ConnectWorldUpdateBegin(
-        boost::bind(&SingleJointPositionLifterPlugin::UpdateChild, this));
+  update_connection_ =
+      event::Events::ConnectWorldUpdateBegin(boost::bind(&SingleJointPositionLifterPlugin::UpdateChild, this));
 
   // For publishing joint state
   joint_state_publisher_ = rosnode_->advertise<sensor_msgs::JointState>(action_name + "/joint_state", 1);
@@ -66,7 +72,7 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
     ROS_INFO("Received valid goal");
     goal.setAccepted();
 
-    if (desired_position > current_position + 1e-3) // We are lifting
+    if (desired_position > current_position + 1e-3)  // We are lifting
     {
       ROS_INFO("SingleJointPositionLifterPlugin: We are lifting");
       lift_model_ = getModelAboveUs();
@@ -75,7 +81,8 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
         lift_world_pose_relative_to_model_ = lift_model_->GetWorldPose() - model_->GetWorldPose();
       }
     }
-    else if (desired_position < current_position - 1e-3) // dropping (if we are going down, we always drop the model we are lifting)
+    else if (desired_position <
+             current_position - 1e-3)  // dropping (if we are going down, we always drop the model we are lifting)
     {
       ROS_INFO("SingleJointPositionLifterPlugin: We are dropping");
       if (lift_model_)
@@ -97,7 +104,7 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
   else
   {
     std::string msg = "Incoming goal " + std::to_string(desired_position) + " out of bound [" +
-        std::to_string(lower_limit) + ", " + std::to_string(upper_limit) + "]";
+                      std::to_string(lower_limit) + ", " + std::to_string(upper_limit) + "]";
     ROS_ERROR_STREAM("Received invalid goal: " << msg);
     goal.setRejected(control_msgs::SingleJointPositionResult(), msg);
   }
@@ -125,7 +132,7 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 
   physics::EntityPtr e = model_->GetWorld()->GetEntity(lift_entity_name);
 
-  if (e) 
+  if (e)
   {
     ROS_INFO("Found entity: %s", e->GetName().c_str());
   }
@@ -143,13 +150,15 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 }
 
 void SingleJointPositionLifterPlugin::UpdateChild()
-{  
+{
   common::Time now = model_->GetWorld()->GetSimTime();
-  if (state_publish_rate_ > 0.0) {
+  if (state_publish_rate_ > 0.0)
+  {
     double seconds_since_last_publish = (now - common::Time(joint_state_msg_.header.stamp.toSec())).Double();
-    if (seconds_since_last_publish > (1.0 / state_publish_rate_)) {
+    if (seconds_since_last_publish > (1.0 / state_publish_rate_))
+    {
       joint_state_msg_.header.stamp = ros::Time(now.Double());
-      joint_state_msg_.position[0] = joint_position_; // Constructor allocates mem
+      joint_state_msg_.position[0] = joint_position_;  // Constructor allocates mem
       joint_state_publisher_.publish(joint_state_msg_);
     }
   }
@@ -168,5 +177,4 @@ void SingleJointPositionLifterPlugin::FiniChild()
 
 // Register this plugin with the simulator
 GZ_REGISTER_MODEL_PLUGIN(SingleJointPositionLifterPlugin)
-
-}
+}  // namespace gazebo

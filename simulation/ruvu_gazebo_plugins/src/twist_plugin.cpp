@@ -1,9 +1,16 @@
-#include "twist_plugin.h"
-#include "util.h"
+//
+// Copyright (c) 2017 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
+#include <string>
+
+#include "./twist_plugin.h"
+#include "./util.h"
 
 namespace gazebo
 {
-
 void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
 {
   //! Store the model so that we can use it later
@@ -15,10 +22,10 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   std::string command_topic = getParameterFromSDF(sdf, "commandTopic", std::string("cmd_vel"));
   publish_tf_ = getParameterFromSDF(sdf, "publishTF", false);
   cmd_timeout_ = getParameterFromSDF(sdf, "commandTimeout", 0.5);
-  std::string odom_topic = getParameterFromSDF(sdf, "odometryTopic",  std::string("odom"));
-  odom_msg_.header.frame_id = tf_prefix + getParameterFromSDF(sdf, "odometryFrame",  std::string("odom"));
+  std::string odom_topic = getParameterFromSDF(sdf, "odometryTopic", std::string("odom"));
+  odom_msg_.header.frame_id = tf_prefix + getParameterFromSDF(sdf, "odometryFrame", std::string("odom"));
   odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
-  odom_msg_.child_frame_id = tf_prefix + getParameterFromSDF(sdf, "robotFrame",  std::string("base_link"));
+  odom_msg_.child_frame_id = tf_prefix + getParameterFromSDF(sdf, "robotFrame", std::string("base_link"));
   transform_stamped_.header.frame_id = odom_msg_.header.frame_id;
   transform_stamped_.child_frame_id = odom_msg_.child_frame_id;
 
@@ -32,16 +39,16 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   if (!ros::isInitialized())
   {
     ROS_FATAL_STREAM_NAMED("twist_teleport", "TwistTeleportPlugin"
-      << ": A ROS node for Gazebo has not been initialized, "
-      << "unable to load plugin. Load the Gazebo system plugin "
-      << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+                                                 << ": A ROS node for Gazebo has not been initialized, "
+                                                 << "unable to load plugin. Load the Gazebo system plugin "
+                                                 << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
     return;
   }
   rosnode_.reset(new ros::NodeHandle(robot_namespace));
 
   // subscribe to the command topic
   ros::SubscribeOptions so = ros::SubscribeOptions::create<geometry_msgs::Twist>(
-        command_topic, 1, boost::bind(&TwistPlugin::twistCallback, this, _1), ros::VoidPtr(), &queue_);
+      command_topic, 1, boost::bind(&TwistPlugin::twistCallback, this, _1), ros::VoidPtr(), &queue_);
   twist_subscriber_ = rosnode_->subscribe(so);
   callback_queue_thread_ = boost::thread(boost::bind(&TwistPlugin::QueueThread, this));
 
@@ -55,7 +62,8 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&TwistPlugin::UpdateChild, this));
 }
 
-void TwistPlugin::QueueThread() {
+void TwistPlugin::QueueThread()
+{
   static const double timeout = 0.01;
   while (alive_ && rosnode_->ok())
   {
@@ -63,15 +71,18 @@ void TwistPlugin::QueueThread() {
   }
 }
 
-void TwistPlugin::twistCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg) {
+void TwistPlugin::twistCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg)
+{
   std::lock_guard<std::mutex> lock(mutex_);
   cmd_msg_ = cmd_msg;
   last_cmd_time_ = model_->GetWorld()->GetSimTime();
 }
 
-geometry_msgs::Twist TwistPlugin::getCurrentVelocity(const common::Time& now) {
+geometry_msgs::Twist TwistPlugin::getCurrentVelocity(const common::Time& now)
+{
   geometry_msgs::Twist velocity;
-  if (cmd_msg_ && (now - last_cmd_time_).Double() < cmd_timeout_) {
+  if (cmd_msg_ && (now - last_cmd_time_).Double() < cmd_timeout_)
+  {
     velocity = *cmd_msg_;
   }
   return velocity;
@@ -88,9 +99,11 @@ void TwistPlugin::UpdateChild()
 
   updateOdometryPose(pose, vel, dt);
 
-  if (odometry_rate_ > 0.0) {
+  if (odometry_rate_ > 0.0)
+  {
     double seconds_since_last_update = (now - common::Time(odom_msg_.header.stamp.toSec())).Double();
-    if (seconds_since_last_update > (1.0 / odometry_rate_)) {
+    if (seconds_since_last_update > (1.0 / odometry_rate_))
+    {
       publishOdometry(vel, now);
     }
   }
@@ -104,7 +117,8 @@ void TwistPlugin::UpdateChild()
   last_update_time_ = now;
 }
 
-void TwistPlugin::updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt)
+void TwistPlugin::updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity,
+                                     const common::Time& dt)
 {
   odom_pose_ = pose;
 }
@@ -138,12 +152,12 @@ void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const co
   }
 }
 
-void TwistPlugin::FiniChild() {
+void TwistPlugin::FiniChild()
+{
   alive_ = false;
   queue_.clear();
   queue_.disable();
   rosnode_->shutdown();
   callback_queue_thread_.join();
 }
-
-}
+}  // namespace gazebo

@@ -29,7 +29,6 @@ from sensor_msgs.msg import LaserScan
 
 
 class Laser(object):
-
     # # PEPPER laser specs
     # # see https://community.aldebaran.com/doc/2-1/family/juliette_technical/laser_juliette.html#juliette-laser
     # PEPPER_LASER_FREQ = 6                       # [hZ] --> check on that
@@ -48,9 +47,11 @@ class Laser(object):
     # PEPPER_LASER_SRD_POINTS = 15
 
     # memory key to fetch laser readings from
-    # see memory key listing https://community.aldebaran.com/doc/2-1/family/juliette_technical/juliette_dcm/actuator_sensor_names.html#lasers
+    # see memory key listing https://community.aldebaran.com/doc/2-1/family/juliette_technical/
+    # juliette_dcm/actuator_sensor_names.html#lasers
     # iterate over all segments e.g./SubDeviceList/Platform/LaserSensor/Front/Shovel/Seg01/X/Value
     LASER_MEMORY_KEY = 'Device/SubDeviceList/Platform/LaserSensor/%s'
+
     # PEPPER_MEM_KEY_SHOVEL = 'Device/SubDeviceList/Platform/LaserSensor/Front/Shovel/'
     # PEPPER_MEM_KEY_GROUND_LEFT = 'Device/SubDeviceList/Platform/LaserSensor/Front/Vertical/Left/'
     # PEPPER_MEM_KEY_GROUND_RIGHT = 'Device/SubDeviceList/Platform/LaserSensor/Front/Vertical/Right/'
@@ -130,103 +131,102 @@ class Laser(object):
         rospy.loginfo("Manually retrieving laser data...")
         print self._memory.getData(self._memory_key)
 
-
-    # def fetchLaserValues(self, keyPrefix, scanNum):
-    #     ranges = []
-    #     # traverse backwards
-    #     tmp_array = []
-    #     for i in xrange(scanNum, 0, -1):
-    #         keyX = keyPrefix + 'Seg' + '%02d' % (i,) + '/X/Sensor/Value'
-    #         keyY = keyPrefix + 'Seg' + '%02d' % (i,) + '/Y/Sensor/Value'
-    #         tmp_array.append(keyX)
-    #         tmp_array.append(keyY)
-    #     memData = self.memProxy.getListData(tmp_array)
-    #     for i in xrange(0, len(tmp_array), 2):
-    #         x = memData[i]
-    #         y = memData[i + 1]
-    #         ranges.append(math.sqrt(math.pow(x, 2.0) + math.pow(y, 2.0)))
-    #     return ranges
-    #
-    # def createLaserMessage(self, frameID, keyPrefix, scanNum):
-    #     laserScanMsg = LaserScan()
-    #     laserScanMsg.header.frame_id = frameID
-    #     laserScanMsg.angle_min = self.PEPPER_LASER_MIN_ANGLE
-    #     laserScanMsg.angle_max = self.PEPPER_LASER_MAX_ANGLE
-    #     laserScanMsg.angle_increment = self.PEPPER_LASER_FOV / scanNum
-    #     laserScanMsg.range_min = self.PEPPER_LASER_MIN_RANGE
-    #     laserScanMsg.range_max = self.PEPPER_LASER_MAX_RANGE
-    #     return laserScanMsg
-    #
-    # def cb(self):
-    #     shovelScan = self.createLaserMessage(
-    #         self.laserShovelFrame,
-    #         self.PEPPER_MEM_KEY_GROUND_SHOVEL,
-    #         self.PEPPER_LASER_GROUND_SHOVEL_POINTS)
-    #     groundLeftScan = self.createLaserMessage(
-    #         self.laserGroundLeftFrame,
-    #         self.PEPPER_MEM_KEY_GROUND_LEFT,
-    #         self.PEPPER_LASER_GROUND_LEFT_POINTS)
-    #     groundRightScan = self.createLaserMessage(
-    #         self.laserGroundRightFrame,
-    #         self.PEPPER_MEM_KEY_GROUND_RIGHT,
-    #         self.PEPPER_LASER_GROUND_RIGHT_POINTS)
-    #     srdFrontScan = self.createLaserMessage(
-    #         self.laserSRDFrontFrame,
-    #         self.PEPPER_MEM_KEY_SRD_FRONT,
-    #         self.PEPPER_LASER_SRD_POINTS)
-    #     srdLeftScan = self.createLaserMessage(
-    #         self.laserSRDLeftFrame,
-    #         self.PEPPER_MEM_KEY_SRD_LEFT,
-    #         self.PEPPER_LASER_SRD_POINTS)
-    #     srdRightScan = self.createLaserMessage(
-    #         self.laserSRDRightFrame,
-    #         self.PEPPER_MEM_KEY_SRD_RIGHT,
-    #         self.PEPPER_LASER_SRD_POINTS)
-    #
-    #     # fetch values
-    #     shovelScan.header.stamp = rospy.Time.now()
-    #     shovelScan.ranges = self.fetchLaserValues(
-    #         self.PEPPER_MEM_KEY_GROUND_SHOVEL,
-    #         self.PEPPER_LASER_GROUND_SHOVEL_POINTS
-    #     )
-    #
-    #     groundLeftScan.header.stamp = rospy.Time.now()
-    #     groundLeftScan.ranges = self.fetchLaserValues(
-    #         self.PEPPER_MEM_KEY_GROUND_LEFT,
-    #         self.PEPPER_LASER_GROUND_LEFT_POINTS
-    #     )
-    #
-    #     groundRightScan.header.stamp = rospy.Time.now()
-    #     groundRightScan.ranges = self.fetchLaserValues(
-    #         self.PEPPER_MEM_KEY_GROUND_RIGHT,
-    #         self.PEPPER_LASER_GROUND_RIGHT_POINTS
-    #     )
-    #
-    #     srdFrontScan.header.stamp = rospy.Time.now()
-    #     srdFrontScan.ranges = self.fetchLaserValues(
-    #         self.PEPPER_MEM_KEY_SRD_FRONT,
-    #         self.PEPPER_LASER_SRD_POINTS
-    #     )
-    #
-    #     srdLeftScan.header.stamp = rospy.Time.now()
-    #     srdLeftScan.ranges = self.fetchLaserValues(
-    #         self.PEPPER_MEM_KEY_SRD_LEFT,
-    #         self.PEPPER_LASER_SRD_POINTS
-    #     )
-    #
-    #     srdRightScan.header.stamp = rospy.Time.now()
-    #     srdRightScan.ranges = self.fetchLaserValues(
-    #         self.PEPPER_MEM_KEY_SRD_RIGHT,
-    #         self.PEPPER_LASER_SRD_POINTS
-    #     )
-    #
-    #     # publish messages
-    #     self.laserShovelPublisher.publish(shovelScan)
-    #     self.laserGroundLeftPublisher.publish(groundLeftScan)
-    #     self.laserGroundRightPublisher.publish(groundRightScan)
-    #     self.laserSRDFrontPublisher.publish(srdFrontScan)
-    #     self.laserSRDLeftPublisher.publish(srdLeftScan)
-    #     self.laserSRDRightPublisher.publish(srdRightScan)
+        # def fetchLaserValues(self, keyPrefix, scanNum):
+        #     ranges = []
+        #     # traverse backwards
+        #     tmp_array = []
+        #     for i in xrange(scanNum, 0, -1):
+        #         keyX = keyPrefix + 'Seg' + '%02d' % (i,) + '/X/Sensor/Value'
+        #         keyY = keyPrefix + 'Seg' + '%02d' % (i,) + '/Y/Sensor/Value'
+        #         tmp_array.append(keyX)
+        #         tmp_array.append(keyY)
+        #     memData = self.memProxy.getListData(tmp_array)
+        #     for i in xrange(0, len(tmp_array), 2):
+        #         x = memData[i]
+        #         y = memData[i + 1]
+        #         ranges.append(math.sqrt(math.pow(x, 2.0) + math.pow(y, 2.0)))
+        #     return ranges
+        #
+        # def createLaserMessage(self, frameID, keyPrefix, scanNum):
+        #     laserScanMsg = LaserScan()
+        #     laserScanMsg.header.frame_id = frameID
+        #     laserScanMsg.angle_min = self.PEPPER_LASER_MIN_ANGLE
+        #     laserScanMsg.angle_max = self.PEPPER_LASER_MAX_ANGLE
+        #     laserScanMsg.angle_increment = self.PEPPER_LASER_FOV / scanNum
+        #     laserScanMsg.range_min = self.PEPPER_LASER_MIN_RANGE
+        #     laserScanMsg.range_max = self.PEPPER_LASER_MAX_RANGE
+        #     return laserScanMsg
+        #
+        # def cb(self):
+        #     shovelScan = self.createLaserMessage(
+        #         self.laserShovelFrame,
+        #         self.PEPPER_MEM_KEY_GROUND_SHOVEL,
+        #         self.PEPPER_LASER_GROUND_SHOVEL_POINTS)
+        #     groundLeftScan = self.createLaserMessage(
+        #         self.laserGroundLeftFrame,
+        #         self.PEPPER_MEM_KEY_GROUND_LEFT,
+        #         self.PEPPER_LASER_GROUND_LEFT_POINTS)
+        #     groundRightScan = self.createLaserMessage(
+        #         self.laserGroundRightFrame,
+        #         self.PEPPER_MEM_KEY_GROUND_RIGHT,
+        #         self.PEPPER_LASER_GROUND_RIGHT_POINTS)
+        #     srdFrontScan = self.createLaserMessage(
+        #         self.laserSRDFrontFrame,
+        #         self.PEPPER_MEM_KEY_SRD_FRONT,
+        #         self.PEPPER_LASER_SRD_POINTS)
+        #     srdLeftScan = self.createLaserMessage(
+        #         self.laserSRDLeftFrame,
+        #         self.PEPPER_MEM_KEY_SRD_LEFT,
+        #         self.PEPPER_LASER_SRD_POINTS)
+        #     srdRightScan = self.createLaserMessage(
+        #         self.laserSRDRightFrame,
+        #         self.PEPPER_MEM_KEY_SRD_RIGHT,
+        #         self.PEPPER_LASER_SRD_POINTS)
+        #
+        #     # fetch values
+        #     shovelScan.header.stamp = rospy.Time.now()
+        #     shovelScan.ranges = self.fetchLaserValues(
+        #         self.PEPPER_MEM_KEY_GROUND_SHOVEL,
+        #         self.PEPPER_LASER_GROUND_SHOVEL_POINTS
+        #     )
+        #
+        #     groundLeftScan.header.stamp = rospy.Time.now()
+        #     groundLeftScan.ranges = self.fetchLaserValues(
+        #         self.PEPPER_MEM_KEY_GROUND_LEFT,
+        #         self.PEPPER_LASER_GROUND_LEFT_POINTS
+        #     )
+        #
+        #     groundRightScan.header.stamp = rospy.Time.now()
+        #     groundRightScan.ranges = self.fetchLaserValues(
+        #         self.PEPPER_MEM_KEY_GROUND_RIGHT,
+        #         self.PEPPER_LASER_GROUND_RIGHT_POINTS
+        #     )
+        #
+        #     srdFrontScan.header.stamp = rospy.Time.now()
+        #     srdFrontScan.ranges = self.fetchLaserValues(
+        #         self.PEPPER_MEM_KEY_SRD_FRONT,
+        #         self.PEPPER_LASER_SRD_POINTS
+        #     )
+        #
+        #     srdLeftScan.header.stamp = rospy.Time.now()
+        #     srdLeftScan.ranges = self.fetchLaserValues(
+        #         self.PEPPER_MEM_KEY_SRD_LEFT,
+        #         self.PEPPER_LASER_SRD_POINTS
+        #     )
+        #
+        #     srdRightScan.header.stamp = rospy.Time.now()
+        #     srdRightScan.ranges = self.fetchLaserValues(
+        #         self.PEPPER_MEM_KEY_SRD_RIGHT,
+        #         self.PEPPER_LASER_SRD_POINTS
+        #     )
+        #
+        #     # publish messages
+        #     self.laserShovelPublisher.publish(shovelScan)
+        #     self.laserGroundLeftPublisher.publish(groundLeftScan)
+        #     self.laserGroundRightPublisher.publish(groundRightScan)
+        #     self.laserSRDFrontPublisher.publish(srdFrontScan)
+        #     self.laserSRDLeftPublisher.publish(srdLeftScan)
+        #     self.laserSRDRightPublisher.publish(srdRightScan)
 
 
 if __name__ == "__main__":

@@ -86,4 +86,3 @@ class RecoveryState(EventState):
         if not self._client.has_result(self._action):
             self._client.cancel(self._action)
             Logger.loginfo('Cancelled active GetPathAction goal.')
-
