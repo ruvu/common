@@ -41,6 +41,16 @@ def _get_interpolated_pose(pose1, pose2, fraction):
     )
 
 
+def _get_squared_distance(p1, p2):
+    """
+    Calculate the squared distance between two geometry_msgs/Point
+    :param p1: Point 1
+    :param p2: Point 2
+    :return: Squared distance
+    """
+    return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2
+
+
 def _add_projected_nodes_on_edges(graph, position, tolerance):
     """
     Loop over all edges and project the position to this edge, if the distance to the edge is
@@ -49,7 +59,27 @@ def _add_projected_nodes_on_edges(graph, position, tolerance):
     :param position: Position of the point that has to be projected on the edges
     :param tolerance: Max distance to edge
     """
-    import ipdb; ipdb.set_trace()
+    graph_poses = nx.get_node_attributes(graph, "pose")
+    for pose1, pose2 in [(graph_poses[e[0]], graph_poses[e[1]]) for e in graph.edges()]:
+        # Edge is going from a to b and we would like to project p on this line
+        a = np.array([pose1.position.x, pose1.position.y, pose1.position.z])
+        b = np.array([pose2.position.x, pose2.position.y, pose2.position.z])
+        p = np.array([position.x, position.y, position.z])
+
+        line_ap = p - a
+        line_ab = b - a
+        import ipdb; ipdb.set_trace()
+        p_on_line_ab = a + np.dot(line_ap, line_ab) / np.dot(line_ab, line_ab) * line_ab
+        projected_point = Point(
+            x=p_on_line_ab[0],
+            y=p_on_line_ab[1],
+            z=p_on_line_ab[2],
+        )
+
+        print _get_squared_distance(projected_point, position)
+
+        if _get_squared_distance(projected_point, position) < tolerance:
+            print projected_point
 
 
 def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance=0):
@@ -103,16 +133,6 @@ def _get_empty_path(frame_id):
             frame_id=frame_id
         )
     )
-
-
-def _get_squared_distance(p1, p2):
-    """
-    Calculate the squared distance between two geometry_msgs/Point
-    :param p1: Point 1
-    :param p2: Point 2
-    :return: Squared distance
-    """
-    return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2
 
 
 class PoseGraphNode(object):
