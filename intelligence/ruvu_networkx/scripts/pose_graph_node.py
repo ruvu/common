@@ -417,7 +417,7 @@ class PoseGraphNode(object):
             rospy.loginfo("Using start nodes %s and end node %s", start_nodes, end_node)
 
             try:
-                shortest_path = _find_shortest_path(self._graph, start_nodes, end_node)
+                shortest_path = _find_shortest_path(graph, start_nodes, end_node)
             except nx.NetworkXNoPath as e:
                 result.outcome = GetPathResult.NO_PATH_FOUND
                 result.message = e.message
