@@ -398,7 +398,8 @@ class PoseGraphNode(object):
         if goal.use_start_pose:
             _add_projected_nodes_on_edges(graph, goal.start_pose.pose.position, goal.tolerance)
             start_nodes = self._get_sorted_nodes_within_distance(graph, goal.start_pose.pose.position, goal.tolerance)
-            end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position, goal.tolerance)
+            end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position,
+                                                               goal.tolerance)
         else:
             try:
                 transform = self._tf_buffer.lookup_transform(self._frame_id, self._robot_frame_id, rospy.Time())
@@ -407,8 +408,10 @@ class PoseGraphNode(object):
                 result.message = "failed to obtain transform from {} to {}".format(self._frame_id, self._robot_frame_id)
             else:
                 _add_projected_nodes_on_edges(graph, transform.transform.translation, goal.tolerance)
-                start_nodes = self._get_sorted_nodes_within_distance(graph, transform.transform.translation, goal.tolerance)
-                end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position, goal.tolerance)
+                start_nodes = self._get_sorted_nodes_within_distance(graph, transform.transform.translation,
+                                                                     goal.tolerance)
+                end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position,
+                                                                   goal.tolerance)
 
         # Plan the path if start and end nodes are valid
         if start_nodes and end_nodes:
