@@ -7,6 +7,7 @@ import rospy
 import actionlib
 import tf2_ros
 from std_srvs.srv import Empty
+from copy import deepcopy
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, Quaternion
 from nav_msgs.msg import Path
@@ -38,6 +39,93 @@ def _get_interpolated_pose(pose1, pose2, fraction):
             *quaternion_slerp(pose1.orientation.__getstate__(), pose2.orientation.__getstate__(), fraction)
         )
     )
+
+
+def _get_unique_node_id(graph):
+    """
+    Creates an unique node name to be added to the graph
+    :return: The node name
+    """
+    return max(graph.nodes()) + 1 if len(graph.nodes()) != 0 else 1
+
+
+def _get_squared_distance(p1, p2):
+    """
+    Calculate the squared distance between two geometry_msgs/Point
+    :param p1: Point 1
+    :param p2: Point 2
+    :return: Squared distance
+    """
+    return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2
+
+
+def _add_projected_nodes_on_edges(graph, position, tolerance):
+    """
+    Loop over all edges and project the position to this edge, if the distance to the edge is
+    smaller than the tolerance, add a node with an edge with the same end node as the found edge.
+    :param graph: Graph reference
+    :param position: Position of the point that has to be projected on the edges
+    :param tolerance: Max distance to edge
+    """
+    graph_poses = nx.get_node_attributes(graph, "pose")
+    num = 0
+
+    for node1, node2 in graph.edges():
+        pose1 = graph_poses[node1]
+        pose2 = graph_poses[node2]
+
+        # Edge is going from a to b and we would like to project p on this line
+        a = np.array([pose1.position.x, pose1.position.y, pose1.position.z])
+        b = np.array([pose2.position.x, pose2.position.y, pose2.position.z])
+        p = np.array([position.x, position.y, position.z])
+
+        line_ap = p - a
+        line_ab = b - a
+
+        # Calculate how far we are on the line, should be 0 <= factor <= 1
+        projection_on_line_factor = np.dot(line_ap, line_ab) / np.dot(line_ab, line_ab)
+
+        if 0 <= projection_on_line_factor <= 1:
+            projected_point = Point(*(a + projection_on_line_factor * line_ab))
+
+            # If the point is close enough to the passed position, we add a node with a connection to pose2
+            # note that we only want to add one node for the same projection point (same edge in other direction)
+            if _get_squared_distance(projected_point, position) < tolerance:
+                new_node = _get_unique_node_id(graph)
+                new_pose = _get_interpolated_pose(pose1, pose2, projection_on_line_factor)
+                graph.add_node(new_node, pose=new_pose)
+                rospy.loginfo("Adding node %d with pose %s", new_node, new_pose)
+                graph.add_edge(new_node, node2, weight=_get_squared_distance(projected_point, pose2.position))
+                rospy.loginfo("Connecting node %d to node %d", new_node, node2)
+                num += 1
+
+    rospy.loginfo("Added %d projected nodes on edges", num)
+
+
+def _find_shortest_path(graph, start_nodes, end_node):
+    """
+    Find shortest path between a number of start node candidates and an end node
+    :param graph: Graph reference
+    :param start_nodes: List of optional start nodes
+    :param end_node: Desired end node
+    :return: The shortest path if found, nx.NetworkXNoPath exception otherwise
+    """
+    shortest_paths = []
+    for start_node in start_nodes:
+        try:
+            shortest_path = nx.shortest_path(graph, source=start_node, target=end_node)
+            shortest_path_length = nx.shortest_path_length(graph, source=start_node, target=end_node)
+        except nx.NetworkXNoPath as e:
+            rospy.logdebug(e)
+        else:
+            shortest_paths.append((shortest_path, shortest_path_length))
+
+    if shortest_paths:
+        shortest_path, _ = min(shortest_paths, key=lambda path: path[1])
+        rospy.loginfo("Performed %d searches", len(start_nodes))
+        return shortest_path
+    else:
+        raise nx.NetworkXNoPath
 
 
 def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance=0):
@@ -93,16 +181,6 @@ def _get_empty_path(frame_id):
     )
 
 
-def _get_squared_distance(p1, p2):
-    """
-    Calculate the squared distance between two geometry_msgs/Point
-    :param p1: Point 1
-    :param p2: Point 2
-    :return: Squared distance
-    """
-    return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2
-
-
 class PoseGraphNode(object):
     def __init__(self, frame_id, robot_frame_id, file_path, click_timeout, interpolation_distance):
         """
@@ -116,12 +194,16 @@ class PoseGraphNode(object):
         """
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
-            self._graph = nx.read_yaml(file_path)
+            self._graph = nx.read_yaml(file_path).to_directed()
             rospy.loginfo("Loaded graph with {} nodes and {} edges from {}".format(
                 len(self._graph.nodes()),
                 len(self._graph.edges()),
                 file_path
             ))
+
+        # TODO VERIFY GRAPH
+        # 1. Check pose attributes
+        # 2. Check weight
 
         self._frame_id = frame_id
         self._robot_frame_id = robot_frame_id
@@ -132,7 +214,7 @@ class PoseGraphNode(object):
         self._interpolation_distance = interpolation_distance
 
         self._visualization_pub = rospy.Publisher("graph_visualization", MarkerArray, queue_size=1, latch=True)
-        self._last_planner_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
+        self._last_planned_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
         self._add_node_sub = rospy.Subscriber("add_node", PoseStamped, self._add_node_cb)
         self._remove_node_sub = rospy.Subscriber("remove_node", PointStamped, self._remove_node_cb)
         self._add_edge_sub = rospy.Subscriber("add_edge", PointStamped, self._add_edge_cb)
@@ -179,30 +261,26 @@ class PoseGraphNode(object):
             return False
         return True
 
-    def _get_closest_node(self, point, tolerance=None):
+    @staticmethod
+    def _get_sorted_nodes_within_distance(graph, point, max_distance):
         """
-        Returns the closes node (based on euclidean distance)
+        Returns the node within the max_distance (based on euclidean distance)
+        :param graph: The graph
         :param point: The point
-        :param tolerance: Maximum tolerance
-        :return: The closes node id, None if no node was found
+        :param max_distance: Maximum distance
+        :return: The nodes within the distance, [] if no nodes were found
         """
-        if len(self._graph.nodes()) == 0:
-            return None
+        if len(graph.nodes()) == 0:
+            rospy.logerr("No nodes in graph!")
+            return []
 
-        closest_node, closest_node_data = min(self._graph.nodes(data=True),
-                                              key=lambda nd: _get_squared_distance(point, nd[1]['pose'].position))
+        nodes = []
+        for node_id, node_data in graph.nodes(data=True):
+            if _get_squared_distance(node_data['pose'].position, point) < max_distance ** 2:
+                nodes.append((node_id, node_data))
+        nodes = sorted(nodes, key=lambda n: _get_squared_distance(point, n[1]['pose'].position))
 
-        if tolerance is not None and _get_squared_distance(closest_node_data['pose'].position, point) > tolerance ** 2:
-            return None
-
-        return closest_node
-
-    def _get_unique_node_id(self):
-        """
-        Creates an unique node name to be added to the graph
-        :return: The node name
-        """
-        return max(self._graph.nodes()) + 1 if len(self._graph.nodes()) != 0 else 1
+        return [node_id for node_id, node_data in nodes]
 
     def _add_node_cb(self, pose):
         """
@@ -250,16 +328,25 @@ class PoseGraphNode(object):
 
         if self._last_get_path_clicked_point \
                 and (rospy.Time.now() - self._last_get_path_clicked_point.header.stamp).to_sec() < self._click_timeout:
-            start_node = self._get_closest_node(self._last_get_path_clicked_point.point, tolerance=1.0)
-            end_node = self._get_closest_node(point.point, tolerance=1.0)
-            if start_node is not None and end_node is not None:
+            graph = deepcopy(self._graph)
+            _add_projected_nodes_on_edges(graph, self._last_get_path_clicked_point.point, 1.0)
+
+            start_nodes = self._get_sorted_nodes_within_distance(graph, self._last_get_path_clicked_point.point, 1.0)
+            end_nodes = self._get_sorted_nodes_within_distance(self._graph, point.point, 1.0)
+            if start_nodes and end_nodes:
                 try:
-                    shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
+                    shortest_path = _find_shortest_path(graph, start_nodes, end_nodes[0])
                 except nx.NetworkXNoPath as _:
-                    self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
+                    rospy.logwarn("No path could be found between %s and %d", start_nodes, end_nodes[0])
+                    self._last_planned_path_pub.publish(_get_empty_path(self._frame_id))
                 else:
-                    path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id)
-                    self._last_planner_path_pub.publish(path)
+                    rospy.loginfo("Found shortest path: %s", shortest_path)
+                    path = _nx_path_to_nav_msgs_path(graph, shortest_path, self._frame_id)
+                    self._last_planned_path_pub.publish(path)
+            elif start_nodes is []:
+                rospy.logwarn("No start nodes could be found")
+            elif end_nodes is []:
+                rospy.logwarn("No end node could be found")
 
         self._last_get_path_clicked_point = point
 
@@ -286,9 +373,6 @@ class PoseGraphNode(object):
         """
         result = GetPathResult()
 
-        start_node = None
-        end_node = None
-
         # Check whether the goal is valid before planning the path
         if not self._check_goal_validity(goal, result):
             self._get_path_as.set_aborted(result, result.message)
@@ -307,10 +391,15 @@ class PoseGraphNode(object):
         else:  # We can safely assume goal.planner == "global", as we checked the goal validity already.
             interpolation_distance = self._interpolation_distance
 
+        # Make a copy of the graph so that we can alter the planning graph (adding projected nodes)
+        graph = deepcopy(self._graph)
+
         # Select start and end nodes
         if goal.use_start_pose:
-            start_node = self._get_closest_node(goal.start_pose.pose.position, goal.tolerance)
-            end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
+            _add_projected_nodes_on_edges(graph, goal.start_pose.pose.position, goal.tolerance)
+            start_nodes = self._get_sorted_nodes_within_distance(graph, goal.start_pose.pose.position, goal.tolerance)
+            end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position,
+                                                               goal.tolerance)
         else:
             try:
                 transform = self._tf_buffer.lookup_transform(self._frame_id, self._robot_frame_id, rospy.Time())
@@ -318,19 +407,27 @@ class PoseGraphNode(object):
                 result.outcome = GetPathResult.TF_ERROR
                 result.message = "failed to obtain transform from {} to {}".format(self._frame_id, self._robot_frame_id)
             else:
-                start_node = self._get_closest_node(transform.transform.translation, goal.tolerance)
-                end_node = self._get_closest_node(goal.target_pose.pose.position, goal.tolerance)
+                _add_projected_nodes_on_edges(graph, transform.transform.translation, goal.tolerance)
+                start_nodes = self._get_sorted_nodes_within_distance(graph, transform.transform.translation,
+                                                                     goal.tolerance)
+                end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position,
+                                                                   goal.tolerance)
 
         # Plan the path if start and end nodes are valid
-        if start_node is not None and end_node is not None:
+        if start_nodes and end_nodes:
+            end_node = end_nodes[0]
+
+            rospy.loginfo("Using start nodes %s and end node %s", start_nodes, end_node)
+
             try:
-                shortest_path = nx.shortest_path(self._graph, source=start_node, target=end_node)
+                shortest_path = _find_shortest_path(graph, start_nodes, end_node)
             except nx.NetworkXNoPath as e:
                 result.outcome = GetPathResult.NO_PATH_FOUND
                 result.message = e.message
-                self._last_planner_path_pub.publish(_get_empty_path(self._frame_id))
+                self._last_planned_path_pub.publish(_get_empty_path(self._frame_id))
             else:
-                result.path = _nx_path_to_nav_msgs_path(self._graph, shortest_path, self._frame_id,
+                rospy.loginfo("Found shortest path: %s", shortest_path)
+                result.path = _nx_path_to_nav_msgs_path(graph, shortest_path, self._frame_id,
                                                         interpolation_distance)
 
                 if goal.planner == "global":
@@ -340,10 +437,10 @@ class PoseGraphNode(object):
                         end_pose.pose.orientation = result.path.poses[-1].pose.orientation
                     result.path.poses.append(end_pose)
 
-                self._last_planner_path_pub.publish(result.path)
-        elif start_node is None:
+                self._last_planned_path_pub.publish(result.path)
+        elif start_nodes is []:
             result.outcome = GetPathResult.NO_PATH_FOUND
-            result.message = "Start node could not be found, with tolerance {}".format(goal.tolerance)
+            result.message = "No start nodes could not be found, with tolerance {}".format(goal.tolerance)
         else:
             result.outcome = GetPathResult.NO_PATH_FOUND
             result.message = "End node could not be found, with tolerance {}".format(goal.tolerance)
@@ -358,7 +455,7 @@ class PoseGraphNode(object):
         Method for adding a pose to the graph
         :param pose: The pose
         """
-        new_node = self._get_unique_node_id()
+        new_node = _get_unique_node_id(self._graph)
 
         self._graph.add_node(new_node, pose=pose)
         rospy.loginfo("Adding node {}".format(new_node))
@@ -371,11 +468,12 @@ class PoseGraphNode(object):
         :param p1: Point one (we will look for the closes pose within a tolerance region of 1.0)
         :param p2: Point two (we will look for the closes pose within a tolerance region of 1.0)
         """
-        n1 = self._get_closest_node(p1, tolerance=1.0)
-        n2 = self._get_closest_node(p2, tolerance=1.0)
-        if n1 is not None and n2 is not None:
-            self._graph.add_edge(n1, n2, weight=_get_squared_distance(p1, p2))
-            rospy.loginfo("Adding edge between {} and {}".format(n1, n2))
+        nodes1 = self._get_sorted_nodes_within_distance(self._graph, p1, 1.0)
+        nodes2 = self._get_sorted_nodes_within_distance(self._graph, p2, 1.0)
+
+        if nodes1 and nodes2:
+            self._graph.add_edge(nodes1[0], nodes2[0], weight=_get_squared_distance(p1, p2))
+            rospy.loginfo("Adding edge between {} and {}".format(nodes1[0], nodes2[0]))
             self._publish_graph_visualization()
 
     def _remove_pose_from_graph(self, point):
@@ -383,10 +481,10 @@ class PoseGraphNode(object):
         Method to remove a pose from the graph together with its edges
         :param point: Point (we will look for the closes pose within a tolerance region of 1.0)
         """
-        n = self._get_closest_node(point, tolerance=1.0)
-        if n is not None:
-            self._graph.remove_node(n)
-            rospy.loginfo("Removed node {}".format(n))
+        nodes = self._get_sorted_nodes_within_distance(self._graph, point, 1.0)
+        if nodes:
+            self._graph.remove_node(nodes[0])
+            rospy.loginfo("Removed node {}".format(nodes[0]))
             self._publish_graph_visualization()
 
     def _publish_graph_visualization(self):

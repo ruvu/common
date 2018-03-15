@@ -206,7 +206,7 @@ Visualization Manager:
           Displays: ~
           Enabled: true
           Name: CarrotPlanner
-      Enabled: false
+      Enabled: true
       Name: Planners
     - Class: rviz/Group
       Displays:
@@ -423,7 +423,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 3.24688315
+      Distance: 5.72211742
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -438,10 +438,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.02979672
+      Pitch: 1.08479667
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 3.42228413
+      Yaw: 3.07728267
     Saved: ~
 Window Geometry:
   Displays:
