@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
@@ -125,6 +127,8 @@ private:
   nav_msgs::Odometry odom_msg_;        // The odom message to be published
   geometry_msgs::TransformStamped transform_stamped_;
   tf2_ros::TransformBroadcaster odom_broadcaster_;
+  std::vector<double> pose_covariance_;
+  std::vector<double> velocity_covariance_;
   void publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now);
 
   //!
