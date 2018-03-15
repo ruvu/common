@@ -7,7 +7,7 @@ import rospy
 import actionlib
 import tf2_ros
 from std_srvs.srv import Empty
-from copy import copy, deepcopy
+from copy import deepcopy
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, Quaternion
 from nav_msgs.msg import Path
@@ -121,7 +121,7 @@ def _find_shortest_path(graph, start_nodes, end_node):
             shortest_paths.append((shortest_path, shortest_path_length))
 
     if shortest_paths:
-        shortest_path, _ = sorted(shortest_paths, key=lambda path: path[1])[0]
+        shortest_path, _ = min(shortest_paths, key=lambda path: path[1])
         rospy.loginfo("Performed %d searches", len(start_nodes))
         return shortest_path
     else:
@@ -202,6 +202,8 @@ class PoseGraphNode(object):
             ))
 
         # TODO VERIFY GRAPH
+        # 1. Check pose attributes
+        # 2. Check weight
 
         self._frame_id = frame_id
         self._robot_frame_id = robot_frame_id
@@ -260,7 +262,7 @@ class PoseGraphNode(object):
         return True
 
     @staticmethod
-    def _get_nodes_within_distance(graph, point, max_distance):
+    def _get_sorted_nodes_within_distance(graph, point, max_distance):
         """
         Returns the node within the max_distance (based on euclidean distance)
         :param graph: The graph
@@ -329,8 +331,8 @@ class PoseGraphNode(object):
             graph = deepcopy(self._graph)
             _add_projected_nodes_on_edges(graph, self._last_get_path_clicked_point.point, 1.0)
 
-            start_nodes = self._get_nodes_within_distance(graph, self._last_get_path_clicked_point.point, 1.0)
-            end_nodes = self._get_nodes_within_distance(self._graph, point.point, 1.0)
+            start_nodes = self._get_sorted_nodes_within_distance(graph, self._last_get_path_clicked_point.point, 1.0)
+            end_nodes = self._get_sorted_nodes_within_distance(self._graph, point.point, 1.0)
             if start_nodes and end_nodes:
                 try:
                     shortest_path = _find_shortest_path(graph, start_nodes, end_nodes[0])
@@ -395,8 +397,8 @@ class PoseGraphNode(object):
         # Select start and end nodes
         if goal.use_start_pose:
             _add_projected_nodes_on_edges(graph, goal.start_pose.pose.position, goal.tolerance)
-            start_nodes = self._get_nodes_within_distance(graph, goal.start_pose.pose.position, goal.tolerance)
-            end_nodes = self._get_nodes_within_distance(self._graph, goal.target_pose.pose.position, goal.tolerance)
+            start_nodes = self._get_sorted_nodes_within_distance(graph, goal.start_pose.pose.position, goal.tolerance)
+            end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position, goal.tolerance)
         else:
             try:
                 transform = self._tf_buffer.lookup_transform(self._frame_id, self._robot_frame_id, rospy.Time())
@@ -405,8 +407,8 @@ class PoseGraphNode(object):
                 result.message = "failed to obtain transform from {} to {}".format(self._frame_id, self._robot_frame_id)
             else:
                 _add_projected_nodes_on_edges(graph, transform.transform.translation, goal.tolerance)
-                start_nodes = self._get_nodes_within_distance(graph, transform.transform.translation, goal.tolerance)
-                end_nodes = self._get_nodes_within_distance(self._graph, goal.target_pose.pose.position, goal.tolerance)
+                start_nodes = self._get_sorted_nodes_within_distance(graph, transform.transform.translation, goal.tolerance)
+                end_nodes = self._get_sorted_nodes_within_distance(self._graph, goal.target_pose.pose.position, goal.tolerance)
 
         # Plan the path if start and end nodes are valid
         if start_nodes and end_nodes:
@@ -463,8 +465,8 @@ class PoseGraphNode(object):
         :param p1: Point one (we will look for the closes pose within a tolerance region of 1.0)
         :param p2: Point two (we will look for the closes pose within a tolerance region of 1.0)
         """
-        nodes1 = self._get_nodes_within_distance(self._graph, p1, 1.0)
-        nodes2 = self._get_nodes_within_distance(self._graph, p2, 1.0)
+        nodes1 = self._get_sorted_nodes_within_distance(self._graph, p1, 1.0)
+        nodes2 = self._get_sorted_nodes_within_distance(self._graph, p2, 1.0)
 
         if nodes1 and nodes2:
             self._graph.add_edge(nodes1[0], nodes2[0], weight=_get_squared_distance(p1, p2))
@@ -476,7 +478,7 @@ class PoseGraphNode(object):
         Method to remove a pose from the graph together with its edges
         :param point: Point (we will look for the closes pose within a tolerance region of 1.0)
         """
-        nodes = self._get_nodes_within_distance(self._graph, point, 1.0)
+        nodes = self._get_sorted_nodes_within_distance(self._graph, point, 1.0)
         if nodes:
             self._graph.remove_node(nodes[0])
             rospy.loginfo("Removed node {}".format(nodes[0]))
