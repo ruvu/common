@@ -27,10 +27,11 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
   odom_msg_.child_frame_id = tf_prefix + getParameterFromSDF(sdf, "robotFrame", std::string("base_link"));
   double pose_noise = getParameterFromSDF(sdf, "poseGaussianNoise", 0.0);
-  pose_covariance_ = { pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0,
-                       pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0, pose_noise };
+  pose_covariance_ = { pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0,  // NOLINT
+                       pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0,
+                       pose_noise, 0, 0, 0, 0, 0, 0, pose_noise };
   double velocity_noise = getParameterFromSDF(sdf, "velocityGaussianNoise", 0.0);
-  velocity_covariance_ = { velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise, 0, 0, 0, 0, 0, 0,
+  velocity_covariance_ = { velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise, 0, 0, 0, 0, 0, 0,  // NOLINT
                            velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise, 0, 0, 0, 0, 0, 0,
                            velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise };
   transform_stamped_.header.frame_id = odom_msg_.header.frame_id;
