@@ -23,6 +23,7 @@
   <test_depend>global_planner</test_depend>
   <test_depend>goal_passer</test_depend>
   <test_depend>navfn</test_depend>
+  <test_depend>pose_follower</test_depend>
   <test_depend>robot_state_publisher</test_depend>
   <test_depend>ruvu_gazebo_plugins</test_depend>
   <test_depend>ruvu_rviz_plugins</test_depend>

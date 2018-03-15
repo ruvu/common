@@ -25,3 +25,4 @@ roslaunch ruvu_costmap_navigation default_in_empty_world.test
 | [simple_local_planner/PurePlannerROS (simple_local_planner)](https://github.com/robotics-upo/upo_robot_navigation/tree/master/simple_local_planner) | Works out of the box but not with sparse paths |
 | [ftc_local_planner/FTCPlanner](http://wiki.ros.org/asr_ftc_local_planner)| Does not work out of the box, no proper nav_core interface, bad code |
 | [eband_local_planner/EBandPlannerROS](http://wiki.ros.org/eband_local_planner) | A lot of parameters, most probably too complex |
+| [pose_follower/PoseFollower](https://github.com/ros-planning/navigation_experimental/tree/hydro-devel/pose_follower) | Sends NaN sometimes |

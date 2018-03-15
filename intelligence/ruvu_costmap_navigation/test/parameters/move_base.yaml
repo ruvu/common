@@ -17,3 +17,5 @@ controllers:
     type: ftc_local_planner/FTCPlanner
   - name: eband
     type: eband_local_planner/EBandPlannerROS
+  - name: pose_follower
+    type: pose_follower/PoseFollower
