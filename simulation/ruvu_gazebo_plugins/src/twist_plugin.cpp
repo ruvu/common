@@ -27,25 +27,12 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   odometry_rate_ = getParameterFromSDF(sdf, "odometryRate", 20.0);
   odom_msg_.child_frame_id = tf_prefix + getParameterFromSDF(sdf, "robotFrame", std::string("base_link"));
   double pose_noise = getParameterFromSDF(sdf, "poseGaussianNoise", 0.0);
-  pose_covariance_ =
-  {
-    pose_noise, 0, 0, 0, 0, 0,
-    0, pose_noise, 0, 0, 0, 0,
-    0, 0, pose_noise, 0, 0, 0,
-    0, 0, 0, pose_noise, 0, 0,
-    0, 0, 0, 0, pose_noise, 0,
-    0, 0, 0, 0, 0, pose_noise
-  };
+  pose_covariance_ = { pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0,
+                       pose_noise, 0, 0, 0, 0, 0, 0, pose_noise, 0, 0, 0, 0, 0, 0, pose_noise };
   double velocity_noise = getParameterFromSDF(sdf, "velocityGaussianNoise", 0.0);
-  velocity_covariance_ =
-  {
-    velocity_noise, 0, 0, 0, 0, 0,
-    0, velocity_noise, 0, 0, 0, 0,
-    0, 0, velocity_noise, 0, 0, 0,
-    0, 0, 0, velocity_noise, 0, 0,
-    0, 0, 0, 0, velocity_noise, 0,
-    0, 0, 0, 0, 0, velocity_noise
-  };
+  velocity_covariance_ = { velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise, 0, 0, 0, 0, 0, 0,
+                           velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise, 0, 0, 0, 0, 0, 0,
+                           velocity_noise, 0, 0, 0, 0, 0, 0, velocity_noise };
   transform_stamped_.header.frame_id = odom_msg_.header.frame_id;
   transform_stamped_.child_frame_id = odom_msg_.child_frame_id;
 
@@ -154,13 +141,13 @@ void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const co
   odom_msg_.pose.pose.orientation.z = odom_pose_.rot.z;
   odom_msg_.pose.pose.orientation.w = odom_pose_.rot.w;
 
-  for ( int i = 0; i < odom_msg_.pose.covariance.size(); i++)
+  for (int i = 0; i < odom_msg_.pose.covariance.size(); i++)
   {
     odom_msg_.pose.covariance[i] = pose_covariance_[i];
   }
 
   odom_msg_.twist.twist = velocity;
-  for ( int i = 0; i < odom_msg_.twist.covariance.size(); i++)
+  for (int i = 0; i < odom_msg_.twist.covariance.size(); i++)
   {
     odom_msg_.twist.covariance[i] = velocity_covariance_[i];
   }
