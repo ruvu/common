@@ -21,3 +21,21 @@ button_index_positions:
     - button_index: 3
       position: 0.0
 ```
+
+### teleop_publish_pose_joy
+
+Map `sensor_msgs/Joy` buttons to `geometry_msgs/Pose` messages containing the pose of a child_frame in an other frame.
+
+#### Parameters
+
+- `button_index_pose_publishers`: Required parameter that maps button indices to transformations and topics
+
+Example config:
+
+```
+button_index_pose_publishers:
+    - button_index: 3
+      topic: /graph_navigation/add_node
+      frame_id: map
+      child_frame_id: base_link
+```

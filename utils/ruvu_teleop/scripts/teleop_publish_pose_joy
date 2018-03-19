@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+from collections import namedtuple
+
+import rospy
+
+from sensor_msgs.msg import Joy
+from geometry_msgs.msg import PoseStamped, Pose, Point
+import tf2_ros
+
+ButtonAction = namedtuple('ButtonAction', ['frame_id', 'child_frame_id', 'publisher'])
+
+# We need to keep track of the last buttons since we only want to react on a rising event
+last_buttons = []
+
+
+def joy_callback(msg):
+    global last_buttons
+    for button, button_action in button_mapping.iteritems():
+        # Check if button is rising
+        if button < len(msg.buttons) and msg.buttons[button] == 1 and msg.buttons[button] != last_buttons[button]:
+            tf_buffer = tf2_ros.Buffer()
+            tf2_ros.TransformListener(tf_buffer)
+
+            try:
+                trans = tf_buffer.lookup_transform(button_action.frame_id, button_action.child_frame_id,
+                                                   rospy.Time(0), rospy.Duration(transform_timeout))
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+                rospy.logerr("Failed to lookup transform: {}".format(str(e)))
+            else:
+                button_action.publisher.publish(PoseStamped(header=trans.header,
+                                                            pose=Pose(position=Point(
+                                                                x=trans.transform.translation.x,
+                                                                y=trans.transform.translation.y,
+                                                                z=trans.transform.translation.z
+                                                            ), orientation=trans.transform.rotation)))
+    last_buttons = msg.buttons
+
+
+if __name__ == "__main__":
+    rospy.init_node('teleop_publish_pose_joy')
+
+    button_index_pose_publishers = rospy.get_param("~button_index_pose_publishers")
+    transform_timeout = float(rospy.get_param("~transform_timeout", 2.0))
+
+    sub = rospy.Subscriber('joy', Joy, joy_callback, queue_size=1)
+
+    # Construct the button_mapping for easy lookup of publishers and parameters in the callback method
+    button_mapping = {
+        int(e['button_index']): ButtonAction(publisher=rospy.Publisher(e["topic"], PoseStamped, queue_size=1),
+                                             frame_id=e["frame_id"], child_frame_id=e["child_frame_id"])
+        for e in button_index_pose_publishers
+    }
+
+    for button_idx, button_action in button_mapping.iteritems():
+        rospy.loginfo(
+            "Mapping button index {} to pose {} -> {} publisher on topic {}".format(button_idx, button_action.frame_id,
+                                                                                    button_action.child_frame_id,
+                                                                                    button_action.publisher.name))
+        tf_buffer = tf2_ros.Buffer()
+        tf2_ros.TransformListener(tf_buffer)
+        if not tf_buffer.can_transform(button_action.frame_id, button_action.child_frame_id, rospy.Time(0),
+                                       rospy.Duration(transform_timeout)):
+            rospy.logwarn("Transform {} -> {} not yet available".format(button_action.frame_id,
+                                                                        button_action.child_frame_id))
+
+    rospy.spin()
