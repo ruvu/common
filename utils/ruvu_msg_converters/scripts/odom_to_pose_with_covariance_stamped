@@ -8,7 +8,7 @@ class OdomToPoseWithCovarianceStampedNode(object):
     def __init__(self, gaussian_noise):
         """
         Class that converts an incoming nav_msgs/Odometry to a geometry_msgs/PoseWithCovarianceStamped
-        :param gaussian_noise: 
+        :param gaussian_noise: Optional gaussian noise parameter for overwriting the covariance
         """
         self.odom_sub = rospy.Subscriber('odom', Odometry, callback=self.callback)
         self.publisher = rospy.Publisher('pose', PoseWithCovarianceStamped, queue_size=10)
