@@ -20,7 +20,6 @@ if (CATKIN_ENABLE_TESTING)
 endif()
 
 install(PROGRAMS
-  scripts/odom_to_pose
-  scripts/p3d_to_imu
+  scripts/odom_to_pose_with_covariance_stamped
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
