@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from nav_msgs.msg import Odometry
+
+
+class OdomToPoseWithCovarianceStampedNode(object):
+    def __init__(self, gaussian_noise):
+        """
+        Class that converts an incoming nav_msgs/Odometry to a geometry_msgs/PoseWithCovarianceStamped
+        :param gaussian_noise: Optional gaussian noise parameter for overwriting the covariance
+        """
+        self.odom_sub = rospy.Subscriber('odom', Odometry, callback=self.callback)
+        self.publisher = rospy.Publisher('pose', PoseWithCovarianceStamped, queue_size=10)
+        if gaussian_noise is not None:
+            self._gaussian_covariance = 36 * [0]
+            # only set the diagonal elements
+            for i in range(0, 6):
+                self._gaussian_covariance[6 * i + i] = gaussian_noise
+        else:
+            self._gaussian_covariance = None
+
+    def callback(self, msg):
+        pose = PoseWithCovarianceStamped()
+        pose.header = msg.header
+        pose.pose.pose = msg.pose.pose
+
+        if self._gaussian_covariance:
+            pose.pose.covariance = self._gaussian_covariance
+
+        self.publisher.publish(pose)
+
+
+if __name__ == '__main__':
+    rospy.init_node('odom_to_pose_with_covariance_stamped')
+
+    OdomToPoseWithCovarianceStampedNode(rospy.get_param("gaussian_noise", None))
+    rospy.spin()
