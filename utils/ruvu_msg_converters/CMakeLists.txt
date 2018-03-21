@@ -21,5 +21,6 @@ endif()
 
 install(PROGRAMS
   scripts/odom_to_pose_with_covariance_stamped
+  scripts/rewrite_odom_covariance
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
