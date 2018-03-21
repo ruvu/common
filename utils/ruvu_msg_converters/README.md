@@ -15,3 +15,17 @@ Converts an incoming `nav_msgs/Odometry` to a `geometry_msgs/PoseWithCovarianceS
 #### Parameters
 
 - `gaussian_noise` (optional parameter that overwrites the incoming covariance)
+
+### rewrite_odom_covariance
+
+Rewrites the diagonal of the covariance of an incoming `nav_msgs/Odometry` with given values.
+
+#### Topics
+
+- `odom` (incoming `nav_msgs/Odometry`)
+- `odom_covariance_rewritten` (outgoing `nav_msgs/Odometry` with rewritten covariance)
+
+#### Parameters
+
+- `pose_covariance_diagonal` (required): array of length 6 containing the desired diagonal elements of the pose covariance.
+- `twist_covariance_diagonal` (required): array of length 6 containing the desired diagonal elements of the twist covariance.
