@@ -21,6 +21,28 @@ import math
 import numpy as np
 
 
+def _load_pose_graph(file_path):
+    """
+    Load a pose graph from a file, raise an exception if the required attributes for the nodes and edges are missing
+    :param file_path: File path of the graph
+    :return: The graph
+    """
+    graph = nx.read_yaml(file_path).to_directed()
+
+    # verify the graph
+    if len(nx.get_node_attributes(graph, 'pose')) != len(graph.nodes()):
+        raise ValueError("Every node in the graph should hold a pose attribute")
+    if len(nx.get_edge_attributes(graph, 'weight')) != len(graph.edges()):
+        raise ValueError("Every edge in the graph should hold a weight attribute")
+
+    rospy.loginfo("Loaded graph with {} nodes and {} edges from {}".format(
+        len(graph.nodes()),
+        len(graph.edges()),
+        file_path
+    ))
+    return graph
+
+
 def _get_interpolated_pose(pose1, pose2, fraction):
     """
     Perform pose interpolation between two geometry_msgs.Pose
@@ -194,16 +216,7 @@ class PoseGraphNode(object):
         """
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
-            self._graph = nx.read_yaml(file_path).to_directed()
-            rospy.loginfo("Loaded graph with {} nodes and {} edges from {}".format(
-                len(self._graph.nodes()),
-                len(self._graph.edges()),
-                file_path
-            ))
-
-        # TODO VERIFY GRAPH
-        # 1. Check pose attributes
-        # 2. Check weight
+            self._graph = _load_pose_graph(file_path)
 
         self._frame_id = frame_id
         self._robot_frame_id = robot_frame_id
@@ -507,6 +520,7 @@ if __name__ == "__main__":
         )
     except Exception:
         # if we don't catch this exception, the node hangs because other threads have been started
+        rospy.logfatal("Pose graph initialization failed")
         rospy.signal_shutdown('exception during initialization')
         raise
     else:
