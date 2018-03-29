@@ -5,38 +5,48 @@
   <xacro:property name="M_PI" value="3.1415926535897931" />
 
   <xacro:macro name="generic_imu_model" params="name parent *origin">
-    <joint name="${name}_joint" type="fixed">
+    <!-- use a zero limit revolute joint rather than fixed to prevent lumping -->
+    <joint name="${name}_joint" type="revolute"> 
+      <limit effort="0" lower="0" upper="0" velocity="0"/>
       <xacro:insert_block name="origin" />
       <parent link="${parent}"/>
-      <child link="${name}_link"/>
+      <child link="${name}"/>
     </joint>
 
-    <link name="${name}_link"/>
+    <link name="${name}">
+      <inertial>
+        <mass value="0.070" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="2.632e-4" ixy="0" ixz="0" iyy="2.632e-4" iyz="0" izz="1.62e-4" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0.005" rpy="0 0 0" />
+        <geometry>
+        <box size="0.01 0.01 0.01" />
+      </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.005" rpy="0 0 0" />
+        <geometry>
+        <box size="0.01 0.01 0.01" />
+      </geometry>
+      </collision>
+    </link>
   </xacro:macro>
 
-  <xacro:macro name="generic_imu" params="name parent *origin rate gaussian_noise">
+  <xacro:macro name="generic_imu" params="name parent *origin robot_namespace update_rate topic_name gaussian_noise">
     <xacro:generic_imu_model name="${name}" parent="${parent}">
       <xacro:insert_block name="origin" />
     </xacro:generic_imu_model>
 
-    <gazebo reference="${name}_link">
-      <gravity>true</gravity>
-      <sensor name="${name}" type="imu">
-        <always_on>true</always_on>
-        <update_rate>100</update_rate>
-        <visualize>true</visualize>
-        <topic>__default_topic__</topic>
-        <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-          <topicName>${name}</topicName>
-          <bodyName>${name}_link</bodyName>
-          <updateRateHZ>${rate}</updateRateHZ>
-          <gaussianNoise>${gaussian_noise}</gaussianNoise>
-          <xyzOffset>0 0 0</xyzOffset>
-          <rpyOffset>0 0 0</rpyOffset>
-          <frameName>${name}_link</frameName>
-        </plugin>
-        <pose>0 0 0 0 0 0</pose>
-      </sensor>
+    <gazebo>
+      <plugin filename="libgazebo_ros_imu.so" name="imu_plugin">
+        <updateRate>${update_rate}</updateRate>
+        <robotNamespace>${robot_namespace}</robotNamespace>
+        <bodyName>${name}</bodyName>
+        <topicName>${topic_name}</topicName>
+        <gaussianNoise>${gaussian_noise}</gaussianNoise>
+      </plugin>
     </gazebo>
   </xacro:macro>
 

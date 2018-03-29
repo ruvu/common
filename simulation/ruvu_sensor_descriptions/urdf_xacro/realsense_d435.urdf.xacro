@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+
+<robot name="realsense_d435" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="M_PI" value="3.1415926535897931" />
+
+  <!-- The following values are approximate, and the ${name} node
+   publishing TF values with actual calibrated ${name} extrinsic values -->
+  <xacro:property name="d435_cam_depth_to_left_ir_offset" value="-0.025"/>
+  <xacro:property name="d435_cam_depth_to_right_ir_offset" value="0.025"/>
+  <xacro:property name="d435_cam_depth_to_fisheye_offset" value="0.042"/>
+
+  <!-- The following values model the aluminum peripherial case for the
+    d435 ${name}, with the ${name} joint represented by the actual 
+    peripherial ${name} tripod mount -->
+  <xacro:property name="d435_cam_width" value="0.105"/>
+  <xacro:property name="d435_cam_height" value="0.039"/>
+  <xacro:property name="d435_cam_depth" value="0.019"/>
+  <xacro:property name="d435_cam_mount_from_center_offset" value=".0275"/>
+
+  <!-- The following offset is relative the the physical d435 ${name} peripherial
+    ${name} tripod mount -->
+  <xacro:property name="d435_cam_depth_px" value="0.00"/>
+  <xacro:property name="d435_cam_depth_py" value="-0.035"/>
+  <xacro:property name="d435_cam_depth_pz" value="0.028"/>
+
+  <xacro:macro name="realsense_d435" params="name parent update_rate width height *origin">
+
+    <!-- ${name} body, with origin at bottom screw mount -->
+    <joint name="${name}_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}"/>
+      <child link="${name}_link" />
+    </joint>
+
+    <link name="${name}_link">
+      <visual>
+      <origin xyz="0 ${-d435_cam_mount_from_center_offset} ${d435_cam_height/2}" rpy="${M_PI/2} 0 ${M_PI/2}"/>
+        <geometry>
+          <box size="${d435_cam_width} ${d435_cam_height} ${d435_cam_depth}"/>
+        </geometry>
+        <material name="aluminum"/>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 ${d435_cam_height/2}" rpy="0 0 0"/>
+        <geometry>
+        <box size="${d435_cam_depth} ${d435_cam_width} ${d435_cam_height}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <!-- The following are not reliable values, and should not be used for modeling -->
+        <mass value="0.564" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257" />
+      </inertial>
+    </link>
+   
+    <!-- ${name} depth joints and links -->
+    <joint name="${name}_depth_joint" type="fixed">
+      <origin xyz="${d435_cam_depth_px} ${d435_cam_depth_py} ${d435_cam_depth_pz}" rpy="0 0 0"/>
+      <parent link="${name}_link"/>
+      <child link="${name}_depth_frame" />
+    </joint>
+    <link name="${name}_depth_frame"/>
+
+    <joint name="${name}_depth_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="${name}_depth_frame" />
+      <child link="${name}_depth_optical_frame" />
+    </joint>
+    <link name="${name}_depth_optical_frame"/>
+      
+    <!-- ${name} left IR joints and links -->
+    <joint name="${name}_left_ir_joint" type="fixed">
+      <origin xyz="0 ${d435_cam_depth_to_left_ir_offset} 0" rpy="0 0 0" />
+      <parent link="${name}_depth_frame" />
+      <child link="${name}_left_ir_frame" />
+    </joint>
+    <link name="${name}_left_ir_frame"/>
+
+    <joint name="${name}_left_ir_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="${name}_left_ir_frame" />
+      <child link="${name}_left_ir_optical_frame" />
+    </joint>
+    <link name="${name}_left_ir_optical_frame"/>
+
+    <!-- ${name} right IR joints and links -->
+    <joint name="${name}_right_ir_joint" type="fixed">
+      <origin xyz="0 ${d435_cam_depth_to_right_ir_offset} 0" rpy="0 0 0" />
+      <parent link="${name}_depth_frame" />
+      <child link="${name}_right_ir_frame" />
+    </joint>
+    <link name="${name}_right_ir_frame"/>
+
+    <joint name="${name}_right_ir_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="${name}_right_ir_frame" />
+      <child link="${name}_right_ir_optical_frame" />
+    </joint>
+    <link name="${name}_right_ir_optical_frame"/>
+
+    <!-- ${name} fisheye joints and links -->
+    <joint name="${name}_fisheye_joint" type="fixed">
+      <origin xyz="0 ${d435_cam_depth_to_fisheye_offset} 0" rpy="0 0 0" />
+      <parent link="${name}_depth_frame" />
+      <child link="${name}_fisheye_frame" />
+    </joint>
+    <link name="${name}_fisheye_frame"/>
+
+    <joint name="${name}_fisheye_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="${name}_fisheye_frame" />
+      <child link="${name}_fisheye_optical_frame" />
+    </joint>
+    <link name="${name}_fisheye_optical_frame"/>
+
+    <gazebo reference="${name}_depth_frame">
+      <sensor type="depth" name="${name}_depth_frame">
+          <always_on>true</always_on>
+          <update_rate>${update_rate}</update_rate>
+          <camera>
+          	  <!-- 91.2 degrees according to https://click.intel.com/intelr-realsensetm-depth-camera-d435.html -->
+              <horizontal_fov>1.5917402778188285</horizontal_fov> 
+              <image>
+                  <format>B8G8R8</format>
+                  <width>${width}</width>
+                  <height>${height}</height>
+              </image>
+              <clip>
+                  <near>0.2</near>
+                  <far>20</far>
+              </clip>
+          </camera>
+          <plugin name="${name}_controller" filename="libgazebo_ros_openni_kinect.so">
+            <imageTopicName>rgb/image_raw</imageTopicName>
+            <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+            <depthImageTopicName>depth/image_rect_raw</depthImageTopicName>
+            <depthImageInfoTopicName>depth/camera_info</depthImageInfoTopicName>
+            <pointCloudTopicName>depth/points</pointCloudTopicName>
+            <frameName>${name}_depth_optical_frame</frameName>
+            <pointCloudCutoff>0.2</pointCloudCutoff>
+            <pointCloudCutoffMax>20</pointCloudCutoffMax>
+          </plugin>
+      </sensor>
+  	</gazebo>
+  </xacro:macro>
+</robot>
