@@ -17,6 +17,9 @@ class TestTwistOdomHasMovement(unittest.TestCase):
 
     def test_twist_odom_has_movement(self):
         timeout = rospy.get_param("~timeout", 10.0)
+        vx = rospy.get_param("~vx", 1.0)
+        vy = rospy.get_param("~vy", 0)
+        vyaw = rospy.get_param("~vyaw", 0.1)
         twist_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
 
         # Wait for connections
@@ -25,7 +28,7 @@ class TestTwistOdomHasMovement(unittest.TestCase):
 
         start = rospy.Time.now()
         while not rospy.is_shutdown() and rospy.Time.now() - start < rospy.Duration(timeout):
-            twist_pub.publish(Twist(linear=Vector3(x=0.2, y=0.2)))
+            twist_pub.publish(Twist(linear=Vector3(x=vx, y=vy), angular=Vector3(z=vyaw)))
             rospy.loginfo("Publishing ...")
             rospy.Rate(10).sleep()
         twist_pub.unregister()
