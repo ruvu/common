@@ -2,11 +2,11 @@
 import numpy as np
 
 import rospy
-from geometry_msgs.msg import Quaternion
+from geometry_msgs.msg import Quaternion, Vector3, Transform, TransformStamped
 from sensor_msgs.msg import Imu
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_multiply
 from tf2_ros import (Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException,
-                     ExtrapolationException)
+                     ExtrapolationException, Header)
 
 
 def get_param(param_name, default):
@@ -44,29 +44,31 @@ class OdomStabilizedPubliser(object):
     def imu_callback(self, data):
         imu_frame = data.header.frame_id
         try:
-            # trans = self.tf_buffer.transform(data, self.odom, rospy.Duration(1))
-            trans = self.tf_buffer.lookup_transform(imu_frame, self.odom, data.header.stamp, rospy.Duration(1))
+            odom_to_imu = self.tf_buffer.lookup_transform(self.odom, imu_frame, data.header.stamp, rospy.Duration(1))
         except (LookupException, ConnectivityException, ExtrapolationException) as e:
             rospy.logerr_throttle(5, e)
         else:
             q_imu = xyzw_to_numpy(data.orientation)
-            q = xyzw_to_numpy(trans.transform.rotation)
+            q = xyzw_to_numpy(odom_to_imu.transform.rotation)
+            q_imu_in_odom = -quaternion_multiply(q, q_imu)
 
-            r, p, y = euler_from_quaternion(q_imu)
-            q_stable = quaternion_from_euler(r, p, 0)
+            # _, _, _ = euler_from_quaternion(q)
+            # r, p, y = euler_from_quaternion(q_imu_in_odom)
+            # q_stable = q_imu_in_odom #quaternion_from_euler(r, p, y)
 
             rospy.logdebug('q: r=%.2f, p=%.2f, y=%.2f', *euler_from_quaternion(q))
             rospy.logdebug('q_imu: r=%.2f, p=%.2f, y=%.2f', *euler_from_quaternion(q_imu))
-            rospy.logdebug('q_stable: r=%.2f, p=%.2f, y=%.2f', *euler_from_quaternion(q_stable))
+            rospy.logdebug('q_stable: r=%.2f, p=%.2f, y=%.2f', *euler_from_quaternion(q_imu_in_odom))
 
-            trans.child_frame_id = self.odom_stabilized
-            trans.transform.rotation = Quaternion(*q_stable)
-
-            self.broadcaster.sendTransform(trans)
+            transform = Transform()
+            transform.translation = Vector3()
+            transform.rotation = Quaternion(*q_imu_in_odom)
+            ts = TransformStamped(header=Header(stamp=data.header.stamp, frame_id=self.odom), child_frame_id = self.odom_stabilized, transform=transform)
+            self.broadcaster.sendTransform(ts)
 
 
 def main():
-    rospy.init_node('odom_stabilized_publisher')
+    rospy.init_node('odom_stabilized_publisher', log_level=rospy.DEBUG)
     OdomStabilizedPubliser()
     rospy.spin()
 
