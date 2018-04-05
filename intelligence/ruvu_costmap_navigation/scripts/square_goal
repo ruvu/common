@@ -39,24 +39,29 @@ class SquareGoal(object):
         path = [PoseStamped(header=header, pose=p) for p in path]
         path = [self.tf_buffer.transform(p, 'map') for p in path]
 
-        paths = []
-        for ps in path:
-            paths.append(self.plan_path(ps))
+        previous = None
+        for ps in cycle(path):
+            # skip the first one
+            if previous is None:
+                self.execute_path(self.plan_path(None, ps))
+                previous = ps
+            else:
+                self.execute_path(self.plan_path(previous, ps))
 
-        for p in cycle(paths):
-            self.execute_path(p)
-
-    def plan_path(self, ps):
+    def plan_path(self, ps1, ps2):
         """Plan a path to a pointStamped"""
+        use_start_pose = True if ps1 else False
+        start_pose = ps1 if ps1 else None
         result = self.get_path.send_goal_and_wait(
-            GetPathGoal(target_pose=ps, tolerance=rospy.get_param("~tolerance", 1.0)))
+            GetPathGoal(use_start_pose=use_start_pose, start_pose=start_pose, target_pose=ps2,
+                        tolerance=rospy.get_param("~tolerance", 1.0)))
         if result != GoalStatus.SUCCEEDED:
             raise RuntimeError("%s: %s" % (self.get_path.action_client.ns, self.get_path.get_goal_status_text()))
 
         return self.get_path.get_result().path
 
     def execute_path(self, path):
-        rospy.loginfo('Sending path...')
+        rospy.loginfo('Sending path with length %d', len(path.poses))
         result = self.exe_path.send_goal_and_wait(ExePathGoal(path=path))
         if result != GoalStatus.SUCCEEDED:
             raise RuntimeError("%s: %s" % (self.exe_path.action_client.ns, self.exe_path.get_goal_status_text()))
