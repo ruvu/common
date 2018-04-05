@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+from argparse import ArgumentParser
+from itertools import cycle
+
+import rospy
+import tf.transformations
+import tf2_geometry_msgs
+from actionlib import SimpleActionClient, GoalStatus
+from geometry_msgs.msg import Point, PoseStamped, Pose, Quaternion
+from mbf_msgs.msg import GetPathAction, ExePathAction, GetPathGoal, ExePathGoal
+from std_msgs.msg import Header
+from tf2_ros import TransformListener, Buffer
+
+_ = tf2_geometry_msgs
+
+
+class SquareGoal(object):
+    def __init__(self):
+        self.tf_buffer = Buffer()
+        self.listener = TransformListener(self.tf_buffer)
+
+        self.get_path = SimpleActionClient("costmap_navigation/get_path", GetPathAction)
+        self.exe_path = SimpleActionClient("costmap_navigation/exe_path", ExePathAction)
+
+        rospy.loginfo("waiting for '%s'", self.get_path.action_client.ns)
+        self.get_path.wait_for_server()
+        rospy.loginfo("waiting for '%s'", self.exe_path.action_client.ns)
+        self.exe_path.wait_for_server()
+
+    def send_goal(self, length):
+        # build the path
+        path = [
+            Pose(Point(+length, +length, 0), Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))),
+            Pose(Point(-length, +length, 0), Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))),
+            Pose(Point(-length, -length, 0), Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))),
+            Pose(Point(+length, -length, 0), Quaternion(*tf.transformations.quaternion_from_euler(0, 0, 0))),
+        ]
+        header = Header(frame_id='base_link')
+        path = [PoseStamped(header=header, pose=p) for p in path]
+        path = [self.tf_buffer.transform(p, 'map') for p in path]
+
+        paths = []
+        for ps in path:
+            paths.append(self.plan_path(ps))
+
+        for p in cycle(paths):
+            self.execute_path(p)
+
+    def plan_path(self, ps):
+        """Plan a path to a pointStamped"""
+        result = self.get_path.send_goal_and_wait(
+            GetPathGoal(target_pose=ps, tolerance=rospy.get_param("~tolerance", 1.0)))
+        if result != GoalStatus.SUCCEEDED:
+            raise RuntimeError("%s: %s" % (self.get_path.action_client.ns, self.get_path.get_goal_status_text()))
+
+        return self.get_path.get_result().path
+
+    def execute_path(self, path):
+        rospy.loginfo('Sending path...')
+        result = self.exe_path.send_goal_and_wait(ExePathGoal(path=path))
+        if result != GoalStatus.SUCCEEDED:
+            raise RuntimeError("%s: %s" % (self.exe_path.action_client.ns, self.exe_path.get_goal_status_text()))
+
+        print self.exe_path.get_result()
+
+
+if __name__ == '__main__':
+    rospy.init_node('square_goal')
+    argv = rospy.myargv()
+
+    parser = ArgumentParser(argv)
+    parser.add_argument('--length', type=float, default=2.0)
+
+    args = parser.parse_args(argv[1:])
+
+    square = SquareGoal()
+    try:
+        square.send_goal(length=args.length)
+    except RuntimeError as e:
+        rospy.logerr(e)
