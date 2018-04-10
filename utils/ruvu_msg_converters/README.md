@@ -29,3 +29,18 @@ Rewrites the diagonal of the covariance of an incoming `nav_msgs/Odometry` with 
 
 - `pose_covariance_diagonal` (required): array of length 6 containing the desired diagonal elements of the pose covariance.
 - `twist_covariance_diagonal` (required): array of length 6 containing the desired diagonal elements of the twist covariance.
+
+### rewrite_imu_covariance
+
+Rewrites the diagonal of the covariances of an incoming `sensor_msgs/Imu` with given values.
+
+#### Topics
+
+- `imu/data` (incoming `sensor_msgs/Imu`)
+- `imu/data_covariance_rewritten` (outgoing `sensor_msgs/Imu` with rewritten covariance)
+
+#### Parameters
+
+- `orientation_covariance_diagonal` (required): array of length 3 containing the desired diagonal elements of the orientation covariance.
+- `angular_velocity_covariance_diagonal` (required): array of length 3 containing the desired diagonal elements of the angular velocity covariance.
+- `linear_acceleration_covariance_diagonal` (required): array of length 3 containing the desired diagonal elements of the linear acceleration covariance.
