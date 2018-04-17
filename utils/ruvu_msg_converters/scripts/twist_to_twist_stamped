@@ -10,8 +10,8 @@ from std_msgs.msg import Header
 class CmdVelToStamped(object):
     def __init__(self):
         # listen to only the latest message because we determine the stamp here
-        self.subscriber = rospy.Subscriber("cmd_vel", Twist, self.callback, queue_size=1)
-        self.publisher = rospy.Publisher('cmd_vel_stamped', TwistStamped, queue_size=10)
+        self.subscriber = rospy.Subscriber("input", Twist, self.callback, queue_size=1)
+        self.publisher = rospy.Publisher('output', TwistStamped, queue_size=10)
 
     def callback(self, twist):
         msg = TwistStamped(header=Header(stamp=rospy.Time.now()), twist=twist)
