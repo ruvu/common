@@ -44,3 +44,13 @@ Rewrites the diagonal of the covariances of an incoming `sensor_msgs/Imu` with g
 - `orientation_covariance_diagonal` (required): array of length 3 containing the desired diagonal elements of the orientation covariance.
 - `angular_velocity_covariance_diagonal` (required): array of length 3 containing the desired diagonal elements of the angular velocity covariance.
 - `linear_acceleration_covariance_diagonal` (required): array of length 3 containing the desired diagonal elements of the linear acceleration covariance.
+
+### twist_to_twist_stamped
+
+Adds a std_msgs/Header to a geometry_msgs/Twist message. This can be used for plotting cmd_vel messages in rqt.
+
+#### Topics
+
+- `input` (incoming `geometry_msgs/Twist`)
+- `output` (converted `geometry_msgs/TwistStamped`)
+
