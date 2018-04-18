@@ -56,7 +56,7 @@ Adds a std_msgs/Header to a geometry_msgs/Twist message. This can be used for pl
 
 ### odom_to_tf
 
-Adds a std_msgs/Header to a geometry_msgs/Twist message. This can be used for plotting cmd_vel messages in rqt.
+Publishes an odometry message as `/tf` transform.
 
 #### Parameters
 
