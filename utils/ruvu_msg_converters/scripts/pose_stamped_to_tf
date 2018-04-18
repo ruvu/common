@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+import PyKDL
+import rospy
+import tf2_ros
+from geometry_msgs.msg import Vector3, Quaternion, PoseStamped
+
+
+def _pose_stamped_to_kdl(msg):
+    """
+    Convert a pose stamped to a KDL frame
+    :param msg: geoemtry_msgs/PoseStamped
+    :return: a KDL frame
+    """
+    return PyKDL.Frame(PyKDL.Rotation.Quaternion(msg.pose.orientation.x, msg.pose.orientation.y,
+                                                 msg.pose.orientation.z, msg.pose.orientation.w),
+                       PyKDL.Vector(msg.pose.position.x, msg.pose.position.y, msg.pose.position.z))
+
+
+def pose_callback(msg):
+    """
+    Pose callback that needs to be republished over the /tf topic
+    :param msg: Incoming pose stamped
+    """
+    kdl_pose = _pose_stamped_to_kdl(msg)
+
+    t = tf2_ros.TransformStamped()
+
+    if publish_as_child:
+        t.header.frame_id = child_frame_id
+        t.child_frame_id = msg.header.frame_id
+        kdl_pose = kdl_pose.Inverse()
+    else:
+        t.header.frame_id = msg.header.frame_id
+        t.child_frame_id = child_frame_id
+
+    t.header.stamp = msg.header.stamp
+    t.header.seq = msg.header.seq
+    t.transform.translation = Vector3(*kdl_pose.p)
+    t.transform.rotation = Quaternion(*kdl_pose.M.GetQuaternion())
+
+    broadcaster.sendTransform(t)
+
+
+if __name__ == '__main__':
+    rospy.init_node("pose_stamped_to_tf")
+    sub = rospy.Subscriber("pose", PoseStamped, pose_callback)
+    broadcaster = tf2_ros.TransformBroadcaster()
+    child_frame_id = rospy.get_param("~child_frame_id")
+    publish_as_child = rospy.get_param("~publish_as_child", False)
+
+    try:
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass

@@ -67,4 +67,16 @@ Publishes an odometry message as `/tf` transform.
 - `odom` (incoming `nav_msgs/Odometry`)
 - `/tf`
 
+### pose_stamped_to_tf
 
+Pose stamped as tf
+
+#### Parameters
+
+- `~child_frame_id`: The child frame id of the transform, set as header if `publish_as_child` is true (required)
+- `~publish_as_child`: Publishes an inverse transform and swaps the header and child frame id (defaults to `false`)
+
+#### Topics
+
+- `pose` (incoming `geometry_msgs/PoseStamped`)
+- `/tf`
