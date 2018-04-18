@@ -54,3 +54,17 @@ Adds a std_msgs/Header to a geometry_msgs/Twist message. This can be used for pl
 - `input` (incoming `geometry_msgs/Twist`)
 - `output` (converted `geometry_msgs/TwistStamped`)
 
+### odom_to_tf
+
+Publishes an odometry message as `/tf` transform.
+
+#### Parameters
+
+- `~publish_as_child`: Publishes an inverse transform and swaps the header and child frame id (defaults to `false`)
+
+#### Topics
+
+- `odom` (incoming `nav_msgs/Odometry`)
+- `/tf`
+
+
