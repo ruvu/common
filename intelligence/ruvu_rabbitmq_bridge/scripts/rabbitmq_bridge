@@ -1,0 +1,114 @@
+#!/usr/bin/env python
+import socket
+from functools import partial
+
+import pika
+import rospy
+from rospy_message_converter import json_message_converter
+from ruvu_rabbitmq_bridge import get_topic_name_msg_type_dict
+
+
+class RabbitMQBridge(object):
+    def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_queue_prefix, ros_publisher_queue_size):
+        """
+        RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
+        :param subscribers: Dictionary that maps topic_names to message types, subscribers on the ROS end
+        :param publishers: Dictionary that maps topic_names to message types, publishers on the ROS end
+        :param rabbitmq_host: Specifies where the RabbitMQ server is running
+        :param rabbitmq_queue_prefix: The ROS topic names equal the RabbitMQ queue names but prepended with this prefix
+        :param ros_publisher_queue_size: ROS publisher queue size
+        """
+        self._ros_subscribers = {}
+        self._ros_publishers = {}
+        self._rabbitmq_subscribers = {}
+        self._rabbitmq_publishers = {}
+        self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
+
+        self._rabbitmq_write_connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host))
+        self._rabbitmq_write_channel = self._rabbitmq_write_connection.channel()
+
+        self._rabbitmq_read_connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host))
+        self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
+
+        for topic_name, topic_msg_type in subscribers.iteritems():
+            # Create ROS subscriber
+            self._ros_subscribers[topic_name] = rospy.Subscriber(
+                topic_name, topic_msg_type, partial(self._ros_msg_callback, topic_name)
+            )
+
+            # Create RabbitMQ Publisher
+            rabbitmq_queue_name = self._rabbitmq_queue_prefix + topic_name
+            self._rabbitmq_write_channel.queue_declare(queue=rabbitmq_queue_name)
+
+        for topic_name, topic_msg_type in publishers.iteritems():
+            # Create ROS publisher
+            self._ros_publishers[topic_name] = rospy.Publisher(
+                topic_name, topic_msg_type, queue_size=ros_publisher_queue_size
+            )
+
+            # Create RabbitMQ subscriber
+            rabbitmq_queue_name = self._rabbitmq_queue_prefix + topic_name
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name)
+            self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
+                                                      no_ack=True)
+
+    def _ros_msg_callback(self, topic_name, msg):
+        """
+        Message callback of incoming ROS message
+        :param topic_name: Topic on which the msg was received
+        :param msg: Incoming message
+        """
+        rabbitmq_queue_name = self._rabbitmq_queue_prefix + topic_name
+        body = json_message_converter.convert_ros_message_to_json(msg)
+        rospy.logdebug("Publishing RabbitMQ message with body {} to queue {}".format(body, rabbitmq_queue_name))
+        self._rabbitmq_write_channel.basic_publish(
+            exchange='',
+            routing_key=rabbitmq_queue_name,
+            body=body
+        )
+
+    def _rabbitmq_msg_callback(self, channel, method, properties, body):
+        """
+        Message callback when a message is read out of the RabbitMQ queue
+        :param channel: Reference to the RabbitMQ channel
+        :param method: RabbitMQ method
+        :param properties: Message properties
+        :param body: Incoming message contents
+        """
+        topic_name = method.routing_key.lstrip(self._rabbitmq_queue_prefix)
+        publisher = self._ros_publishers[topic_name]
+        try:
+            msg = json_message_converter.convert_json_to_ros_message(publisher.type, body)
+        except ValueError as e:
+            rospy.logerr("Conversion to ROS msg failed: {}".format(e))
+        else:
+            rospy.logdebug("Publishing ROS message {} to topic {}".format(topic_name, msg))
+            publisher.publish(msg)
+
+    def spin(self):
+        """
+        Spins the bridge, starts the read channel and makes sure that a shutdown is handled properly.
+        """
+
+        def shutdown_hook():
+            rospy.loginfo("Shutting down RabbitMQ read channel ...")
+            self._rabbitmq_read_channel.stop_consuming()
+
+        rospy.on_shutdown(shutdown_hook)
+
+        rospy.loginfo("RabbitMQBridge initialized. Start consuming RabbitMQ read channel ..")
+        self._rabbitmq_read_channel.start_consuming()
+        rospy.loginfo("RabbitMQBridge stopped")
+
+
+if __name__ == '__main__':
+    rospy.init_node('rabbitmq_bridge')
+
+    bridge = RabbitMQBridge(
+        get_topic_name_msg_type_dict(rospy.get_param('~subscribers')),
+        get_topic_name_msg_type_dict(rospy.get_param('~publishers')),
+        rospy.get_param('~rabbitmq_host', 'localhost'),
+        rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
+        rospy.get_param('~ros_publisher_queue_size', 10)
+    )
+    bridge.spin()
