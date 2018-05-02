@@ -1,9 +1,13 @@
 subscribers:
-  string_to_rabbitmq: std_msgs/String
-  float_to_rabbitmq: std_msgs/Float32
+  - topic: prefix/string_to_rabbitmq
+    message_type: std_msgs/String
+  - topic: float_to_rabbitmq
+    message_type: std_msgs/Float32
 publishers:
-  string_from_rabbitmq: std_msgs/String
-  twist_from_rabbitmq: geometry_msgs/Twist
+  - topic: string_from_rabbitmq
+    message_type: std_msgs/String
+  - topic: prefix/twist_from_rabbitmq
+    message_type: geometry_msgs/Twist
 rabbitmq_host: localhost
 #rabbitmq_queue_prefix: custom_prefix # defaults to current hostname
 ros_publisher_queue_size: 10 # defaults to 10
