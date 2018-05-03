@@ -10,8 +10,9 @@ catkin_package()
 if (CATKIN_ENABLE_TESTING)
   	# ROS Lint
     file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
+    file(GLOB_RECURSE PY_FILES *.py)
     file(GLOB_RECURSE TEST_SCRIPTS test/rabbitmq_*)
-    roslint_python(${PYTHON_SCRIPTS} ${TEST_SCRIPTS})
+    roslint_python(${PYTHON_SCRIPTS} ${TEST_SCRIPTS} ${PY_FILES})
     roslint_add_test()
 
     # Catkin lint
