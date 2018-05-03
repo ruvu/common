@@ -51,6 +51,7 @@ add_library(${PROJECT_NAME}
   src/add_edge_tool.cpp
   src/remove_node_tool.cpp
   src/remove_edge_tool.cpp
+  src/get_path_tool.cpp
   src/configurable_goal_pose_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})

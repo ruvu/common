@@ -48,4 +48,11 @@
       Tool for sending a PointStamped for removing an edge from a graph.
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/GetPath"
+         type="ruvu_rviz_plugins::GetPathTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a PointStamped for planning a path from A to B in a graph.
+    </description>
+  </class>
 </library>
