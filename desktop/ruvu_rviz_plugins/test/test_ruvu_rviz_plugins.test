@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ruvu_rviz_plugins)/test/rviz_config.rviz" />
+</launch>
+

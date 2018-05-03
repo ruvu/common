@@ -20,4 +20,32 @@
       Give a PoseStamped goal for a subscriber within a namespace
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/AddNode"
+         type="ruvu_rviz_plugins::AddNodeTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a PoseStamped for adding a pose to a graph.
+    </description>
+  </class>
+  <class name="ruvu_rviz_plugins/AddEdge"
+         type="ruvu_rviz_plugins::AddEdgeTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a PointStamped for adding edges to graphs. 
+    </description>
+  </class>
+  <class name="ruvu_rviz_plugins/RemoveNode"
+         type="ruvu_rviz_plugins::RemoveNodeTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a PointStamped for removing a pose from a graph.
+    </description>
+  </class>
+  <class name="ruvu_rviz_plugins/RemoveEdge"
+         type="ruvu_rviz_plugins::RemoveEdgeTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a PointStamped for removing an edge from a graph.
+    </description>
+  </class>
 </library>
