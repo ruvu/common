@@ -44,3 +44,10 @@ Tool for sending a `geometry_msgs/PointStamped` for removing a pose from a graph
 ![RemoveEdge](icons/classes/RemoveEdge.png)
 
 Tool for sending a `geometry_msgs/PointStamped` for removing edges from a graph. The output topic can be configured. 
+
+## Get path
+
+![GetPath](icons/classes/GetPath.png)
+
+Tool for sending a `geometry_msgs/PointStamped` for planing a path from A to B over a graph. The output topic can be configured. 
+

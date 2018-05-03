@@ -27,7 +27,10 @@ def _load_pose_graph(file_path):
     :param file_path: File path of the graph
     :return: The graph
     """
-    graph = nx.read_yaml(file_path).to_directed()
+    try:
+        graph = nx.read_yaml(file_path).to_directed()
+    except AttributeError as _:
+        raise ValueError("Could not read directed graph")
 
     # verify the graph
     if len(nx.get_node_attributes(graph, 'pose')) != len(graph.nodes()):
@@ -81,16 +84,9 @@ def _get_squared_distance(p1, p2):
     return (p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2
 
 
-def _add_projected_nodes_on_edges(graph, position, tolerance):
-    """
-    Loop over all edges and project the position to this edge, if the distance to the edge is
-    smaller than the tolerance, add a node with an edge with the same end node as the found edge.
-    :param graph: Graph reference
-    :param position: Position of the point that has to be projected on the edges
-    :param tolerance: Max distance to edge
-    """
+def _get_edges_with_projected_interpolated_pose_within_tolerance(graph, position, tolerance):
     graph_poses = nx.get_node_attributes(graph, "pose")
-    num = 0
+    edges_with_projected_interpolated_pose = []
 
     for node1, node2 in graph.edges():
         pose1 = graph_poses[node1]
@@ -113,15 +109,37 @@ def _add_projected_nodes_on_edges(graph, position, tolerance):
             # If the point is close enough to the passed position, we add a node with a connection to pose2
             # note that we only want to add one node for the same projection point (same edge in other direction)
             if _get_squared_distance(projected_point, position) < tolerance:
-                new_node = _get_unique_node_id(graph)
-                new_pose = _get_interpolated_pose(pose1, pose2, projection_on_line_factor)
-                graph.add_node(new_node, pose=new_pose)
-                rospy.loginfo("Adding node %d with pose %s", new_node, new_pose)
-                graph.add_edge(new_node, node2, weight=_get_squared_distance(projected_point, pose2.position))
-                rospy.loginfo("Connecting node %d to node %d", new_node, node2)
-                num += 1
+                edges_with_projected_interpolated_pose.append((
+                    node1,
+                    node2,
+                    _get_interpolated_pose(pose1, pose2, projection_on_line_factor)
+                ))
 
-    rospy.loginfo("Added %d projected nodes on edges", num)
+    return edges_with_projected_interpolated_pose
+
+
+def _add_projected_nodes_on_edges(graph, position, tolerance):
+    """
+    Loop over all edges and project the position to this edge, if the distance to the edge is
+    smaller than the tolerance, add a node with an edge with the same end node as the found edge.
+    :param graph: Graph reference
+    :param position: Position of the point that has to be projected on the edges
+    :param tolerance: Max distance to edge
+    """
+    graph_poses = nx.get_node_attributes(graph, "pose")
+    edges_with_projected_interpolated_pose = \
+        _get_edges_with_projected_interpolated_pose_within_tolerance(graph, position, tolerance)
+
+    for _, node2, interpolated_pose in edges_with_projected_interpolated_pose:
+        pose2 = graph_poses[node2]
+
+        new_node = _get_unique_node_id(graph)
+        graph.add_node(new_node, pose=interpolated_pose)
+        rospy.loginfo("Adding node %d with pose %s", new_node, interpolated_pose)
+        graph.add_edge(new_node, node2, weight=_get_squared_distance(interpolated_pose.position, pose2.position))
+        rospy.loginfo("Connecting node %d to node %d", new_node, node2)
+
+    rospy.loginfo("Added %d projected nodes on edges", len(edges_with_projected_interpolated_pose))
 
 
 def _find_shortest_path(graph, start_nodes, end_node):
@@ -216,7 +234,10 @@ class PoseGraphNode(object):
         """
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
-            self._graph = _load_pose_graph(file_path)
+            try:
+                self._graph = _load_pose_graph(file_path)
+            except ValueError as e:
+                rospy.logerr("Failed to load graph from file_path {}: {}".format(file_path, e))
 
         self._frame_id = frame_id
         self._robot_frame_id = robot_frame_id
@@ -230,6 +251,7 @@ class PoseGraphNode(object):
         self._last_planned_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
         self._add_node_sub = rospy.Subscriber("add_node", PoseStamped, self._add_node_cb)
         self._remove_node_sub = rospy.Subscriber("remove_node", PointStamped, self._remove_node_cb)
+        self._remove_edge_sub = rospy.Subscriber("remove_edge", PointStamped, self._remove_edge_cb)
         self._add_edge_sub = rospy.Subscriber("add_edge", PointStamped, self._add_edge_cb)
         self._get_path_sub = rospy.Subscriber("get_path", PointStamped, self._get_path_cb)
 
@@ -329,6 +351,16 @@ class PoseGraphNode(object):
             self._add_edge_to_graph(self._last_connect_clicked_point.point, point.point)
 
         self._last_connect_clicked_point = point
+
+    def _remove_edge_cb(self, point):
+        """
+        Callback fired to remove an edge from the graph
+        :param point: A point near to the graph pose, the closest graph edge is removed
+        """
+        if not self._check_frame_id(point.header.frame_id):
+            return
+
+        self._remove_edge_from_graph(point.point)
 
     def _get_path_cb(self, point):
         """
@@ -498,6 +530,24 @@ class PoseGraphNode(object):
         if nodes:
             self._graph.remove_node(nodes[0])
             rospy.loginfo("Removed node {}".format(nodes[0]))
+            self._publish_graph_visualization()
+
+    def _remove_edge_from_graph(self, point):
+        """
+        Method to remove an edge from the graph together
+        :param point: Point (we will look for the closest edge within a tolerance region of 1.0)
+        """
+        edges_with_projected_interpolated_pose = \
+            _get_edges_with_projected_interpolated_pose_within_tolerance(self._graph, point, 1.0)
+
+        sorted_edges_with_poses = sorted(edges_with_projected_interpolated_pose,
+                                         key=lambda (n1, n2, pose): _get_squared_distance(point, pose.position))
+
+        if sorted_edges_with_poses:
+            node1, node2, _ = sorted_edges_with_poses[0]
+            self._graph.remove_edge(node1, node2)
+
+            rospy.loginfo("Removed edge between {} and {}".format(node1, node2))
             self._publish_graph_visualization()
 
     def _publish_graph_visualization(self):

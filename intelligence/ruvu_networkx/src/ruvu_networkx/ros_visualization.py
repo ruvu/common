@@ -1,10 +1,34 @@
-import networkx as nx
 import itertools
+import networkx as nx
 
+import PyKDL
 import rospy
-from std_msgs.msg import Header, ColorRGBA
 from geometry_msgs.msg import Vector3, Pose, Point, Quaternion
+from std_msgs.msg import Header, ColorRGBA
 from visualization_msgs.msg import MarkerArray, Marker
+
+
+def _pose_to_kdl(msg):
+    return PyKDL.Frame(PyKDL.Rotation.Quaternion(msg.orientation.x, msg.orientation.y,
+                                                 msg.orientation.z, msg.orientation.w),
+                       PyKDL.Vector(msg.position.x, msg.position.y, msg.position.z))
+
+
+def _point_line_list_from_poses(poses, length):
+    points = []
+    for pose in poses:
+        points.append(pose.position)
+        points.append(Point(*(_pose_to_kdl(pose) * PyKDL.Vector(length, 0, 0))))
+
+    return points
+
+
+def _point_line_list_from_pose_pairs(pose_pairs):
+    points = []
+    for pose1, pose2 in pose_pairs:
+        points.append(pose1.position)
+        points.append(pose2.position)
+    return points
 
 
 def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribute_name="pose"):
@@ -14,7 +38,8 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
     :param graph: The networkx graph
     :param attribute_name: The pose attribute name
     """
-    graph_poses = nx.get_node_attributes(graph, attribute_name)
+    graph_poses_dict = nx.get_node_attributes(graph, attribute_name)
+    graph_edges_pose_pairs = [(graph_poses_dict[n1], graph_poses_dict[n2]) for n1, n2 in graph.edges()]
 
     marker_array = MarkerArray()
     header = Header(
@@ -22,60 +47,44 @@ def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribut
         stamp=rospy.Time.now()
     )
 
-    node_scale = 0.15
     marker_array.markers.append(Marker(
-        header=header,
-        ns="nodes",
-        pose=Pose(orientation=Quaternion(w=1)),
-        type=Marker.SPHERE_LIST,
-        scale=Vector3(x=node_scale, y=node_scale, z=node_scale),
-        color=ColorRGBA(1.0, 1.0, 1.0, 1.0),
-        points=[graph_poses[n].position for n in graph.nodes()]
-    ))
-
-    edge_width = 0.1
-    marker_array.markers.append(Marker(
-        header=header,
-        ns="edges",
-        pose=Pose(orientation=Quaternion(w=1)),
-        type=Marker.LINE_LIST,
-        scale=Vector3(x=edge_width),
-        color=ColorRGBA(0.0, 1.0, 1.0, 1.0),
-        points=list(
-            itertools.chain(*[(graph_poses[n1].position, graph_poses[n2].position) for n1, n2 in graph.edges()])),
-        colors=list(itertools.chain(*[(ColorRGBA(a=1.0), ColorRGBA(1.0, 1.0, 1.0, 1.0)) for _, _ in graph.edges()]))
+        action=Marker.DELETEALL
     ))
 
     arrow_length = 1.0
     arrow_width = 0.15
     marker_array.markers += [Marker(
         header=header,
-        ns="poses",
+        ns="nodes_arrow",
         id=i,
-        pose=graph_poses[n],
+        pose=pose,
         type=Marker.ARROW,
         scale=Vector3(x=arrow_length, y=arrow_width, z=arrow_width),
         color=ColorRGBA(1.0, 0.4, 0.4, 1.0),
-    ) for i, n in enumerate(graph.nodes())]
+    ) for i, pose in enumerate(graph_poses_dict.values())]
 
-    character_height = 0.3
-    offset_z = 0.3
+    sphere_size = 0.2
     marker_array.markers += [Marker(
         header=header,
-        ns="labels",
-        text=str(n),
+        ns="nodes_sphere",
         id=i,
-        pose=Pose(
-            orientation=graph_poses[n].orientation,
-            position=Point(
-                graph_poses[n].position.x,
-                graph_poses[n].position.y,
-                graph_poses[n].position.z + offset_z
-            )
-        ),
-        type=Marker.TEXT_VIEW_FACING,
-        scale=Vector3(z=character_height),
-        color=ColorRGBA(1.0, 1.0, 1.0, 1.0),
-    ) for i, n in enumerate(graph.nodes())]
+        pose=pose,
+        type=Marker.SPHERE,
+        scale=Vector3(x=sphere_size, y=sphere_size, z=sphere_size),
+        color=ColorRGBA(0.4, 0.4, 0.8, 1.0),
+    ) for i, pose in enumerate(graph_poses_dict.values())]
+
+    shaft_diameter = 0.03
+    head_diameter = 0.15
+    marker_array.markers += [Marker(
+        header=header,
+        ns="edges_arrow",
+        id=i,
+        pose=Pose(orientation=Quaternion(w=1)),
+        type=Marker.ARROW,
+        scale=Vector3(x=shaft_diameter, y=head_diameter),
+        color=ColorRGBA(0.95, 0.95, 0.95, 1.0),
+        points=[pose.position for pose in pose_pair]
+    ) for i, pose_pair in enumerate(graph_edges_pose_pairs)]
 
     return marker_array
