@@ -1,0 +1,5 @@
+<launch>
+  <node name="rabbitmq_bridge" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" output="screen">
+    <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge.yaml" command="load" />
+  </node>
+</launch>
