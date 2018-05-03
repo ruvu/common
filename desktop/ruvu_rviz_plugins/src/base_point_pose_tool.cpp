@@ -4,9 +4,9 @@
 // @author Ramon Wijnands
 //
 
-#include "./base_point_tool.h"
+#include "./base_point_pose_tool.h"
 
-#include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <OgreVector3.h>
 #include <rviz/display_context.h>
 #include <rviz/load_resource.h>
@@ -18,7 +18,7 @@
 
 namespace ruvu_rviz_plugins
 {
-BasePointTool::BasePointTool(std::string name)
+BasePointPoseTool::BasePointPoseTool(std::string name)
 {
   // shortcut_key_ = 'l';
   this->topic_property_ = new rviz::StringProperty("Topic", "goal", "The topic on which to publish pick goals.",
@@ -31,34 +31,34 @@ BasePointTool::BasePointTool(std::string name)
   this->name = name;
 }
 
-BasePointTool::~BasePointTool()
+BasePointPoseTool::~BasePointPoseTool()
 {
 }
 
-void BasePointTool::onInitialize()
+void BasePointPoseTool::onInitialize()
 {
   hit_cursor_ = cursor_;
   std_cursor_ = rviz::getDefaultCursor();
 }
 
-void BasePointTool::activate()
+void BasePointPoseTool::activate()
 {
 }
 
-void BasePointTool::deactivate()
+void BasePointPoseTool::deactivate()
 {
 }
 
-void BasePointTool::updateTopic()
+void BasePointPoseTool::updateTopic()
 {
-  pub_ = nh_.advertise<geometry_msgs::PointStamped>(topic_property_->getStdString(), 1);
+  pub_ = nh_.advertise<geometry_msgs::PoseStamped>(topic_property_->getStdString(), 1);
 }
 
-void BasePointTool::updateAutoDeactivate()
+void BasePointPoseTool::updateAutoDeactivate()
 {
 }
 
-int BasePointTool::processMouseEvent(rviz::ViewportMouseEvent& event)
+int BasePointPoseTool::processMouseEvent(rviz::ViewportMouseEvent& event)
 {
   int flags = 0;
 
@@ -76,10 +76,11 @@ int BasePointTool::processMouseEvent(rviz::ViewportMouseEvent& event)
 
     if (event.leftUp())
     {
-      geometry_msgs::PointStamped ps;
-      ps.point.x = pos.x;
-      ps.point.y = pos.y;
-      ps.point.z = pos.z;
+      geometry_msgs::PoseStamped ps;
+      ps.pose.position.x = pos.x;
+      ps.pose.position.y = pos.y;
+      ps.pose.position.z = pos.z;
+      ps.pose.orientation.w = 1;
       ps.header.frame_id = context_->getFixedFrame().toStdString();
       ps.header.stamp = ros::Time::now();
       pub_.publish(ps);

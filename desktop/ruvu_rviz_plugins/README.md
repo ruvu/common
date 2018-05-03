@@ -12,7 +12,7 @@ Tool for sending a `geometry_msgs/PoseStamped` for a docking action to a specifi
 
 ![GraphGoal](icons/classes/GraphGoal.png)
 
-Tool for sending a `geometry_msgs/PointStamped` for a graph navigation action to a specific topic via rviz. The output topic can be configured.
+Tool for sending a `geometry_msgs/PoseStamped` for a graph navigation action to a specific topic via rviz. The output topic can be configured.
 
 ## Configurable goal
 
