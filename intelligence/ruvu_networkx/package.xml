@@ -22,4 +22,6 @@
 
   <test_depend>python-catkin-lint</test_depend>
   <test_depend>python-mock</test_depend>
+  <test_depend>rviz</test_depend>
+  <test_depend>ruvu_rviz_plugins</test_depend>
 </package>

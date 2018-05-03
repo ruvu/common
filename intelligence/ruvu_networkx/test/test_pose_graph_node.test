@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+  <node name="pose_graph" pkg="ruvu_networkx" type="pose_graph_node.py" output="screen">
+      <param name="file_path" value="$(find ruvu_networkx)/test/test_pose_graph.yaml" />
+  </node>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ruvu_networkx)/test/test_pose_graph.rviz" />
+</launch>
+
