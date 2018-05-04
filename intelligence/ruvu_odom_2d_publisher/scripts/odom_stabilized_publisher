@@ -21,7 +21,7 @@ def xyzw_to_numpy(ori):
     return np.array((ori.x, ori.y, ori.z, ori.w))
 
 
-class OdomStabilizedPubliser(object):
+class Odom2dPubliser(object):
     def __init__(self):
         self.base_link = get_param('~base_link_frame', 'base_link')
         self.odom = get_param('~odom_frame', 'odom')
@@ -69,7 +69,7 @@ class OdomStabilizedPubliser(object):
 
 def main():
     rospy.init_node('odom_2d_publisher', log_level=rospy.DEBUG)
-    OdomStabilizedPubliser()
+    Odom2dPubliser()
     rospy.spin()
 
 
