@@ -2,7 +2,7 @@
 <package format="2">
   <name>ruvu_teleop</name>
   <version>0.0.0</version>
-  <description>The ruvu_teleop package</description>
+  <description>The ruvu_teleop package contains teleop joy and keyboard tools for robot operation.</description>
 
   <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>
 
@@ -13,6 +13,7 @@
   <build_depend>roslint</build_depend>
 
   <exec_depend>actionlib</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
   <exec_depend>control_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>

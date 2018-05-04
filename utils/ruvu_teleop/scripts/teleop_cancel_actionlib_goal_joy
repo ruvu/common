@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import rospy
+
+from sensor_msgs.msg import Joy
+from actionlib_msgs.msg import GoalID
+
+
+# We need to keep track of the last button state since we only want to react on a rising event
+last_button_state = 0
+
+
+def joy_callback(msg):
+    global last_button_state
+    if button_index < len(msg.buttons):
+        if msg.buttons[button_index] == 1 and msg.buttons[button_index] != last_button_state:
+            pub.publish(GoalID(id=goal_id))
+        last_button_state = msg.buttons[button_index]
+
+
+if __name__ == "__main__":
+    rospy.init_node('teleop_cancel_actionlib_goal_joy')
+
+    button_index = int(rospy.get_param("~button_index", 0))
+    goal_id = str(rospy.get_param("~goal_id", ""))
+
+    rospy.Subscriber('joy', Joy, joy_callback)
+    pub = rospy.Publisher('cancel', GoalID, queue_size=1)
+    rospy.spin()
