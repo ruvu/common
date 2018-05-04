@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ruvu_frame_2d_publisher</name>
+  <version>0.0.0</version>
+  <description>The ruvu_frame_2d_publisher package</description>
+
+  <maintainer email="ramon@ruvu.nl">Ramon Wijnands</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roslint</build_depend>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <test_depend>python-catkin-lint</test_depend>
+</package>
