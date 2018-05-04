@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ruvu_odom_2d_publisher</name>
+  <name>ruvu_frame_2d_publisher</name>
   <version>0.0.0</version>
-  <description>The ruvu_odom_2d_publisher package</description>
+  <description>The ruvu_frame_2d_publisher package</description>
 
   <maintainer email="ramon@ruvu.nl">Ramon Wijnands</maintainer>
 
