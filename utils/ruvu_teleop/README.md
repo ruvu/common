@@ -39,3 +39,17 @@ button_index_pose_publishers:
       frame_id: map
       child_frame_id: base_link
 ```
+
+### teleop_cancel_actionlib_goal_joy
+
+Cancels an actionlib goal when a joystick button has been pressed.
+
+#### Parameters
+
+- `button_index`: Button index used for canceling the actionlib goal. (default=`0`)
+- `goal_id`: Which actionlib goal id to cancel. (default=`''`)
+
+#### Topics
+
+- joy ([sensor_msgs/Joy](http://docs.ros.org/api/sensor_msgs/html/msg/Joy.html))
+- cancel ([actionlib_msgs/GoalID](http://docs.ros.org/api/actionlib_msgs/html/msg/GoalID.html))
