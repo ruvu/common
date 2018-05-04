@@ -25,7 +25,7 @@ class OdomStabilizedPubliser(object):
     def __init__(self):
         self.base_link = get_param('~base_link_frame', 'base_link')
         self.odom = get_param('~odom_frame', 'odom')
-        self.odom_stabilized = get_param('~odom_stabilized_frame', 'odom_stabilized')
+        self.odom_2d = get_param('~odom_2d_frame', 'odom_2d')
 
         self.tf_buffer = Buffer()
         self.listener = TransformListener(self.tf_buffer)
@@ -63,12 +63,12 @@ class OdomStabilizedPubliser(object):
             transform = Transform()
             transform.translation = Vector3()
             transform.rotation = Quaternion(*q_imu_in_odom)
-            ts = TransformStamped(header=Header(stamp=data.header.stamp, frame_id=self.odom), child_frame_id = self.odom_stabilized, transform=transform)
+            ts = TransformStamped(header=Header(stamp=data.header.stamp, frame_id=self.odom), child_frame_id = self.odom_2d, transform=transform)
             self.broadcaster.sendTransform(ts)
 
 
 def main():
-    rospy.init_node('odom_stabilized_publisher', log_level=rospy.DEBUG)
+    rospy.init_node('odom_2d_publisher', log_level=rospy.DEBUG)
     OdomStabilizedPubliser()
     rospy.spin()
 
