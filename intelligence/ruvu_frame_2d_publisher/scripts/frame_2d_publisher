@@ -4,7 +4,6 @@ import numpy as np
 import rospy
 from geometry_msgs.msg import Quaternion, Vector3, Transform, TransformStamped
 from sensor_msgs.msg import Imu
-from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_multiply
 from tf2_ros import (Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException,
                      ExtrapolationException, Header, TFMessage)
 
@@ -24,21 +23,26 @@ class Frame2dPubliser(object):
         self.world_2d_frame = world_2d_frame
 
         self.broadcaster = TransformBroadcaster()
-        self.tf_sub = rospy.Subscriber("/tf", TFMessage, self.tf_callback, queue_size=queue_size)
 
-        rospy.loginfo('Waiting for transform...')
-        self.startup_message_shown = False
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer)
 
-    def tf_callback(self, data):
-        for transform in data.transforms:
-            if transform.header.frame_id == self.world_frame and transform.child_frame_id == self.base_frame:
-                self.transform_callback(transform)
+        # fill the tf buffer a little bit
+        rospy.sleep(1)
+
+    def spin(self):
+        # tf internally spins at 20Hz, so we don't need to do that
+        while not rospy.is_shutdown():
+            try:
+                # wait until a transform is published with time == now
+                tf = self.tf_buffer.lookup_transform(self.world_frame, self.base_frame, rospy.Time.now(),
+                                                     rospy.Duration(5))
+            except (LookupException, ConnectivityException, ExtrapolationException) as e:
+                rospy.logerr("tf2 exception: %s", e.message)
+            else:
+                self.transform_callback(tf)
 
     def transform_callback(self, data):
-        if not self.startup_message_shown:
-            self.startup_message_shown = True
-            rospy.loginfo('Started')
-
         transform = Transform()
         transform.translation = Vector3(x=0, y=0, z=data.transform.translation.z)
         transform.rotation = Quaternion(w=1)
@@ -48,12 +52,12 @@ class Frame2dPubliser(object):
 
 def main():
     rospy.init_node('frame_2d_publisher')
-    Frame2dPubliser(
+    fp = Frame2dPubliser(
         base_frame=get_param('~base_frame', 'base_link'),
         world_frame=get_param('~world_frame', 'odom'),
         world_2d_frame=get_param('~world_2d_frame', 'odom_2d'),
         queue_size=10)
-    rospy.spin()
+    fp.spin()
 
 
 if __name__ == '__main__':
