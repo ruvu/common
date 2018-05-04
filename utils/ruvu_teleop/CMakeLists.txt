@@ -20,6 +20,8 @@ if (CATKIN_ENABLE_TESTING)
 endif()
 
 install(PROGRAMS
+  scripts/teleop_cancel_actionlib_goal_joy
+  scripts/teleop_publish_pose_joy
   scripts/teleop_single_joint_position_joy
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
