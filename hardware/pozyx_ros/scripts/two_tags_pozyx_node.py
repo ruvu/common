@@ -99,7 +99,7 @@ if __name__ == '__main__':
         tags = {d['network_id']: [int(float(d['position']['x']) * 1e3), int(float(d['position']['y']) * 1e3),
                                   int(float(d['position']['z']) * 1e3)] for d
                 in rospy.get_param('~tags', [])}
-        tag_serial_ports = rospy.get_param("~tag_ports", [])
+        tag_serial_ports = [os.path.realpath(port) for port in rospy.get_param("~tag_ports", [])]
 
         if len(tags) != 2:
             raise ValueError("~tags should be of size 2")
