@@ -24,19 +24,19 @@ def imu_cb(msg):
         # Write the new covariance list to the message as a tuple
         msg.orientation_covariance = tuple(orientation_cov_list)
 
-    # Do the same for rotational velocity
-    if rotational_velocity_covariance_diagonal:
-        rotational_velocity_covariance_list = list(msg.rotational_velocity_covariance)
-        for index, element in zip(diagonal_indices, rotational_velocity_covariance_diagonal):
-            rotational_velocity_covariance_list[index] = element
-        msg.twist.covariance = tuple(rotational_velocity_covariance_list)
+    # Do the same for angular velocity
+    if angular_velocity_covariance_diagonal:
+        angular_velocity_covariance_list = list(msg.angular_velocity_covariance)
+        for index, element in zip(diagonal_indices, angular_velocity_covariance_diagonal):
+            angular_velocity_covariance_list[index] = element
+        msg.angular_velocity_covariance = tuple(angular_velocity_covariance_list)
 
     # Do the same for linear acceleration
     if linear_acceleration_covariance_diagonal:
         linear_acceleration_covariance_list = list(msg.linear_acceleration_covariance)
         for index, element in zip(diagonal_indices, linear_acceleration_covariance_diagonal):
             linear_acceleration_covariance_list[index] = element
-        msg.twist.covariance = tuple(linear_acceleration_covariance_list)
+        msg.linear_acceleration_covariance = tuple(linear_acceleration_covariance_list)
 
     # Publish the message on the output topic
     odom_pub.publish(msg)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     # Get the diagonal elements to write to the odom covariance from the ROS param server
     orientation_covariance_diagonal = rospy.get_param('~orientation_covariance_diagonal', None)
-    rotational_velocity_covariance_diagonal = rospy.get_param('~rotational_velocity_covariance_diagonal', None)
+    angular_velocity_covariance_diagonal = rospy.get_param('~angular_velocity_covariance_diagonal', None)
     linear_acceleration_covariance_diagonal = rospy.get_param('~linear_acceleration_covariance_diagonal', None)
 
     # Check whether these have the correct lengths
@@ -57,9 +57,9 @@ if __name__ == '__main__':
                        .format(len(orientation_covariance_diagonal)))
         sys.exit(1)
 
-    if rotational_velocity_covariance_diagonal is not None and len(rotational_velocity_covariance_diagonal) is not 3:
-        rospy.logfatal("Parameter ~rotational_velocity_covariance_diagonal must have length 3. Length is {}."
-                       .format(len(rotational_velocity_covariance_diagonal)))
+    if angular_velocity_covariance_diagonal is not None and len(angular_velocity_covariance_diagonal) is not 3:
+        rospy.logfatal("Parameter ~angular_velocity_covariance_diagonal must have length 3. Length is {}."
+                       .format(len(angular_velocity_covariance_diagonal)))
         sys.exit(1)
 
     if linear_acceleration_covariance_diagonal is not None and len(linear_acceleration_covariance_diagonal) is not 3:
