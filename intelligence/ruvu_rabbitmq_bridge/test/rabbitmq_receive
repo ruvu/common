@@ -6,11 +6,19 @@ import json
 
 parser = argparse.ArgumentParser(description='Receive rabbitmq json messages from a queue')
 parser.add_argument('--host', type=str, default='localhost', help='The RabbitMQ host')
+parser.add_argument('--username', type=str, default='', help='The RabbitMQ username')
+parser.add_argument('--password', type=str, default='', help='The RabbitMQ password')
 parser.add_argument('queue_name', metavar='QUEUE', type=str, help='RabbitMQ queue name')
 
 args = parser.parse_args()
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+# Setup RabbitMQ connection
+if args.username:
+    parameters = pika.ConnectionParameters(host=args.host, credentials=pika.PlainCredentials(args.username,
+                                                                                             args.password))
+else:
+    parameters = pika.ConnectionParameters(host=args.host)
+connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 channel.queue_declare(queue=args.queue_name)
 

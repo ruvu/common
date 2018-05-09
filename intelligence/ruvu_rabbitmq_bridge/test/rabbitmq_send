@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-import pika
 import argparse
 import json
 import time
 
+import pika
+
 parser = argparse.ArgumentParser(description='Send a rabbitmq json message over a queue')
 parser.add_argument('--host', type=str, default='localhost', help='The RabbitMQ host')
+parser.add_argument('--username', type=str, default='', help='The RabbitMQ username')
+parser.add_argument('--password', type=str, default='', help='The RabbitMQ password')
 parser.add_argument('--rate', type=float, default=0, help='The rate of sending')
 parser.add_argument('queue_name', metavar='QUEUE', type=str, help='RabbitMQ queue name')
 parser.add_argument('msg', metavar='MSG', type=str, help='JSON string to send over the queue')
@@ -14,7 +17,13 @@ parser.add_argument('msg', metavar='MSG', type=str, help='JSON string to send ov
 args = parser.parse_args()
 
 # Setup RabbitMQ connection
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=args.host))
+if args.username:
+    parameters = pika.ConnectionParameters(host=args.host, credentials=pika.PlainCredentials(args.username,
+                                                                                             args.password))
+else:
+    parameters = pika.ConnectionParameters(host=args.host)
+
+connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 channel.queue_declare(queue=args.queue_name)
 

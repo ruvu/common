@@ -9,12 +9,15 @@ from ruvu_rabbitmq_bridge import get_topic_name_msg_type_dict
 
 
 class RabbitMQBridge(object):
-    def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_queue_prefix, ros_publisher_queue_size):
+    def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_username, rabbitmq_password,
+                 rabbitmq_queue_prefix, ros_publisher_queue_size):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: Dictionary that maps topic_names to message types, subscribers on the ROS end
         :param publishers: Dictionary that maps topic_names to message types, publishers on the ROS end
         :param rabbitmq_host: Specifies where the RabbitMQ server is running
+        :param rabbitmq_username: The RabbitMQ username
+        :param rabbitmq_password: The RabbitMQ password
         :param rabbitmq_queue_prefix: The ROS topic names equal the RabbitMQ queue names but prepended with this prefix
         :param ros_publisher_queue_size: ROS publisher queue size
         """
@@ -24,10 +27,19 @@ class RabbitMQBridge(object):
         self._rabbitmq_publishers = {}
         self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
 
-        self._rabbitmq_write_connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host))
+        if rabbitmq_username:
+            parameters = pika.ConnectionParameters(host=rabbitmq_host,
+                                                   credentials=pika.PlainCredentials(rabbitmq_username,
+                                                                                     rabbitmq_password))
+            rospy.loginfo("Connecting to {} (username={}, password={})".format(rabbitmq_host, rabbitmq_username,
+                                                                               rabbitmq_password))
+        else:
+            parameters = pika.ConnectionParameters(host=rabbitmq_host)
+            rospy.loginfo("Connecting to {}".format(rabbitmq_host))
+        self._rabbitmq_write_connection = pika.BlockingConnection(parameters)
         self._rabbitmq_write_channel = self._rabbitmq_write_connection.channel()
 
-        self._rabbitmq_read_connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitmq_host))
+        self._rabbitmq_read_connection = pika.BlockingConnection(parameters)
         self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
 
         for topic_name, topic_msg_type in subscribers.iteritems():
@@ -108,6 +120,8 @@ if __name__ == '__main__':
         get_topic_name_msg_type_dict(rospy.get_param('~subscribers')),
         get_topic_name_msg_type_dict(rospy.get_param('~publishers')),
         rospy.get_param('~rabbitmq_host', 'localhost'),
+        rospy.get_param('~rabbitmq_username', ''),
+        rospy.get_param('~rabbitmq_password', ''),
         rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
         rospy.get_param('~ros_publisher_queue_size', 10)
     )
