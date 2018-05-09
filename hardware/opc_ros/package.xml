@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>opc_ros</name>
+  <version>0.0.0</version>
+  <description>The opc_ros package</description>
+
+  <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>fadecandy_opc_server</exec_depend>
+  <exec_depend>opc_msgs</exec_depend>
+  <!--exec_depend>python-opc-pip</exec_depend-->
+  <exec_depend>rospy</exec_depend>
+</package>
