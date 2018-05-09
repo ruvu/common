@@ -3,6 +3,8 @@ project(pozyx_ros)
 
 find_package(catkin REQUIRED COMPONENTS message_generation roslint std_msgs)
 
+catkin_python_setup()
+
 ## Generate messages in the 'msg' folder
 add_message_files(
     FILES
