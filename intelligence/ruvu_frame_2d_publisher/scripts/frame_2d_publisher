@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import Quaternion, Vector3, Transform, TransformStamped
 from tf2_ros import (Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException,
-                     ExtrapolationException)
+                     ExtrapolationException, TFMessage)
 
 
 def get_param(param_name, default):
@@ -22,23 +22,45 @@ class Frame2dPubliser(object):
 
         self.broadcaster = TransformBroadcaster()
 
-        self.tf_buffer = Buffer()
-        self.tf_listener = TransformListener(self.tf_buffer)
+        self.tf_sub = rospy.Subscriber("/tf", TFMessage, self.tf_callback, queue_size=10)
+        self.tf_buffer = None
+        self.tf_listener = None
 
-        # fill the tf buffer a little bit
-        rospy.sleep(1)
+        self.use_lookup_transform = False
+
+    def tf_callback(self, data):
+        for tf in data.transforms:
+            if tf.child_frame_id == self.base_frame:
+                if tf.header.frame_id == self.world_frame:
+                    self.transform_callback(tf)
+                else:
+                    self.use_lookup_transform = True
 
     def spin(self):
-        # tf internally spins at 20Hz, so we don't need to do that
-        while not rospy.is_shutdown():
-            try:
-                # wait until a transform is published with time == now
-                tf = self.tf_buffer.lookup_transform(self.world_frame, self.base_frame, rospy.Time.now(),
-                                                     rospy.Duration(5))
-            except (LookupException, ConnectivityException, ExtrapolationException) as e:
-                rospy.logerr("tf2 exception: %s", e.message)
-            else:
-                self.transform_callback(tf)
+        while not rospy.is_shutdown() and not self.use_lookup_transform:
+            rospy.Rate(10).sleep()
+
+        if self.use_lookup_transform:
+            rospy.logwarn("{} and {} do not have a direct relation, using lookup_transform".format(self.world_frame,
+                                                                                                   self.base_frame))
+            self.tf_sub.unregister()
+
+            self.tf_buffer = Buffer()
+            self.tf_listener = TransformListener(self.tf_buffer)
+
+            # fill the tf buffer a little bit
+            rospy.sleep(1)
+
+            # tf internally spins at 20Hz, so we don't need to do that
+            while not rospy.is_shutdown():
+                try:
+                    # wait until a transform is published with time == now
+                    tf = self.tf_buffer.lookup_transform(self.world_frame, self.base_frame, rospy.Time.now(),
+                                                         rospy.Duration(5))
+                except (LookupException, ConnectivityException, ExtrapolationException) as e:
+                    rospy.logerr("tf2 exception: %s", e.message)
+                else:
+                    self.transform_callback(tf)
 
     def transform_callback(self, data):
         transform = Transform()
