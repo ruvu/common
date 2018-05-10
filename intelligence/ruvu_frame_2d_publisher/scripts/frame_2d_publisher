@@ -23,8 +23,6 @@ class Frame2dPubliser(object):
         self.broadcaster = TransformBroadcaster()
 
         self.tf_sub = rospy.Subscriber("/tf", TFMessage, self.tf_callback, queue_size=10)
-        self.tf_buffer = None
-        self.tf_listener = None
 
         self.use_lookup_transform = False
 
@@ -45,8 +43,8 @@ class Frame2dPubliser(object):
                                                                                                    self.base_frame))
             self.tf_sub.unregister()
 
-            self.tf_buffer = Buffer()
-            self.tf_listener = TransformListener(self.tf_buffer)
+            tf_buffer = Buffer()
+            tf_listener = TransformListener(tf_buffer)
 
             # fill the tf buffer a little bit
             rospy.sleep(1)
@@ -55,8 +53,8 @@ class Frame2dPubliser(object):
             while not rospy.is_shutdown():
                 try:
                     # wait until a transform is published with time == now
-                    tf = self.tf_buffer.lookup_transform(self.world_frame, self.base_frame, rospy.Time.now(),
-                                                         rospy.Duration(5))
+                    tf = tf_buffer.lookup_transform(self.world_frame, self.base_frame, rospy.Time.now(),
+                                                    rospy.Duration(5))
                 except (LookupException, ConnectivityException, ExtrapolationException) as e:
                     rospy.logerr("tf2 exception: %s", e.message)
                 else:
