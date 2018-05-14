@@ -343,12 +343,14 @@ class PoseGraphNode(object):
         connect to clicked nodes in the graph when we click on two nodes in an interval < click_timeout
         :param point: The clicked point, we will select the closest node
         """
+        rospy.loginfo("add edge")
         if not self._check_frame_id(point.header.frame_id):
             return
 
         if self._last_connect_clicked_point \
-                and (rospy.Time.now() - self._last_connect_clicked_point.header.stamp).to_sec() < self._click_timeout:
+                and (point.header.stamp - self._last_connect_clicked_point.header.stamp).to_sec() < self._click_timeout:
             self._add_edge_to_graph(self._last_connect_clicked_point.point, point.point)
+            rospy.loginfo("let's connect")
 
         self._last_connect_clicked_point = point
 
