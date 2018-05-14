@@ -31,8 +31,7 @@ class RabbitMQBridge(object):
             parameters = pika.ConnectionParameters(host=rabbitmq_host,
                                                    credentials=pika.PlainCredentials(rabbitmq_username,
                                                                                      rabbitmq_password))
-            rospy.loginfo("Connecting to {} (username={}, password={})".format(rabbitmq_host, rabbitmq_username,
-                                                                               rabbitmq_password))
+            rospy.loginfo("Connecting to {} (with credentials)".format(rabbitmq_host))
         else:
             parameters = pika.ConnectionParameters(host=rabbitmq_host)
             rospy.loginfo("Connecting to {}".format(rabbitmq_host))
