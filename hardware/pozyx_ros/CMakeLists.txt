@@ -3,6 +3,8 @@ project(pozyx_ros)
 
 find_package(catkin REQUIRED COMPONENTS message_generation roslint std_msgs)
 
+catkin_python_setup()
+
 ## Generate messages in the 'msg' folder
 add_message_files(
     FILES
@@ -22,22 +24,22 @@ catkin_package(
 if (CATKIN_ENABLE_TESTING)
     # ROS Lint
     roslint_python()
-    roslint_add_test()
 
     # Launch check
     find_package(roslaunch REQUIRED)
-    file(GLOB_RECURSE TEST_LAUNCH_FILES test/*.test)
-    roslaunch_add_file_check(${TEST_LAUNCH_FILES})
+    roslaunch_add_file_check(test/test_pozyx_ros.test)
+    roslaunch_add_file_check(test/test_two_tags_pozyx_ros.test)
 
     # Catkin lint
     find_program(CATKIN_LINT catkin_lint REQUIRED)
     execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
     if(NOT ${lint_result} EQUAL 0)
-    message(FATAL_ERROR "catkin_lint failed")
+        message(FATAL_ERROR "catkin_lint failed")
     endif()
 endif()
 
 install(PROGRAMS
+  scripts/two_tags_pozyx_node.py
   scripts/pozyx_node.py
   scripts/range_info_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
