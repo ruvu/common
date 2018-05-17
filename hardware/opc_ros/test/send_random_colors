@@ -6,7 +6,6 @@ import rospy
 from opc_msgs.msg import Colors
 from std_msgs.msg import ColorRGBA
 
-
 parser = argparse.ArgumentParser(description='Send colors via ROS to a led array')
 parser.add_argument('--number_of_pixels', type=int, default=33, help='Number of pixels')
 
@@ -14,7 +13,8 @@ args = parser.parse_args()
 
 rospy.init_node('send_color')
 pub = rospy.Publisher('cmd_colors', Colors, queue_size=1, latch=True)
-pub.publish(Colors(colors=[ColorRGBA(r=random.random(), g=random.random(), b=random.random()) for i in range(0, args.number_of_pixels)]))
+pub.publish(Colors(colors=[ColorRGBA(r=random.random(), g=random.random(), b=random.random()) for i in
+                           range(0, args.number_of_pixels)]))
 
 rospy.loginfo("Sending message, press ctrl+c to exit")
 rospy.spin()
