@@ -1,9 +1,9 @@
 import json
+
 from pypozyx import *
 
 
 class DevicePositioner(object):
-
     def __init__(self, pozyx_serials, anchor_locations, **kwargs):
         self.pozyx_serials = pozyx_serials
         self.set_anchors_on_devices(anchor_locations)
@@ -27,7 +27,7 @@ class DevicePositioner(object):
             for anchor_id in anchor_device_coordinates:
                 status &= self.pozyx_serials[tag_id].addDevice(anchor_device_coordinates[anchor_id])
             if not status == POZYX_SUCCESS:
-                print('ALERT: setting anchors on the tags failed ('+str(tag_id)+')')
+                print('ALERT: setting anchors on the tags failed (' + str(tag_id) + ')')
 
     def get_positions(self, positioning_input):
         self.tag_coordinates = {}
@@ -48,7 +48,6 @@ class DevicePositioner(object):
 
 
 class DeviceLogPositioner(object):
-
     def __init__(self, log_filename):
         self.log_data_list = []
         with open(log_filename) as log_file:
@@ -62,7 +61,6 @@ class DeviceLogPositioner(object):
 
 
 class DeviceRanger(object):
-
     def __init__(self, pozyx_serials, anchor_ids, **kwargs):
         self.pozyx_serials = pozyx_serials
         self.anchor_ids = anchor_ids
@@ -89,7 +87,6 @@ class DeviceRanger(object):
 
 
 class DeviceMultiRanger(object):
-
     def __init__(self, pozyx_serials, anchor_ids, num_ranges, **kwargs):
         self.pozyx_serials = pozyx_serials
         self.anchor_ids = anchor_ids
@@ -119,7 +116,6 @@ class DeviceMultiRanger(object):
 
 
 class DeviceLogRanger(object):
-
     def __init__(self, log_filename):
         self.log_data_list = []
         with open(log_filename) as log_file:
@@ -131,4 +127,3 @@ class DeviceLogRanger(object):
             new_data = self.log_data_list.pop(0)
             return {int(t_id): {int(a_id): new_data[t_id][a_id] for a_id in new_data[t_id]} for t_id in new_data}
         return {}
-

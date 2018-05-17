@@ -4,7 +4,7 @@ import os
 import diagnostic_updater
 import pypozyx
 import rospy
-from geometry_msgs.msg import PoseWithCovariance, Pose, Point, PoseWithCovarianceStamped, Quaternion
+from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
 from pozyx_ros.algorithms.device import DevicePositioner
 from pozyx_ros.algorithms.procrustesgrouppositioner import ProcrustesGroupPositioner
@@ -77,7 +77,8 @@ class TwoTagPozyxNode:
                     ),
                     child_frame_id=self._sensor_frame_id,
                     pose=PoseWithCovariance(
-                        pose=Pose(position=Point(float(position["x"]) / 1e3, float(position["y"]) / 1e3, float(position["z"]) / 1e3),
+                        pose=Pose(position=Point(float(position["x"]) / 1e3, float(position["y"]) / 1e3,
+                                                 float(position["z"]) / 1e3),
                                   orientation=Quaternion(*quaternion_from_euler(0, 0, orientation["yaw"])))
                     )
                 ))
