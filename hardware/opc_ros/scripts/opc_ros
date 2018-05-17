@@ -3,29 +3,33 @@
 import opc_ros
 import rospy
 from opc_msgs.msg import Colors
+from std_msgs.msg import ColorRGBA
 
 
 class OPCROS(object):
     def __init__(self, host, port, number_of_pixels):
         self._client = opc_ros.Client('{}:{}'.format(host, port))
         self._number_of_pixels = number_of_pixels
-        self._subscriber = rospy.Subscriber('cmd_colors', Colors, self._colors_callback, queue_size=1)
+        self._colors_subscriber = rospy.Subscriber('cmd_colors', Colors, self._colors_callback, queue_size=1)
+        self._color_subscriber = rospy.Subscriber('cmd_color', ColorRGBA, self._color_callback, queue_size=1)
 
     def _colors_callback(self, msg):
-        if len(msg.colors) != self._number_of_pixels:
-            rospy.logerr("OPC ROS expects an array of length {}, received length {}".format(self._number_of_pixels,
-                                                                                            len(msg.colors)))
+        if not msg.colors:
+            rospy.logerr("OPC ROS expects a non empty array")
         else:
-            self._client.put_pixels([(color.r * 255, color.b * 255, color.g * 255) for color in msg.colors])
+            self._client.put_pixels(opc_ros.get_color_array(msg.colors, self._number_of_pixels))
+
+    def _color_callback(self, msg):
+        self._client.put_pixels(opc_ros.get_color_array([msg], self._number_of_pixels))
 
 
 if __name__ == '__main__':
     rospy.init_node('opc_ros')
 
     try:
-        opc_ros = OPCROS(rospy.get_param('~host', 'localhost'),
-                         int(rospy.get_param('~port', 7890)),
-                         int(rospy.get_param('~number_of_pixels')))
+        OPCROS(rospy.get_param('~host', 'localhost'),
+               int(rospy.get_param('~port', 7890)),
+               int(rospy.get_param('~number_of_pixels')))
         rospy.spin()
     except rospy.ROSInterruptException as e:
         rospy.logwarn(e)

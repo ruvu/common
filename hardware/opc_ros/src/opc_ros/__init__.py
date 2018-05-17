@@ -167,6 +167,7 @@ class Client(object):
         self._debug('put_pixels: sending pixels to server')
         try:
             self._socket.send(message)
+            self._socket.send(message)
         except socket.error:
             self._debug('put_pixels: connection lost.  could not send pixels.')
             self._socket = None
@@ -209,3 +210,14 @@ class Client(object):
             self._debug('set_interpolation: disconnecting')
             self.disconnect()
         return True
+
+
+def get_color_array(colors, size):
+    def output_index_to_input_index(output_index):
+        return int(len(colors) * float(output_index) / size)
+
+    color_array = [(255 * colors[output_index_to_input_index(i)].r,
+                    255 * colors[output_index_to_input_index(i)].g,
+                    255 * colors[output_index_to_input_index(i)].b) for i in range(size)]
+
+    return color_array
