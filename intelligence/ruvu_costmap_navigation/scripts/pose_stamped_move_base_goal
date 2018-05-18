@@ -26,6 +26,8 @@ def goal_cb(planner_client, controller_pub, planner, controller, msg):
     planner_client.wait_for_result()
     result = planner_client.get_result()
 
+    rospy.loginfo("Result '%s' for planner '%s': %s", planner_client.action_client.ns, planner, result)
+
     if result is None:
         rospy.logerr("Failed to call the planner")
         return
@@ -48,12 +50,12 @@ if __name__ == '__main__':
     rospy.init_node("pose_stamped_move_base_goal")
 
     # Available planners and controllers
-    controllers = [c['name'] for c in rospy.get_param('costmap_navigation/controllers')]
-    planners = [p['name'] for p in rospy.get_param('costmap_navigation/planners')]
+    controllers = [c['name'] for c in rospy.get_param('controllers')]
+    planners = [p['name'] for p in rospy.get_param('planners')]
 
     # Get interfaces to both
-    costmap_global_planner_client = actionlib.SimpleActionClient("costmap_navigation/get_path", mbf_msgs.GetPathAction)
-    costmap_local_planner_pub = rospy.Publisher("costmap_navigation/exe_path/goal", ExePathActionGoal, queue_size=1)
+    costmap_global_planner_client = actionlib.SimpleActionClient("get_path", mbf_msgs.GetPathAction)
+    costmap_local_planner_pub = rospy.Publisher("exe_path/goal", ExePathActionGoal, queue_size=1)
 
     # Create interfaces for all planner and controller combinations
     subscribers = []

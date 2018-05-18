@@ -22,7 +22,8 @@ catkin_package(
 # Tests
 if (CATKIN_ENABLE_TESTING)
 	# ROS Lint
-	roslint_python(scripts/pose_stamped_move_base_goal)
+    file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
+    roslint_python(${PYTHON_SCRIPTS})
 	roslint_add_test()
 
 	# Launch check
@@ -40,5 +41,6 @@ endif()
 
 install(PROGRAMS
 	scripts/pose_stamped_move_base_goal
+	scripts/get_path_exe_path_relay
 	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
