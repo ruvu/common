@@ -418,7 +418,7 @@ Visualization Manager:
     - Class: rviz/Interact
       Hide Inactive Objects: true
     - Class: ruvu_rviz_plugins/ConfigurableGoal
-      Pose Stamped namespace: /pose_stamped_move_base_goal
+      Pose Stamped namespace: /costmap_navigation/pose_stamped_move_base_goal
   Value: true
   Views:
     Current:
@@ -438,10 +438,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.08479667
+      Pitch: 0.874796748
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 3.07728267
+      Yaw: 3.19728351
     Saved: ~
 Window Geometry:
   Displays:

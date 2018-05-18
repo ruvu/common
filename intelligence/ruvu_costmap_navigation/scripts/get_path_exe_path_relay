@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+from collections import namedtuple
+
+import actionlib
+import rospy
+from mbf_msgs.msg import GetPathAction, ExePathAction
+
+
+ActionlibRelaySpecification = namedtuple('ActionlibRelaySpecification', 'local_name remote_name remote_actionlib')
+ActionlibRelayClient = namedtuple('ActionlibRelayClient', 'client name')
+
+
+class ActionlibRelay(object):
+    def __init__(self, specifications, msg_type, local_actionlib, key):
+        self._result_type = msg_type.action_result.__class__
+        self._key = key
+        self._relay_map = {}
+        for specification in specifications:
+            self._relay_map[specification.local_name] = ActionlibRelayClient(
+                client=actionlib.SimpleActionClient(specification.remote_actionlib, msg_type),
+                name=specification.remote_name
+            )
+            rospy.loginfo("Waiting for {} ..".format(specification.remote_actionlib))
+            self._relay_map[specification.local_name].client.wait_for_server()
+            rospy.loginfo("Connected to {}".format(specification.remote_actionlib))
+
+        self._action_server = actionlib.SimpleActionServer(local_actionlib, msg_type, self._server_execute_callback,
+                                                           auto_start=False)
+        self._action_server.start()
+
+    def _server_execute_callback(self, goal):
+        # Make sure to cancel all running goals
+        for relay in self._relay_map.values():
+            relay.client.cancel_all_goals()
+
+        key_name = getattr(goal, self._key)
+        if key_name not in self._relay_map:
+            msg = "{} not present in available relays {}".format(goal.planner, self._relay_map.keys())
+            self._action_server.set_aborted(text=msg)
+            return
+
+        relay = self._relay_map[key_name]
+        rospy.loginfo("Relaying goal to {} ()".format(relay.client.action_client.ns, relay.name))
+        setattr(goal, self._key, relay.name)
+        relay.client.send_goal(goal, feedback_cb=self._client_feedback_callback)
+
+        # wait for the server to be finished
+        r = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            # Check if we are done from the server side
+            if self._action_server.is_preempt_requested():
+                relay.client.cancel_goal()
+                self._action_server.set_preempted()
+                rospy.loginfo("Preempted")
+                return
+
+            # Check if we are done from the client side
+            if relay.client.get_state() == actionlib.GoalStatus.SUCCEEDED:
+                self._action_server.set_succeeded(relay.client.get_result())
+                rospy.loginfo("Succeeded")
+                return
+
+            if relay.client.get_state() == actionlib.GoalStatus.ABORTED:
+                self._action_server.set_aborted(relay.client.get_result())
+                rospy.loginfo("Aborted")
+                return
+
+            rospy.logdebug('spinning...')
+            r.sleep()
+
+    def _client_feedback_callback(self, feedback):
+        self._action_server.publish_feedback(feedback)
+
+
+if __name__ == '__main__':
+    rospy.init_node("get_path_exe_path_relay")
+
+    planners_specification = [
+        ActionlibRelaySpecification(
+            local_name=planner['name'],
+            remote_name=planner['planner_name'],
+            remote_actionlib=planner['actionlib']
+        ) for planner in rospy.get_param('planners')
+    ]
+    ActionlibRelay(planners_specification, GetPathAction, 'get_path', 'planner')
+
+    controllers_specification = [
+        ActionlibRelaySpecification(
+            local_name=controller['name'],
+            remote_name=controller['controller_name'],
+            remote_actionlib=controller['actionlib']
+        ) for controller in rospy.get_param('controllers')
+    ]
+    ActionlibRelay(controllers_specification, ExePathAction, 'exe_path', 'controller')
+    rospy.spin()
