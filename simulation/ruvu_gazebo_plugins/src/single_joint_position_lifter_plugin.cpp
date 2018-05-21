@@ -61,6 +61,8 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
 
 void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServer::GoalHandle goal)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
+
   double current_position = joint_position_;
   double desired_position = goal.getGoal()->position;
   double lower_limit = joint_->GetLowerLimit(0).Radian();
@@ -151,6 +153,7 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 
 void SingleJointPositionLifterPlugin::UpdateChild()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   common::Time now = model_->GetWorld()->GetSimTime();
   if (state_publish_rate_ > 0.0)
   {
