@@ -97,5 +97,10 @@ private:
   //! \brief FiniChild Called on shutdown
   //!
   void FiniChild();
+
+  //!
+  //! \brief mutex_ Thread safety for ROS and gazebo thread
+  //!
+  std::mutex mutex_;
 };
 }  // namespace gazebo
