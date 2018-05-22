@@ -217,7 +217,7 @@ def get_color_array(colors, size):
         return int(len(colors) * float(output_index) / size)
 
     color_array = [(255 * colors[output_index_to_input_index(i)].r,
-                    255 * colors[output_index_to_input_index(i)].g,
-                    255 * colors[output_index_to_input_index(i)].b) for i in range(size)]
+                    255 * colors[output_index_to_input_index(i)].b,
+                    255 * colors[output_index_to_input_index(i)].g) for i in range(size)]
 
     return color_array
