@@ -9,12 +9,13 @@ import actionlib
 def callback(msg):
     for button, position in button_mapping.iteritems():
         if button < len(msg.buttons) and msg.buttons[button] == 1:
-            if button_mapping_first_pressed is None:
+            if button_mapping_first_pressed[button] is None:
+                rospy.loginfo("Initial press button %d", button)
                 button_mapping_first_pressed[button] = rospy.Time.now()
         else:
             button_mapping_first_pressed[button] = None
 
-        if button_mapping_first_pressed[button]:
+        if button_mapping_first_pressed[button] is not None:
             if (rospy.Time.now() - button_mapping_first_pressed[button]).to_sec() > press_time: 
                 goal = SingleJointPositionGoal(position=position)
                 rospy.loginfo("Sending SingleJointPositionGoal position = {}".format(position))
@@ -22,6 +23,8 @@ def callback(msg):
                 client.wait_for_result()
                 rospy.loginfo("Done")
                 button_mapping_first_pressed[button] = None
+            else:
+                rospy.logdebug("Button %d still pressed ...", button)
 
 
 if __name__ == "__main__":
