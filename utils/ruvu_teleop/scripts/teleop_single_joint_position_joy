@@ -16,7 +16,7 @@ def callback(msg):
             button_mapping_first_pressed[button] = None
 
         if button_mapping_first_pressed[button] is not None:
-            if (rospy.Time.now() - button_mapping_first_pressed[button]).to_sec() > press_time: 
+            if (rospy.Time.now() - button_mapping_first_pressed[button]).to_sec() > press_time:
                 goal = SingleJointPositionGoal(position=position)
                 rospy.loginfo("Sending SingleJointPositionGoal position = {}".format(position))
                 client.send_goal(goal)
