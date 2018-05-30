@@ -5,7 +5,6 @@ import rospy
 from sensor_msgs.msg import Joy
 from actionlib_msgs.msg import GoalID
 
-
 # We need to keep track of the last button state since we only want to react on a rising event
 last_button_state = 0
 
