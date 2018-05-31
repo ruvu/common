@@ -69,4 +69,18 @@
       Tool for sending a lift down
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/LongitudinalGoal"
+         type="ruvu_rviz_plugins::LongitudinalGoalTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a longitudinal goal
+    </description>
+  </class>
+  <class name="ruvu_rviz_plugins/LateralGoal"
+         type="ruvu_rviz_plugins::LateralGoalTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a lateral goal
+    </description>
+  </class>
 </library>
