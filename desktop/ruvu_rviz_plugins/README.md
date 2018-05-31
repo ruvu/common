@@ -51,3 +51,14 @@ Tool for sending a `geometry_msgs/PointStamped` for removing edges from a graph.
 
 Tool for sending a `geometry_msgs/PointStamped` for planing a path from A to B over a graph. The output topic can be configured. 
 
+## Lift Up
+
+![LiftUp](icons/classes/LiftUp.png)
+
+Tool for sending a `control_msgs/SingleJointPositionActionGoal` to an upper position of a lift.
+
+## Lift Down
+
+![LiftDown](icons/classes/LiftDown.png)
+
+Tool for sending a `control_msgs/SingleJointPositionActionGoal` to an down position of a lift.

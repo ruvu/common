@@ -53,6 +53,9 @@ add_library(${PROJECT_NAME}
   src/remove_edge_tool.cpp
   src/get_path_tool.cpp
   src/configurable_goal_pose_tool.cpp
+  src/base_single_joint_position_action_tool.cpp
+  src/lift_up_tool.cpp
+  src/lift_down_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
