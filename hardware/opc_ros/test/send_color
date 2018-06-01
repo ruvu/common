@@ -5,9 +5,10 @@ import rospy
 from opc_msgs.msg import Colors
 from std_msgs.msg import ColorRGBA
 
-
 parser = argparse.ArgumentParser(description='Send colors via ROS to a led array')
-parser.add_argument('--number_of_pixels', type=int, default=33, help='Number of pixels')
+parser.add_argument('--number_of_pixels', type=int, default=1, help='Number of pixels')
+parser.add_argument('--target_index', type=int, default=None,
+                    help='Target index to set to color, if None supplied, all will be set')
 parser.add_argument('red', metavar='RED', type=float, help='Red value')
 parser.add_argument('green', metavar='GREEN', type=float, help='Green value')
 parser.add_argument('blue', metavar='BLUE', type=float, help='Blue value')
@@ -16,7 +17,17 @@ args = parser.parse_args()
 
 rospy.init_node('send_color')
 pub = rospy.Publisher('cmd_colors', Colors, queue_size=1, latch=True)
-pub.publish(Colors(colors=[ColorRGBA(r=args.red, g=args.green, b=args.blue) for i in range(0, args.number_of_pixels)]))
+if args.target_index is not None and args.number_of_pixels > args.target_index >= 0:
+    colors = [ColorRGBA(r=0, g=0, b=0) for i in range(args.number_of_pixels)]
+    colors[args.target_index] = ColorRGBA(r=args.red, g=args.green, b=args.blue)
+    rospy.loginfo("Setting only target index %d of list size %d to (%.2f, %.2f, %.2f)", args.target_index,
+                  args.number_of_pixels, args.red, args.green, args.blue)
+else:
+    colors = [ColorRGBA(r=args.red, g=args.green, b=args.blue) for i in range(args.number_of_pixels)]
+    rospy.loginfo("Setting list size of size %d to (%.2f, %.2f, %.2f)", args.number_of_pixels, args.red, args.green,
+                  args.blue)
+
+pub.publish(Colors(colors=colors))
 
 rospy.loginfo("Sending message, press ctrl+c to exit")
 rospy.spin()
