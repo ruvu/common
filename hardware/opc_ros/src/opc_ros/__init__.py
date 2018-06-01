@@ -36,6 +36,7 @@ Recommended use:
 import socket
 import struct
 import sys
+from terminal_mock import TerminalMockClient
 
 
 class Client(object):

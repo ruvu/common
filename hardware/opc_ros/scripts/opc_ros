@@ -7,8 +7,11 @@ from std_msgs.msg import ColorRGBA
 
 
 class OPCROS(object):
-    def __init__(self, host, port, number_of_pixels):
-        self._client = opc_ros.Client('{}:{}'.format(host, port))
+    def __init__(self, host, port, number_of_pixels, mock=False):
+        if mock:
+            self._client = opc_ros.TerminalMockClient()
+        else:
+            self._client = opc_ros.Client('{}:{}'.format(host, port))
         self._number_of_pixels = number_of_pixels
         self._colors_subscriber = rospy.Subscriber('cmd_colors', Colors, self._colors_callback, queue_size=1)
         self._color_subscriber = rospy.Subscriber('cmd_color', ColorRGBA, self._color_callback, queue_size=1)
@@ -29,7 +32,8 @@ if __name__ == '__main__':
     try:
         OPCROS(rospy.get_param('~host', 'localhost'),
                int(rospy.get_param('~port', 7890)),
-               int(rospy.get_param('~number_of_pixels')))
+               int(rospy.get_param('~number_of_pixels')),
+               rospy.get_param('~mock', False))
         rospy.spin()
     except rospy.ROSInterruptException as e:
         rospy.logwarn(e)
