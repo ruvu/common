@@ -55,4 +55,18 @@
       Tool for sending a PointStamped for planning a path from A to B in a graph.
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/LiftUp"
+         type="ruvu_rviz_plugins::LiftUpTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a lift up
+    </description>
+  </class>
+  <class name="ruvu_rviz_plugins/LiftDown"
+         type="ruvu_rviz_plugins::LiftDownTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a lift down
+    </description>
+  </class>
 </library>
