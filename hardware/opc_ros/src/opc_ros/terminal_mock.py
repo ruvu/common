@@ -85,20 +85,24 @@ def best_match(r, g, b):
             bestdist = dist
     return int(best)
 
+cache = {}
+
 
 def get_terminal_led(r, g, b):
-    return '\x1b[48;5;%dm \x1b[0m' % best_match(r, g, b)
+    global cache
+
+    if (r, g, b) not in cache:
+        cache[(r, g, b)] = '\x1b[48;5;%dm \x1b[0m' % best_match(r, g, b)
+
+    return cache[(r, g, b)]
 
 
 class TerminalMockClient():
     def __init__(self):
-        self._last_result = ''
+        pass
 
     def put_pixels(self, pixels, channel=0):
         result = 'PIXEL STATE: '
         for pixel in pixels:
             result += get_terminal_led(*pixel)
-
-        if result != self._last_result:
-            print result
-        self._last_result = result
+        print result
