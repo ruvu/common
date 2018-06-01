@@ -56,6 +56,8 @@ add_library(${PROJECT_NAME}
   src/base_single_joint_position_action_tool.cpp
   src/lift_up_tool.cpp
   src/lift_down_tool.cpp
+  src/lateral_goal_tool.cpp
+  src/longitudinal_goal_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
