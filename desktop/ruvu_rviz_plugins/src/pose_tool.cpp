@@ -27,6 +27,7 @@ PoseTool::~PoseTool()
 
 void PoseTool::onInitialize()
 {
+  rviz::PoseTool::onInitialize();
   updateTopic();
 }
 
