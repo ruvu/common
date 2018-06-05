@@ -25,7 +25,7 @@ class SingleJointPositionTool : public rviz::Tool
   Q_OBJECT
 
 public:
-  explicit SingleJointPositionTool();
+  SingleJointPositionTool();
   virtual void onInitialize();
 
   virtual void activate();

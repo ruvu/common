@@ -24,7 +24,7 @@ class PointTool : public rviz::Tool
 {
   Q_OBJECT
 public:
-  explicit PointTool();
+  PointTool();
   virtual ~PointTool();
   virtual void onInitialize();
 

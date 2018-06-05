@@ -24,7 +24,7 @@ class PointPoseTool : public rviz::Tool
 {
   Q_OBJECT
 public:
-  explicit PointPoseTool();
+  PointPoseTool();
   virtual ~PointPoseTool();
   virtual void onInitialize();
 
