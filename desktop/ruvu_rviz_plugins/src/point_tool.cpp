@@ -4,7 +4,7 @@
 // @author Ramon Wijnands
 //
 
-#include "./base_point_tool.h"
+#include "./point_tool.h"
 
 #include <geometry_msgs/PointStamped.h>
 #include <OgreVector3.h>
@@ -18,7 +18,7 @@
 
 namespace ruvu_rviz_plugins
 {
-BasePointTool::BasePointTool(std::string name)
+PointTool::PointTool()
 {
   // shortcut_key_ = 'l';
   this->topic_property_ = new rviz::StringProperty("Topic", "goal", "The topic on which to publish pick goals.",
@@ -27,38 +27,36 @@ BasePointTool::BasePointTool(std::string name)
   auto_deactivate_property_ =
       new rviz::BoolProperty("Single click", true, "Switch away from this tool after one click.",
                              getPropertyContainer(), SLOT(updateAutoDeactivate()), this);
-
-  this->name = name;
 }
 
-BasePointTool::~BasePointTool()
+PointTool::~PointTool()
 {
 }
 
-void BasePointTool::onInitialize()
+void PointTool::onInitialize()
 {
   hit_cursor_ = cursor_;
   std_cursor_ = rviz::getDefaultCursor();
 }
 
-void BasePointTool::activate()
+void PointTool::activate()
 {
 }
 
-void BasePointTool::deactivate()
+void PointTool::deactivate()
 {
 }
 
-void BasePointTool::updateTopic()
+void PointTool::updateTopic()
 {
   pub_ = nh_.advertise<geometry_msgs::PointStamped>(topic_property_->getStdString(), 1);
 }
 
-void BasePointTool::updateAutoDeactivate()
+void PointTool::updateAutoDeactivate()
 {
 }
 
-int BasePointTool::processMouseEvent(rviz::ViewportMouseEvent& event)
+int PointTool::processMouseEvent(rviz::ViewportMouseEvent& event)
 {
   int flags = 0;
 
@@ -98,3 +96,6 @@ int BasePointTool::processMouseEvent(rviz::ViewportMouseEvent& event)
   return flags;
 }
 }  // namespace ruvu_rviz_plugins
+
+#include <pluginlib/class_list_macros.h>
+PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::PointTool, rviz::Tool)

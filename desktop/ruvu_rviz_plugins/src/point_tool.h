@@ -20,12 +20,12 @@ class BoolProperty;
 
 namespace ruvu_rviz_plugins
 {
-class BasePointTool : public rviz::Tool
+class PointTool : public rviz::Tool
 {
   Q_OBJECT
 public:
-  explicit BasePointTool(std::string name);
-  virtual ~BasePointTool();
+  explicit PointTool();
+  virtual ~PointTool();
   virtual void onInitialize();
 
   virtual void activate();
@@ -46,7 +46,5 @@ private:
 
   rviz::StringProperty* topic_property_;
   rviz::BoolProperty* auto_deactivate_property_;
-
-  std::string name;
 };
 }  // namespace ruvu_rviz_plugins

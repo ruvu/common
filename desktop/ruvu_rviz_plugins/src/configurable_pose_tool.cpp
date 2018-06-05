@@ -4,7 +4,7 @@
 // @author Rein Appeldoorn
 //
 
-#include "./configurable_goal_pose_tool.h"
+#include "./configurable_pose_tool.h"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
@@ -108,7 +108,7 @@ private:
   QComboBox* box;
 };
 
-ConfigurableGoalPoseTool::ConfigurableGoalPoseTool() : selected_index_(0)
+ConfigurablePoseTool::ConfigurablePoseTool() : selected_index_(0)
 {
   std::string msg = "This namespace will be scanned for topics with type " + TYPE + ". The user can select the desired "
                                                                                     "topic when a pose has been set.";
@@ -116,7 +116,7 @@ ConfigurableGoalPoseTool::ConfigurableGoalPoseTool() : selected_index_(0)
                                         SLOT(updatePublishers()), this);
 }
 
-void ConfigurableGoalPoseTool::updatePublishers()
+void ConfigurablePoseTool::updatePublishers()
 {
   publisher_map_.clear();
 
@@ -135,14 +135,14 @@ void ConfigurableGoalPoseTool::updatePublishers()
   }
 }
 
-void ConfigurableGoalPoseTool::onInitialize()
+void ConfigurablePoseTool::onInitialize()
 {
   PoseTool::onInitialize();
   setName("Configurable 2D nav goal");
   updatePublishers();
 }
 
-void ConfigurableGoalPoseTool::onPoseSet(double x, double y, double theta)
+void ConfigurablePoseTool::onPoseSet(double x, double y, double theta)
 {
   std::string fixed_frame = context_->getFixedFrame().toStdString();
   tf::Quaternion quat;
@@ -171,4 +171,4 @@ void ConfigurableGoalPoseTool::onPoseSet(double x, double y, double theta)
 }  // namespace ruvu_rviz_plugins
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::ConfigurableGoalPoseTool, rviz::Tool)
+PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::ConfigurablePoseTool, rviz::Tool)

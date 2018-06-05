@@ -4,7 +4,7 @@
 // @author Ramon Wijnands
 //
 
-#include "./base_pose_tool.h"
+#include "./pose_tool.h"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
@@ -14,31 +14,28 @@
 
 namespace ruvu_rviz_plugins
 {
-BasePoseTool::BasePoseTool(std::string name)
+PoseTool::PoseTool()
 {
   // shortcut_key_ = 'l';
   topic_property_ = new rviz::StringProperty("Topic", "goal", "The topic on which to publish pick goals.",
                                              getPropertyContainer(), SLOT(updateTopic()), this);
-  this->name = name;
 }
 
-BasePoseTool::~BasePoseTool()
+PoseTool::~PoseTool()
 {
 }
 
-void BasePoseTool::onInitialize()
+void PoseTool::onInitialize()
 {
-  PoseTool::onInitialize();
-  setName(this->name.c_str());
   updateTopic();
 }
 
-void BasePoseTool::updateTopic()
+void PoseTool::updateTopic()
 {
   pub_ = nh_.advertise<geometry_msgs::PoseStamped>(topic_property_->getStdString(), 1);
 }
 
-void BasePoseTool::onPoseSet(double x, double y, double theta)
+void PoseTool::onPoseSet(double x, double y, double theta)
 {
   std::string fixed_frame = context_->getFixedFrame().toStdString();
   tf::Quaternion quat;
@@ -52,3 +49,6 @@ void BasePoseTool::onPoseSet(double x, double y, double theta)
   pub_.publish(goal);
 }
 }  // namespace ruvu_rviz_plugins
+
+#include <pluginlib/class_list_macros.h>
+PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::PoseTool, rviz::Tool)

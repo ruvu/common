@@ -4,7 +4,7 @@
 // @author Rein Appeldoorn
 //
 
-#include "./base_single_joint_position_action_tool.h"
+#include "./single_joint_position_tool.h"
 
 #include <control_msgs/SingleJointPositionActionGoal.h>
 #include <rviz/properties/string_property.h>
@@ -13,26 +13,24 @@
 
 namespace ruvu_rviz_plugins
 {
-BaseSingleJointPositionActionTool::BaseSingleJointPositionActionTool(std::string name)
-  : name_(name)
-  , topic_property_(new rviz::StringProperty("Topic", "goal", "The topic on which to publish the joint position goal.",
+SingleJointPositionTool::SingleJointPositionTool()
+  : topic_property_(new rviz::StringProperty("Topic", "goal", "The topic on which to publish the joint position goal.",
                                              getPropertyContainer(), SLOT(updateTopic()), this))
   , position_property_(new rviz::FloatProperty("Joint position", 0, "Joint position setpoint", getPropertyContainer()))
 {
 }
 
-void BaseSingleJointPositionActionTool::onInitialize()
+void SingleJointPositionTool::onInitialize()
 {
-  setName(name_.c_str());
   updateTopic();
 }
 
-void BaseSingleJointPositionActionTool::updateTopic()
+void SingleJointPositionTool::updateTopic()
 {
   pub_ = nh_.advertise<control_msgs::SingleJointPositionActionGoal>(topic_property_->getStdString(), 1);
 }
 
-void BaseSingleJointPositionActionTool::activate()
+void SingleJointPositionTool::activate()
 {
   control_msgs::SingleJointPositionActionGoal msg;
   msg.header.stamp = ros::Time::now();
@@ -40,11 +38,14 @@ void BaseSingleJointPositionActionTool::activate()
   pub_.publish(msg);
   Q_EMIT(close());
 }
-void BaseSingleJointPositionActionTool::deactivate()
+void SingleJointPositionTool::deactivate()
 {
 }
 
-int BaseSingleJointPositionActionTool::processMouseEvent()
+int SingleJointPositionTool::processMouseEvent()
 {
 }
 }  // namespace ruvu_rviz_plugins
+
+#include <pluginlib/class_list_macros.h>
+PLUGINLIB_EXPORT_CLASS(ruvu_rviz_plugins::SingleJointPositionTool, rviz::Tool)

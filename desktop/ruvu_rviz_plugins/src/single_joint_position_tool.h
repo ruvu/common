@@ -20,12 +20,12 @@ class FloatProperty;
 
 namespace ruvu_rviz_plugins
 {
-class BaseSingleJointPositionActionTool : public rviz::Tool
+class SingleJointPositionTool : public rviz::Tool
 {
   Q_OBJECT
 
 public:
-  explicit BaseSingleJointPositionActionTool(std::string name);
+  explicit SingleJointPositionTool();
   virtual void onInitialize();
 
   virtual void activate();
@@ -42,6 +42,5 @@ private:
 
   rviz::StringProperty* topic_property_;
   rviz::FloatProperty* position_property_;
-  std::string name_;
 };
 }  // namespace ruvu_rviz_plugins

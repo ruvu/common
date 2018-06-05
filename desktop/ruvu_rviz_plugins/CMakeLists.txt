@@ -42,22 +42,11 @@ endif()
 add_definitions(-DQT_NO_KEYWORDS)
 
 add_library(${PROJECT_NAME}
-  src/base_pose_tool.cpp
-  src/base_point_tool.cpp
-  src/base_point_pose_tool.cpp
-  src/graph_goal_tool.cpp
-  src/dock_goal_tool.cpp
-  src/add_node_tool.cpp
-  src/add_edge_tool.cpp
-  src/remove_node_tool.cpp
-  src/remove_edge_tool.cpp
-  src/get_path_tool.cpp
-  src/configurable_goal_pose_tool.cpp
-  src/base_single_joint_position_action_tool.cpp
-  src/lift_up_tool.cpp
-  src/lift_down_tool.cpp
-  src/lateral_goal_tool.cpp
-  src/longitudinal_goal_tool.cpp
+  src/pose_tool.cpp
+  src/point_tool.cpp
+  src/point_pose_tool.cpp
+  src/configurable_pose_tool.cpp
+  src/single_joint_position_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
