@@ -47,6 +47,7 @@ add_library(${PROJECT_NAME}
   src/point_pose_tool.cpp
   src/configurable_pose_tool.cpp
   src/single_joint_position_tool.cpp
+  src/cancel_all_goals_tool.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
