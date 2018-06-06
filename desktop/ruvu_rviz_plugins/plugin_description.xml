@@ -62,6 +62,13 @@
       Tool for sending a lift up
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/LiftDown"
+         type="ruvu_rviz_plugins::SingleJointPositionTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for sending a lift down
+    </description>
+  </class>
   <class name="ruvu_rviz_plugins/CancelAllGoals"
          type="ruvu_rviz_plugins::CancelAllGoalsTool"
          base_class_type="rviz::Tool">
