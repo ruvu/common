@@ -14,7 +14,7 @@
 namespace ruvu_rviz_plugins
 {
 CancelAllGoalsTool::CancelAllGoalsTool()
-  : topic_property_(new rviz::StringProperty("Topic", "goal", "The topic on which to publish the joint position goal.",
+  : topic_property_(new rviz::StringProperty("Topic", "goal", "The topic on which to publish the cancel goal.",
                                              getPropertyContainer(), SLOT(updateTopic()), this))
 {
 }
