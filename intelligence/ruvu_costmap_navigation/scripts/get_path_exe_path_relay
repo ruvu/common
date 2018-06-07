@@ -26,7 +26,13 @@ class ActionlibRelay(object):
 
         self._action_server = actionlib.SimpleActionServer(local_actionlib, msg_type, self._server_execute_callback,
                                                            auto_start=False)
+        self._action_server.register_preempt_callback(self._server_preempt_callback)
         self._action_server.start()
+
+    def _server_preempt_callback(self):
+        # Make sure to cancel all running goals
+        for relay in self._relay_map.values():
+            relay.client.cancel_all_goals()
 
     def _server_execute_callback(self, goal):
         # Make sure to cancel all running goals
@@ -47,13 +53,6 @@ class ActionlibRelay(object):
         # wait for the server to be finished
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            # Check if we are done from the server side
-            if self._action_server.is_preempt_requested():
-                relay.client.cancel_goal()
-                self._action_server.set_preempted()
-                rospy.loginfo("Preempted")
-                return
-
             # Check if we are done from the client side
             if relay.client.get_state() == actionlib.GoalStatus.SUCCEEDED:
                 self._action_server.set_succeeded(relay.client.get_result())
@@ -63,6 +62,11 @@ class ActionlibRelay(object):
             if relay.client.get_state() == actionlib.GoalStatus.ABORTED:
                 self._action_server.set_aborted(relay.client.get_result())
                 rospy.loginfo("Aborted")
+                return
+
+            if relay.client.get_state() == actionlib.GoalStatus.PREEMPTED:
+                self._action_server.set_preempted(relay.client.get_result())
+                rospy.loginfo("Preempted")
                 return
 
             rospy.logdebug('spinning...')
