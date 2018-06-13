@@ -62,3 +62,10 @@ Tool for sending a `control_msgs/SingleJointPositionActionGoal` to an upper posi
 ![LiftDown](icons/classes/LiftDown.png)
 
 Tool for sending a `control_msgs/SingleJointPositionActionGoal` to an down position of a lift.
+
+## Cancel all goals
+
+![Cancel all goals](icons/classes/CancelAllGoals.png)
+
+Tool for sending a cancel request for all actionlib goals.
+

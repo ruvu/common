@@ -1,47 +1,50 @@
 //
 // Copyright (c) 2018 RUVU Robotics
 //
-// @author Rein Appeldoorn
+// @author Ramon Wijnands
 //
 
 #pragma once
 
+#include <rviz/tool.h>
 #include <ros/node_handle.h>
 #include <ros/publisher.h>
-#include <rviz/tool.h>
 #include <string>
 
 // forward declare
 namespace rviz
 {
 class StringProperty;
-class FloatProperty;
+class BoolProperty;
 }
 
 namespace ruvu_rviz_plugins
 {
-class BaseSingleJointPositionActionTool : public rviz::Tool
+class PointPoseTool : public rviz::Tool
 {
   Q_OBJECT
-
 public:
-  explicit BaseSingleJointPositionActionTool(std::string name);
+  PointPoseTool();
+  virtual ~PointPoseTool();
   virtual void onInitialize();
 
   virtual void activate();
   virtual void deactivate();
 
-  virtual int processMouseEvent();
+  virtual int processMouseEvent(rviz::ViewportMouseEvent& event);  // NOLINT
 
 private Q_SLOTS:
   void updateTopic();
+  void updateAutoDeactivate();
 
 private:
+  QCursor std_cursor_;
+  QCursor hit_cursor_;
+
   ros::NodeHandle nh_;
   ros::Publisher pub_;
 
   rviz::StringProperty* topic_property_;
-  rviz::FloatProperty* position_property_;
-  std::string name_;
+  rviz::BoolProperty* auto_deactivate_property_;
 };
 }  // namespace ruvu_rviz_plugins

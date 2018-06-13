@@ -17,11 +17,11 @@ class StringProperty;
 
 namespace ruvu_rviz_plugins
 {
-class ConfigurableGoalPoseTool : public rviz::PoseTool
+class ConfigurablePoseTool : public rviz::PoseTool
 {
   Q_OBJECT
 public:
-  ConfigurableGoalPoseTool();
+  ConfigurablePoseTool();
 
   virtual void onInitialize();
 

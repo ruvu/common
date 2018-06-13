@@ -1,86 +1,79 @@
 <library path="lib/libruvu_rviz_plugins">
   <class name="ruvu_rviz_plugins/DockGoal"
-         type="ruvu_rviz_plugins::DockGoalTool"
+         type="ruvu_rviz_plugins::PoseTool"
          base_class_type="rviz::Tool">
     <description>
       Give a PoseStamped goal for docking
     </description>
   </class>
   <class name="ruvu_rviz_plugins/GraphGoal"
-         type="ruvu_rviz_plugins::GraphGoalTool"
+         type="ruvu_rviz_plugins::PointPoseTool"
          base_class_type="rviz::Tool">
     <description>
       Give a PoseStamped goal for graph navigation
     </description>
   </class>
   <class name="ruvu_rviz_plugins/ConfigurableGoal"
-         type="ruvu_rviz_plugins::ConfigurableGoalPoseTool"
+         type="ruvu_rviz_plugins::ConfigurablePoseTool"
          base_class_type="rviz::Tool">
     <description>
       Give a PoseStamped goal for a subscriber within a namespace
     </description>
   </class>
   <class name="ruvu_rviz_plugins/AddNode"
-         type="ruvu_rviz_plugins::AddNodeTool"
+         type="ruvu_rviz_plugins::PoseTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a PoseStamped for adding a pose to a graph.
     </description>
   </class>
   <class name="ruvu_rviz_plugins/AddEdge"
-         type="ruvu_rviz_plugins::AddEdgeTool"
+         type="ruvu_rviz_plugins::PointTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a PointStamped for adding edges to graphs. 
     </description>
   </class>
   <class name="ruvu_rviz_plugins/RemoveNode"
-         type="ruvu_rviz_plugins::RemoveNodeTool"
+         type="ruvu_rviz_plugins::PointTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a PointStamped for removing a pose from a graph.
     </description>
   </class>
   <class name="ruvu_rviz_plugins/RemoveEdge"
-         type="ruvu_rviz_plugins::RemoveEdgeTool"
+         type="ruvu_rviz_plugins::PointTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a PointStamped for removing an edge from a graph.
     </description>
   </class>
   <class name="ruvu_rviz_plugins/GetPath"
-         type="ruvu_rviz_plugins::GetPathTool"
+         type="ruvu_rviz_plugins::PointTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a PointStamped for planning a path from A to B in a graph.
     </description>
   </class>
   <class name="ruvu_rviz_plugins/LiftUp"
-         type="ruvu_rviz_plugins::LiftUpTool"
+         type="ruvu_rviz_plugins::SingleJointPositionTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a lift up
     </description>
   </class>
   <class name="ruvu_rviz_plugins/LiftDown"
-         type="ruvu_rviz_plugins::LiftDownTool"
+         type="ruvu_rviz_plugins::SingleJointPositionTool"
          base_class_type="rviz::Tool">
     <description>
       Tool for sending a lift down
     </description>
   </class>
-  <class name="ruvu_rviz_plugins/LongitudinalGoal"
-         type="ruvu_rviz_plugins::LongitudinalGoalTool"
+  <class name="ruvu_rviz_plugins/CancelAllGoals"
+         type="ruvu_rviz_plugins::CancelAllGoalsTool"
          base_class_type="rviz::Tool">
     <description>
-      Tool for sending a longitudinal goal
-    </description>
-  </class>
-  <class name="ruvu_rviz_plugins/LateralGoal"
-         type="ruvu_rviz_plugins::LateralGoalTool"
-         base_class_type="rviz::Tool">
-    <description>
-      Tool for sending a lateral goal
+      Cancel all goals
     </description>
   </class>
 </library>
