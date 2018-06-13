@@ -21,7 +21,6 @@ In and output topic are specified using the parameters.
 - `~rabbitmq_username`: The RabbitMQ username (defaults to `''`)
 - `~rabbitmq_password`: The RabbitMQ password (defaults to `''`)
 - `~ros_publishere_queue_size`: Queue size on the ROS end (only holds for the specified `~publishers`).
-- `~queue_empty_timeout`: How long to sleep if there are no incoming ROS msgs in the queue. (default=`0.01`)
 
 Example parameter file:
 
@@ -41,5 +40,4 @@ rabbitmq_username: ''
 rabbitmq_password: ''
 #rabbitmq_queue_prefix: custom_prefix # defaults to current hostname
 ros_publisher_queue_size: 10 # defaults to 10
-queue_empty_timeout: 0.01
 ```

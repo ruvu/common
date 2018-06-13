@@ -12,7 +12,7 @@ from ruvu_rabbitmq_bridge import get_topic_name_msg_type_dict
 
 class RabbitMQBridge(object):
     def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_username, rabbitmq_password,
-                 rabbitmq_queue_prefix, ros_publisher_queue_size, queue_empty_timeout):
+                 rabbitmq_queue_prefix, ros_publisher_queue_size):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: Dictionary that maps topic_names to message types, subscribers on the ROS end
@@ -22,14 +22,12 @@ class RabbitMQBridge(object):
         :param rabbitmq_password: The RabbitMQ password
         :param rabbitmq_queue_prefix: The ROS topic names equal the RabbitMQ queue names but prepended with this prefix
         :param ros_publisher_queue_size: ROS publisher queue size
-        :param queue_empty_timeout: When there is no incoming ROS message, wait for x seconds
         """
         self._ros_subscribers = {}
         self._ros_publishers = {}
         self._rabbitmq_subscribers = {}
         self._rabbitmq_publishers = {}
         self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
-        self._queue_empty_timeout = queue_empty_timeout
 
         if rabbitmq_username:
             parameters = pika.ConnectionParameters(host=rabbitmq_host,
@@ -107,11 +105,7 @@ class RabbitMQBridge(object):
 
     def _ros_msg_handler_thread(self):
         while not rospy.is_shutdown():
-            try:
-                self._publish_ros_msg_rabbitmq(*self._ros_q.get(block=False))
-            except Queue.Empty:
-                rospy.logdebug("Queue empty")
-                rospy.sleep(self._queue_empty_timeout)
+            self._publish_ros_msg_rabbitmq(*self._ros_q.get())
 
     def spin(self):
         """
@@ -145,7 +139,6 @@ if __name__ == '__main__':
         rospy.get_param('~rabbitmq_username', ''),
         rospy.get_param('~rabbitmq_password', ''),
         rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
-        rospy.get_param('~ros_publisher_queue_size', 10),
-        rospy.get_param('~queue_empty_timeout', 0.01)
+        rospy.get_param('~ros_publisher_queue_size', 10)
     )
     bridge.spin()
