@@ -35,7 +35,7 @@ class ActionlibRelay(object):
 
         key_name = getattr(goal, self._key)
         if key_name not in self._relay_map:
-            msg = "{} not present in available relays {}".format(goal.planner, self._relay_map.keys())
+            msg = "{} not present in available relays {}".format(key_name, self._relay_map.keys())
             self._action_server.set_aborted(text=msg)
             return
 
