@@ -29,10 +29,6 @@ class ActionlibRelay(object):
         self._action_server.start()
 
     def _server_execute_callback(self, goal):
-        # Make sure to cancel all running goals
-        for relay in self._relay_map.values():
-            relay.client.cancel_all_goals()
-
         key_name = getattr(goal, self._key)
         if key_name not in self._relay_map:
             msg = "{} not present in available relays {}".format(key_name, self._relay_map.keys())
