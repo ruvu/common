@@ -26,8 +26,6 @@ def goal_cb(planner_client, controller_pub, planner, controller, msg):
     planner_client.wait_for_result()
     result = planner_client.get_result()
 
-    rospy.loginfo("Result '%s' for planner '%s': %s", planner_client.action_client.ns, planner, result)
-
     if result is None:
         rospy.logerr("Failed to call the planner")
         return
