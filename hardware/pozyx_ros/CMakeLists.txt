@@ -40,6 +40,7 @@ endif()
 
 install(PROGRAMS
   scripts/two_tags_pozyx_node.py
+  scripts/two_tags_pozyx_socket_node.py
   scripts/pozyx_node.py
   scripts/range_info_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

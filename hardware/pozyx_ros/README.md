@@ -53,3 +53,7 @@ Publishes the UWB ranges
 ### [two_tags_pozyx_node.py](scripts/two_tags_pozyx_node.py)
 
 Publish the estimated pose using two pozyx tags
+
+### [two_tags_pozyx_socket_node.py](scripts/two_tags_pozyx_socket_node.py)
+
+Publish the estimated pose using two pozyx tags, obtained via UDP socket
