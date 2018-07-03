@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<launch>
+  <!-- Costmap navigation for global planning and local execution -->
+  <node name="costmap_navigation" pkg="mbf_costmap_nav" type="mbf_costmap_nav" required="true" output="screen">
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/move_base.yaml" command="load" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/common_costmap.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/common_costmap.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/local_costmap.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/global_costmap.yaml" command="load" ns="global_costmap" />
+
+    <!-- controllers -->
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/dwa.yaml" command="load" ns="dwa" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/simple_local_planner.yaml" command="load" ns="simple_local_planner" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/ftc.yaml" command="load" ns="ftc" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/eband.yaml" command="load" ns="eband" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/pose_follower.yaml" command="load" ns="pose_follower" />
+
+    <!-- planners -->
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/planners/navfn.yaml" command="load" ns="navfn" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/planners/global_planner.yaml" command="load" ns="global_planner" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/planners/goal_passer.yaml" command="load" ns="goal_passer" />
+    <rosparam file="$(find ruvu_navigation_playground)/parameters/planners/carrot_planner.yaml" command="load" ns="carrot_planner" />
+  </node>
+
+  <node name="pose_stamped_move_base_goal" pkg="ruvu_mbf" type="pose_stamped_move_base_goal" required="true" output="screen" ns="costmap_navigation" />
+</launch>

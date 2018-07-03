@@ -1,11 +1,11 @@
-# RUVU Costmap navigation
+# RUVU Navigation playground
 
 ## Research
 
 Planner / Controller combinations can be tested using:
 
 ````
-roslaunch ruvu_costmap_navigation default_in_empty_world.test
+roslaunch ruvu_navigation_playground default_in_empty_world.test
 ````
 
 ### Planners

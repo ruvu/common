@@ -6,7 +6,7 @@
   <arg name="gui" default="false" />
 
   <!-- Simulator -->
-  <include file="$(find ruvu_costmap_navigation)/test/launch/includes/simulator.launch.xml">
+  <include file="$(find ruvu_navigation_playground)/launch/includes/simulator.launch.xml">
   	<arg name="robot_description_name" value="default" />
   	<arg name="world_name" value="worlds/empty.world" />
   	<arg name="debug" value="$(arg debug)" />
@@ -14,10 +14,10 @@
   </include>
 
   <!-- MBF costmap navigation -->
-  <include file="$(find ruvu_costmap_navigation)/test/launch/includes/mbf_costmap_nav.launch.xml" />
+  <include file="$(find ruvu_navigation_playground)/launch/includes/mbf_costmap_nav.launch.xml" />
 
   <!-- RVIZ -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ruvu_costmap_navigation)/test/parameters/config.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ruvu_navigation_playground)/parameters/config.rviz" />
 
   <!-- RQT reconfigure -->
   <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" />

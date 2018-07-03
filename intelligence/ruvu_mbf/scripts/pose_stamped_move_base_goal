@@ -52,8 +52,8 @@ if __name__ == '__main__':
     planners = [p['name'] for p in rospy.get_param('planners')]
 
     # Get interfaces to both
-    costmap_global_planner_client = actionlib.SimpleActionClient("get_path", mbf_msgs.GetPathAction)
-    costmap_local_planner_pub = rospy.Publisher("exe_path/goal", ExePathActionGoal, queue_size=1)
+    global_planner_client = actionlib.SimpleActionClient("get_path", mbf_msgs.GetPathAction)
+    local_planner_pub = rospy.Publisher("exe_path/goal", ExePathActionGoal, queue_size=1)
 
     # Create interfaces for all planner and controller combinations
     subscribers = []
@@ -61,8 +61,8 @@ if __name__ == '__main__':
         for controller in controllers:
             topic = 'pose_stamped_move_base_goal/{}/{}'.format(planner, controller)
             rospy.loginfo("Creating pose stamped interface for planner controller combination on topic '%s'", topic)
-            subscribers.append(rospy.Subscriber(topic, PoseStamped, partial(goal_cb, costmap_global_planner_client,
-                                                                            costmap_local_planner_pub,
+            subscribers.append(rospy.Subscriber(topic, PoseStamped, partial(goal_cb, global_planner_client,
+                                                                            local_planner_pub,
                                                                             planner, controller)))
 
     rospy.spin()

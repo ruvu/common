@@ -11,7 +11,8 @@ variables:
         ruvu_rostest
         ruvu_networkx
         ruvu_msg_converters
-        ruvu_costmap_navigation
+        ruvu_mbf
+        ruvu_navigation_playground
         ruvu_frame_2d_publisher
         ruvu_rabbitmq_bridge
         ruvu_rviz_plugins
