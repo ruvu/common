@@ -8,7 +8,7 @@
   <arg name="robot_description_name" default="default" />
 
   <!-- Load the robot description on the parameter server -->
-  <param name="robot_description" command="xacro --inorder '$(find ruvu_costmap_navigation)/test/robot_descriptions/$(arg robot_description_name).urdf.xacro'" />
+  <param name="robot_description" command="xacro --inorder '$(find ruvu_navigation_playground)/robot_descriptions/$(arg robot_description_name).urdf.xacro'" />
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg world_name)"/>

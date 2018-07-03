@@ -1,23 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ruvu_costmap_navigation)
+project(ruvu_mbf)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
-
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  mbf_costmap_core
-  mbf_costmap_nav
   roslint
 )
 
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES ruvu_costmap_navigation
-  CATKIN_DEPENDS mbf_costmap_core mbf_costmap_nav
-)
+catkin_package()
 
 # Tests
 if (CATKIN_ENABLE_TESTING)
@@ -25,11 +13,6 @@ if (CATKIN_ENABLE_TESTING)
     file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
     roslint_python(${PYTHON_SCRIPTS})
 	roslint_add_test()
-
-	# Launch check
-	find_package(roslaunch REQUIRED)
-	file(GLOB_RECURSE TEST_LAUNCH_FILES test/launch/*.test)
-	roslaunch_add_file_check(${TEST_LAUNCH_FILES})
 
 	# Catkin lint
 	find_program(CATKIN_LINT catkin_lint REQUIRED)
