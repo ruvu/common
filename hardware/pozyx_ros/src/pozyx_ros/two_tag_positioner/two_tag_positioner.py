@@ -11,7 +11,7 @@ Position = namedtuple('Position', 'x y z')  # in mm
 Velocity2D = namedtuple('Velocity2D', 'x y yaw')  # in mm/s and rad/s
 Orientation = namedtuple('Orientation', 'pitch roll yaw')  # in rad
 UWBSettings = namedtuple('UWBSettings', 'channel bitrate prf plen gain_db')
-Tag = namedtuple('SerialTag', 'serial_port position')  # Position w.r.t. robot coordinate frame
+Tag = namedtuple('Tag', 'serial_port position')  # Position w.r.t. robot coordinate frame
 Anchor = namedtuple('Anchor', 'network_id position')  # Position w.r.t. global coordinate frame
 Input = namedtuple('Input', 'velocity covariance')
 Output = namedtuple('Output', 'position orientation covariance')
@@ -36,7 +36,7 @@ class TwoTagPositioner:
         self._multitag_positioner = MultiTagPositioner(
             anchor_locations={anchor.network_id: [anchor.position.x, anchor.position.y, anchor.position.z] for anchor in
                               anchors},
-            tag_locations={tag.network_id: [tag.position.x, tag.position.y, tag.position.z] for tag in tags}
+            tag_locations={tc.network_id: [tc.position.x, tc.position.y, tc.position.z] for tc in tag_connections}
         )
 
     @staticmethod
