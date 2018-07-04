@@ -2,9 +2,9 @@ import os
 from collections import namedtuple
 
 import pypozyx
-from device import DeviceRangerPolling
-from algorithms.multi_tag_positioner import MultiTagPositioner
 
+from algorithms.multi_tag_positioner import MultiTagPositioner
+from device import DeviceRangerPolling
 
 # External interface
 Position = namedtuple('Position', 'x y z')  # in mm
@@ -34,8 +34,9 @@ class TwoTagPositioner:
             anchor_ids=[anchor.network_id for anchor in anchors]
         )
         self._multitag_positioner = MultiTagPositioner(
-            anchor_locations={anchor.network_id: [anchor.x, anchor.y, anchor.z] for anchor in anchors},
-            tag_locations={tag.network_id: [tag.x, tag.y, tag.z] for tag in tags}
+            anchor_locations={anchor.network_id: [anchor.position.x, anchor.position.y, anchor.position.z] for anchor in
+                              anchors},
+            tag_locations={tag.network_id: [tag.position.x, tag.position.y, tag.position.z] for tag in tags}
         )
 
     @staticmethod
