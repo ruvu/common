@@ -6,7 +6,7 @@ import json
 from two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--tag_serial_ports', help='Serial ports of the tags, e.g. /dev/ttyACM0', nargs="+", type=str,
                         default=['pozyx_1-2', 'pozyx_1-3'])
     parser.add_argument('--tag_positions', help='Positions of the tags w.r.t the robot"s coordinate frame in mm',
