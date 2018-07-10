@@ -20,12 +20,12 @@ if __name__ == "__main__":
     parser.add_argument('--anchor_positions', help='Positions of the anchors w.r.t the global coordinate frame in mm',
                         nargs="+", type=str,
                         default=[
-                            {"x": 9719, "y": 8997, "z": 4099},
-                            {"x": 1, "y": 0, "z": 4141},
-                            {"x": 0, "y": 8951, "z": 4092},
-                            {"x": 9735, "y": 18694, "z": 4109},
-                            {"x": 9720, "y": 465, "z": 4129},
-                            {"x": 5, "y": 18658, "z": 4115}
+                            '{"x": 9719, "y": 8997, "z": 4099}',
+                            '{"x": 1, "y": 0, "z": 4141}',
+                            '{"x": 0, "y": 8951, "z": 4092}',
+                            '{"x": 9735, "y": 18694, "z": 4109}',
+                            '{"x": 9720, "y": 465, "z": 4129}',
+                            '{"x": 5, "y": 18658, "z": 4115}'
                         ])
     parser.add_argument('--uwb_settings', help='UWB Settings for the tags.', type=str,
                         default='{"channel": 5, "bitrate": 2, "prf": 2, "plen": 4, "gain_db": 30.0}')
