@@ -1,31 +1,18 @@
 #!/usr/bin/env python
-import os
-from collections import namedtuple
 
 import diagnostic_updater
-import pypozyx
 import rospy
 from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
-from pozyx_ros.algorithms.device import DevicePositioner
-from pozyx_ros.algorithms.procrustesgrouppositioner import ProcrustesGroupPositioner
-from pozyx_ros.two_tag_posit
+from pozyx_ros.two_tag_positioner.two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
+
 from std_msgs.msg import Header
 from tf.transformations import quaternion_from_euler
 
-Position = namedtuple('Position', 'x y')
-UWBSettings = namedtuple('UWBSettings', 'channel bitrate prf plen gain_db')
-
 
 class TwoTagPositionerNode:
-    def __init__(self, tag_serial_port_position_map, anchor_id_position_map, uwb_settings, world_frame_id,
-                 sensor_frame_id, expected_frequency):
-        self.tag_ids = [tag_id for tag_id in tag_position_map]
-        self.tag_locations = tag_position_map
-        self.anchor_ids = [anchor_id for anchor_id in anchor_position_map]
-        self.anchor_locations = anchor_position_map
-        self._pozyx_serials = self.initialize_pozyx_serials(tag_serial_port_position_map, uwb_settings)
-        self.positioner_functions = self.initialize_positioner_functions()
+    def __init__(self, tags, anchors, uwb_settings, world_frame_id, sensor_frame_id, expected_frequency):
+        self._two_tag_positioner = TwoTagPositioner(tags, anchors, uwb_settings)
 
         self._world_frame_id = world_frame_id
         self._sensor_frame_id = sensor_frame_id
@@ -34,47 +21,23 @@ class TwoTagPositionerNode:
 
         # # Initialize diagnostics publisher
         self._diagnostic_updater = diagnostic_updater.Updater()
-        self._diagnostic_updater.setHardwareID("pozyx_{}".format(port))
+        self._diagnostic_updater.setHardwareID("_".join([tag.serial_port for tag in tags]))
 
         # Add frequency monitoring
         self._frequency_status = diagnostic_updater.FrequencyStatus(
             diagnostic_updater.FrequencyStatusParam({'min': expected_frequency, 'max': expected_frequency}))
         self._diagnostic_updater.add(self._frequency_status)
 
-    def initialize_pozyx_serials(self, tag_serial_port_position_map, uwb_settings):
-        pozyx_serials_dict = {}
-        pozyx_serials = [pypozyx.PozyxSerial(pp) for pp in tag_serial_ports]
-        for ps in pozyx_serials:
-            tag_id_object = pypozyx.NetworkID()
-            ps.getNetworkId(tag_id_object)
-            tag_id = int(str(tag_id_object), 0)
-            if tag_id in self.tag_ids:
-                pozyx_serials_dict[tag_id] = ps
-        return pozyx_serials_dict
-
-    def initialize_positioner_functions(self):
-        positioner_functions = []
-        dp = DevicePositioner(self._pozyx_serials, self.anchor_locations)
-        positioner_functions.append(dp.get_positions)
-        pgp = ProcrustesGroupPositioner(self.tag_locations)
-        positioner_functions.append(pgp.calculate_group_position)
-        return positioner_functions
-
     def spin(self):
         while not rospy.is_shutdown():
-            output = []
-            new_position = {}
+            try:
+                estimate = self._two_tag_positioner.get_position(
+                    Input(
+                        velocity=Velocity2D(x=0, y=0, yaw=0),
+                        covariance=[1e3] * 9
+                    )
+                )
 
-            for positioner_function in self.positioner_functions:
-                new_position = positioner_function(new_position)
-                output.append(new_position)
-
-            last_output = output[-1]
-
-            if last_output and last_output["success"]:
-                position = last_output["coordinates"]
-                orientation = last_output["orientation"]
-                position["z"] = 0
                 self._odom_publisher.publish(Odometry(
                     header=Header(
                         stamp=rospy.Time.now(),
@@ -82,13 +45,14 @@ class TwoTagPositionerNode:
                     ),
                     child_frame_id=self._sensor_frame_id,
                     pose=PoseWithCovariance(
-                        pose=Pose(position=Point(float(position["x"]) / 1e3, float(position["y"]) / 1e3,
-                                                 float(position["z"]) / 1e3),
-                                  orientation=Quaternion(*quaternion_from_euler(0, 0, orientation["yaw"])))
+                        pose=Pose(position=Point(p / 1e3 for p in estimate.position),
+                                  orientation=Quaternion(*quaternion_from_euler(0, 0, estimate.orientation.yaw)))
                     )
                 ))
 
                 self._frequency_status.tick()
+            except RuntimeError as runtime_error:
+                rospy.logerr(runtime_error)
 
             self._diagnostic_updater.update()
 
@@ -96,22 +60,19 @@ class TwoTagPositionerNode:
 if __name__ == '__main__':
     rospy.init_node('two_tag_pozyx_node')
 
-    def _meter_to_mm(v):
-        return int(float(v) * 1e3)
-
     def _get_position(v):
-        return Position(_meter_to_mm(v['x']), y=_meter_to_mm(v['y']))
+        return Position(p / 1e3 for p in v)
 
     try:
-        anchors = {d['network_id']: _get_position(d['position']) for d in rospy.get_param('~anchors', [])}
-        tags = {os.path.realpath(d['serial_port']): _get_position(d['position']) for d in rospy.get_param('~tags', [])}
-        uwb_settings = rospy.get_param('~uwb_settings', {
+        anchors = [Anchor(d['network_id'], _get_position(d['position'])) for d in rospy.get_param('~anchors', [])]
+        tags = [Tag(d['serial_port'], _get_position(d['position'])) for d in rospy.get_param('~tags', [])]
+        uwb_settings = UWBSettings(**rospy.get_param('~uwb_settings', {
             'channel': 5,
             'bitrate': 2,
             'prf': 2,
             'plen': 0x04,
             'gain_db': 30.0
-        })  # 6810kbit/s 64plen
+        }))  # 6810 kbit/s 64plen
 
         if len(anchors) < 3:
             raise ValueError("~There should be at least 3 anchors")
