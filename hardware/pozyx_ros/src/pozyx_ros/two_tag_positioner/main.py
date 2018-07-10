@@ -16,16 +16,16 @@ if __name__ == "__main__":
                             '{"x": 350, "y": 0, "z": 0}',
                         ])
     parser.add_argument('--anchor_ids', help='Network ids of the pozyx anchors e.g. 0x02', nargs="+", type=int,
-                        default=[26476, 35448, 52659, 23602, 43083, 12123])
+                        default=[23602, 12123, 26476, 52659, 43083, 35448])
     parser.add_argument('--anchor_positions', help='Positions of the anchors w.r.t the global coordinate frame in mm',
                         nargs="+", type=str,
                         default=[
-                            '{"x": -2, "y": 3, "z": 4092}',
-                            '{"x": 4590, "y": 8555, "z": 4115}',
-                            '{"x": 13182, "y": 3988, "z": 4109}',
-                            '{"x": 8585, "y": -4550, "z": 4099}',
-                            '{"x": 4554, "y": -12069, "z": 4129}',
-                            '{"x": -4231, "y": -7886, "z": 4141}'
+                            {"x": 9719, "y": 8997, "z": 4099},
+                            {"x": 1, "y": 0, "z": 4141},
+                            {"x": 0, "y": 8951, "z": 4092},
+                            {"x": 9735, "y": 18694, "z": 4109},
+                            {"x": 9720, "y": 465, "z": 4129},
+                            {"x": 5, "y": 18658, "z": 4115}
                         ])
     parser.add_argument('--uwb_settings', help='UWB Settings for the tags.', type=str,
                         default='{"channel": 5, "bitrate": 2, "prf": 2, "plen": 4, "gain_db": 30.0}')
