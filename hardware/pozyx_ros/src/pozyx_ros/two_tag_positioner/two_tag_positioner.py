@@ -50,10 +50,10 @@ class TwoTagPositioner:
         :return: Tag connection (type=_TagConnection)
         """
         resolved_port = os.path.realpath(tag.serial_port)
-        try:
-            serial_connection = pypozyx.PozyxSerial(resolved_port)
-        except pypozyx.PozyxConnectionError as e:
-            raise pypozyx.PozyxConnectionError("Failed to connect to {} ({})".format(tag.serial_port, resolved_port), e)
+        # try:
+        serial_connection = pypozyx.PozyxSerial(resolved_port)
+        # except pypozyx.PozyxConnectionError as e:
+        #     raise pypozyx.PozyxConnectionError("Failed to connect to {} ({})".format(tag.serial_port, resolved_port), e)
 
         result_set_uwb_settings = serial_connection.setUWBSettings(pypozyx.UWBSettings(*uwb_settings))
         if result_set_uwb_settings != pypozyx.POZYX_SUCCESS:
