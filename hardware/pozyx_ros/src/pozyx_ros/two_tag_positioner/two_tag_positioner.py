@@ -75,7 +75,6 @@ class TwoTagPositioner:
         """
         timestamp, ranges = self._device_ranger_polling.get_ranges()
         position = self._multitag_positioner.get_position(timestamp, ranges, input)
-        print(position)
         if not position["success"]:
             raise RuntimeError("Multitag positioning unsuccessful!")
 

@@ -19,8 +19,10 @@
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
   <exec_depend>python-pypozyx-pip</exec_depend>
   <exec_depend>python-pykalman</exec_depend>
+  <exec_depend>python-scipy</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
 
