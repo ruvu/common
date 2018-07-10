@@ -1,4 +1,5 @@
 import os
+import time
 from collections import namedtuple
 
 import pypozyx
@@ -72,26 +73,22 @@ class TwoTagPositioner:
         :param input: System model input for the positioner (type=Input)
         :return: Estimated position (type=Output)
         """
-        ranges = self._device_ranger_polling.get_ranges()
-        positions = self._multitag_positioner.get_positions(input, ranges)
-
-        if not positions:
-            raise RuntimeError("Multitag positioner returned empty list!")
-
-        position = positions[-1]
+        timestamp, ranges = self._device_ranger_polling.get_ranges()
+        position = self._multitag_positioner.get_position(timestamp, ranges, input)
+        print(position)
         if not position["success"]:
             raise RuntimeError("Multitag positioning unsuccessful!")
 
         return Output(
             position=Position(
-                x=position["coordinates"]["x"],
-                y=position["coordinates"]["y"],
-                z=position["coordinates"]["z"]
+                x=position["state"]["position"][0],
+                y=position["state"]["position"][1],
+                z=position["state"]["position"][2]
             ),
             orientation=Orientation(
-                pitch=position["orientation"]["pitch"],
-                roll=position["orientation"]["roll"],
-                yaw=position["orientation"]["yaw"]
+                pitch=position["state"]["orientation"][0],
+                roll=position["state"]["orientation"][1],
+                yaw=position["state"]["orientation"][2]
             ),
-            covariance=position["covariance"]
+            covariance=position["diagnostics"]["covariance"]
         )
