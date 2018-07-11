@@ -43,7 +43,7 @@ class TwoTagPositionerNode:
                     ),
                     child_frame_id=self._sensor_frame_id,
                     pose=PoseWithCovariance(
-                        pose=Pose(position=Point(p / 1e3 for p in estimate.position),
+                        pose=Pose(position=Point(*[p / 1e3 for p in estimate.position]),
                                   orientation=Quaternion(*quaternion_from_euler(0, 0, estimate.orientation.yaw)))
                     )
                 ))
@@ -51,6 +51,8 @@ class TwoTagPositionerNode:
                 self._frequency_status.tick()
             except RuntimeError as runtime_error:
                 rospy.logerr(runtime_error)
+            else:
+                rospy.logdebug("Position update succesful: %s", estimate)
 
             self._diagnostic_updater.update()
 
@@ -59,7 +61,7 @@ if __name__ == '__main__':
     rospy.init_node('two_tag_pozyx_node')
 
     def _get_position(v):
-        return Position(p / 1e3 for p in v)
+        return Position(*[int(p * 1e3) for p in Position(**v)])
 
     try:
         rospy.loginfo("Parsing anchors ..")
@@ -82,7 +84,7 @@ if __name__ == '__main__':
             raise ValueError("~tags should be of size 2")
     except KeyError as e:
         rospy.logerr("Missing key {} in specification".format(e))
-    except Exception as e:
+    except ValueError as e:
         rospy.logerr("{}".format(e))
     else:
         try:

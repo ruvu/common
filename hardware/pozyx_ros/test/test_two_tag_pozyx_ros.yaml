@@ -1,15 +1,54 @@
-world_frame_id: world # ID of the frame attached to the world
-sensor_frame_id: sensor # ID of the sensor frame
+anchors:
+  - network_id: 23602
+    position:
+      x: 9.719
+      y: 8.997
+      z: 4.099
+  - network_id: 12123
+    position:
+      x: 0.001
+      y: 0
+      z: 4.141
+  - network_id: 26476
+    position:
+      x: 0
+      y: 8.951
+      z: 4.092
+  - network_id: 52659
+    position:
+      x: 9.735
+      y: 18.694
+      z: 4.109
+  - network_id: 43083
+    position:
+      x: 9.720
+      y: 0.465
+      z: 4.129
+  - network_id: 35448
+    position:
+      x: 0.005
+      y: 18.658
+      z: 4.115
+
 tags:
-    - {network_id: 0x6020, position: {x: 0, y: -0.315, z: 0}}
-    - {network_id: 0x682e, position: {x: 0, y: 0.315, z: 0}}
-tag_ports:
-    - /dev/ttyACM0
-    - /dev/ttyACM1
-anchors: # Anchors used for localization
-    - {network_id: 26476, position: {x: -0.002, y: 0.003, z: 4.092}}
-    - {network_id: 35448, position: {x: 4.590, y: 8.555, z: 4.115}}
-    - {network_id: 52659, position: {x: 13.182, y: 3.988, z: 4.109}}
-    - {network_id: 23602, position: {x: 8.585, y: -4.550, z: 4.099}}
-    - {network_id: 43083, position: {x: 4.554, y: -12.069, z: 4.129}}
-    - {network_id: 12123, position: {x: -.4231, y: -7.886, z: 4.141}}
+  - serial_port: /dev/sensors/pozyx_1-2
+    position:
+      x: 0
+      y: -0.35
+      z: 0
+  - serial_port: /dev/sensors/pozyx_1-2
+    position:
+      x: 0
+      y: 0.35
+      z: 0
+
+uwb_settings:
+  channel: 5
+  bitrate: 2
+  prf: 2
+  plen: 0x04
+  gain_db: 30.0
+
+expected_frequency: 8
+world_frame_id: map # ID of the frame attached to the world
+sensor_frame_id: uwb # ID of the sensor frame

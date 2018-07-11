@@ -8,12 +8,12 @@ from two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositio
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--tag_serial_ports', help='Serial ports of the tags, e.g. /dev/ttyACM0', nargs="+", type=str,
-                        default=['/dev/sensors/pozyx_1-2', '/dev/sensors/pozyx_1-4'])
+                        default=['/dev/sensors/pozyx_1-4', '/dev/sensors/pozyx_1-2'])
     parser.add_argument('--tag_positions', help='Positions of the tags w.r.t the robot"s coordinate frame in mm',
                         nargs="+", type=str,
                         default=[
-                            '{"x": -350, "y": 0, "z": 0}',
-                            '{"x": 350, "y": 0, "z": 0}',
+                            '{"x": 0, "y": -350, "z": 0}',
+                            '{"x": 0, "y": 350, "z": 0}',
                         ])
     parser.add_argument('--anchor_ids', help='Network ids of the pozyx anchors e.g. 0x02', nargs="+", type=int,
                         default=[23602, 12123, 26476, 52659, 43083, 35448])
