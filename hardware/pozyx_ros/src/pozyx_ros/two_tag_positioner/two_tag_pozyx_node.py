@@ -75,6 +75,7 @@ class TwoTagPositionerNode:
                     )
                 )
 
+                c = estimate.covariance
                 self._odom_publisher.publish(Odometry(
                     header=Header(
                         stamp=rospy.Time.now(),
@@ -83,7 +84,15 @@ class TwoTagPositionerNode:
                     child_frame_id=self._sensor_frame_id,
                     pose=PoseWithCovariance(
                         pose=Pose(position=Point(*[p / 1e3 for p in estimate.position]),
-                                  orientation=Quaternion(*quaternion_from_euler(0, 0, estimate.orientation.yaw)))
+                                  orientation=Quaternion(*quaternion_from_euler(0, 0, estimate.orientation.yaw))),
+                        covariance=[
+                            c[0] / 1e6,  c[1] / 1e6,  c[2] / 1e6,  c[3] / 1e3,  c[4] / 1e3,  c[5] / 1e3,
+                            c[6] / 1e6,  c[7] / 1e6,  c[8] / 1e6,  c[9] / 1e3,  c[10] / 1e3, c[11] / 1e3,
+                            c[12] / 1e6, c[13] / 1e6, c[14] / 1e6, c[15] / 1e3, c[16] / 1e3, c[17] / 1e3,
+                            c[18] / 1e3, c[19] / 1e3, c[20] / 1e3, c[21],       c[22],       c[34],
+                            c[24] / 1e3, c[25] / 1e3, c[26] / 1e3, c[27],       c[28],       c[29],
+                            c[30] / 1e3, c[31] / 1e3, c[32] / 1e3, c[33],       c[34],       c[35]
+                        ]
                     )
                 ))
 
