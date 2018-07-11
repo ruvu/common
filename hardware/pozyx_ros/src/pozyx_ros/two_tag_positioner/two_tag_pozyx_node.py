@@ -27,7 +27,7 @@ class TwoTagPositionerNode:
         self._world_frame_id = world_frame_id
         self._sensor_frame_id = sensor_frame_id
 
-        self._odom_subscriber = rospy.Publisher("odom", Odometry, self._odom_callback, queue_size=1)
+        self._odom_subscriber = rospy.Subscriber("odom", Odometry, self._odom_callback, queue_size=1)
         self._pose_publisher = rospy.Publisher("uwb_pose", Odometry, queue_size=1)
 
         # # Initialize diagnostics publisher
@@ -151,7 +151,7 @@ if __name__ == '__main__':
                                              rospy.get_param("~expected_frequency", 5),
                                              rospy.get_param("~warning_success_rate", 0.8),
                                              rospy.get_param("~height_2_5d", 0.1))
-            ros_pozyx.spin()
+            rospy.spin()
         except rospy.ROSInterruptException as e:
             rospy.logwarn(e)
         except RuntimeError as e:
