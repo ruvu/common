@@ -14,11 +14,11 @@ UWBSettings = namedtuple('UWBSettings', 'channel bitrate prf plen gain_db')
 Tag = namedtuple('Tag', 'serial_port position')  # Position w.r.t. robot coordinate frame
 Anchor = namedtuple('Anchor', 'network_id position')  # Position w.r.t. global coordinate frame
 
-# Velocity w.r.t. robot coordinate frame and the covariance matrix (size=9) as follows:
+# Time in seconds since epoch, Velocity w.r.t. robot coordinate frame and the covariance matrix (size=9) as follows:
 # [xx,   xy,   xyaw,                [mm^2/s^2, mm^2/s^2, mm*rad/s^2,
 #  yx,   yy,   yyaw,    with units   mm^2/s^2, mm^2/s^2, mm*rad/s^2,
 #  yawx, yawy, yawyaw]               mm^2/s^2, mm^2/s^2, rad^2/s^2]
-Input = namedtuple('Input', 'velocity covariance')
+Input = namedtuple('Input', 'current_time velocity_time velocity covariance')
 
 # Position and Orientation w.r.t. global coordinate frame and the covariance matrix (size=36) as follows:
 # [xx,     xy,     xz,     xroll,     xpitch,     xyaw,                [mm^2,   mm^2,   mm^2,   rad*mm, rad*mm, rad*mm,
