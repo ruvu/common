@@ -67,15 +67,19 @@ class TwoTagPositionerNode:
         return stat
 
     def _odom_callback(self, msg):
+        current_time = rospy.get_time()
+        twist_time = msg.header.stamp.to_sec()
         twist = msg.twist.twist
-        twist_stamp = msg.header.stamp.to_sec()
         twist_covariance = msg.twist.covariance
 
+        rospy.logdebug("Odom callback. Time difference twist msg %.5f", current_time - twist_time)
+
         try:
+            rospy.logdebug("Calling positioning update ...")
             estimate = self._two_tag_positioner.get_position(
                 Input(
-                    current_time=rospy.get_time(),
-                    velocity_time=twist_stamp,
+                    current_time=current_time,
+                    velocity_time=twist_time,
                     velocity=Velocity2D(x=int(twist.linear.x * 1e3), y=int(twist.linear.y * 1e3), yaw=twist.angular.z),
                     covariance=[
                         int(twist_covariance[0] * 1e6), int(twist_covariance[1] * 1e6), int(twist_covariance[5] * 1e3),
@@ -84,6 +88,7 @@ class TwoTagPositionerNode:
                     ]
                 )
             )
+            rospy.logdebug("Positioning update took %.3f seconds", rospy.get_time() - current_time)
 
             c = estimate.covariance
             self._pose_publisher.publish(Odometry(
