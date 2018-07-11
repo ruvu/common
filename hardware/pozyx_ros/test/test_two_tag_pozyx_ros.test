@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
 <launch>
-  <node name="pozyx_ros_two_tag" pkg="pozyx_ros" type="two_tag_pozyx_node.py" required="true">
+  <node name="pozyx_ros_two_tag" pkg="pozyx_ros" type="two_tag_pozyx_node" required="true">
     <rosparam file="$(find pozyx_ros)/test/test_two_tag_pozyx_ros.yaml" command="load" />
   </node>
 </launch>

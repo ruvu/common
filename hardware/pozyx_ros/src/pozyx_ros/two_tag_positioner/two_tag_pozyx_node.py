@@ -51,6 +51,8 @@ class TwoTagPositionerNode:
                 self._frequency_status.tick()
             except RuntimeError as runtime_error:
                 rospy.logerr(runtime_error)
+            else:
+                rospy.loginfo("Position update succesful: %s", estimate)
 
             self._diagnostic_updater.update()
 
@@ -59,7 +61,7 @@ if __name__ == '__main__':
     rospy.init_node('two_tag_pozyx_node')
 
     def _get_position(v):
-        return Position(p / 1e3 for p in v)
+        return Position(*[p / 1e3 for p in Position(**v)])
 
     try:
         rospy.loginfo("Parsing anchors ..")
@@ -82,7 +84,7 @@ if __name__ == '__main__':
             raise ValueError("~tags should be of size 2")
     except KeyError as e:
         rospy.logerr("Missing key {} in specification".format(e))
-    except Exception as e:
+    except ValueError as e:
         rospy.logerr("{}".format(e))
     else:
         try:

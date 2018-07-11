@@ -39,7 +39,7 @@ if (CATKIN_ENABLE_TESTING)
 endif()
 
 install(PROGRAMS
-  scripts/two_tag_pozyx_node.py
+  scripts/two_tag_pozyx_node
   scripts/pozyx_node.py
   scripts/range_info_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
