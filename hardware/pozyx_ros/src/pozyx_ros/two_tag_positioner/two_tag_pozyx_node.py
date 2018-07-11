@@ -33,17 +33,16 @@ class TwoTagPositionerNode:
         self._diagnostic_updater.add(self._frequency_status)
 
         self._anchor_broadcaster = StaticTransformBroadcaster()
-        for anchor in anchors:
-            anchor_frame_id = "anchor_{}".format(anchor.network_id)
-            rospy.loginfo("Broadcasting static transform from %s to %s", world_frame_id, anchor_frame_id)
-            self._anchor_broadcaster.sendTransform(TransformStamped(
+        self._anchor_broadcaster.sendTransform([
+            TransformStamped(
                 header=Header(frame_id=world_frame_id, stamp=rospy.Time.now()),
-                child_frame_id=anchor_frame_id,
+                child_frame_id="anchor_{}".format(anchor.network_id),
                 transform=Transform(
                     translation=Vector3(*anchor.position),
                     rotation=Quaternion(w=1)  # Unit quaternion
                 )
-            ))
+            )
+        for anchor in anchors])
 
     def spin(self):
         while not rospy.is_shutdown():
