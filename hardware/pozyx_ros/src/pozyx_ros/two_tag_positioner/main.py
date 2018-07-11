@@ -29,6 +29,7 @@ if __name__ == "__main__":
                         ])
     parser.add_argument('--uwb_settings', help='UWB Settings for the tags.', type=str,
                         default='{"channel": 5, "bitrate": 2, "prf": 2, "plen": 4, "gain_db": 30.0}')
+    parser.add_argument('--height_2_5d', help='Fixed height in world frame in mm', type=float, default=140)
     args = parser.parse_args()
 
     tags = [Tag(serial_port=serial_port, position=Position(**json.loads(tag_position)))
@@ -37,7 +38,7 @@ if __name__ == "__main__":
                for (anchor_id, anchor_position) in zip(args.anchor_ids, args.anchor_positions)]
     uwb_settings = UWBSettings(**json.loads(args.uwb_settings))
 
-    positioner = TwoTagPositioner(tags, anchors, uwb_settings)
+    positioner = TwoTagPositioner(tags, anchors, uwb_settings, args.height_2_5d)
     while True:
         try:
             estimated_position = positioner.get_position(

@@ -33,12 +33,13 @@ _TagConnection = namedtuple('TagConnection', 'serial_connection network_id posit
 
 
 class TwoTagPositioner:
-    def __init__(self, tags, anchors, uwb_settings):
+    def __init__(self, tags, anchors, uwb_settings, height_2_5d):
         """
         Two tag positioner interface
         :param tags: List of tags (type=[Tags])
         :param anchors: List of anchors (type=[Anchor]) 
         :param uwb_settings: UWB settings for the tags (type=UWBSettings)
+        :param height_2_5d=140: Fixed z height for 2.5 D mode in mm (type=float)
         """
         tag_connections = [self._get_tag_connection(tag, uwb_settings) for tag in tags]
 
@@ -49,7 +50,8 @@ class TwoTagPositioner:
         self._multitag_positioner = MultiTagPositioner(
             anchor_locations={anchor.network_id: [anchor.position.x, anchor.position.y, anchor.position.z] for anchor in
                               anchors},
-            tag_locations={tc.network_id: [tc.position.x, tc.position.y, tc.position.z] for tc in tag_connections}
+            tag_locations={tc.network_id: [tc.position.x, tc.position.y, tc.position.z] for tc in tag_connections},
+            height_2_5d=height_2_5d
         )
 
     @staticmethod
@@ -84,7 +86,7 @@ class TwoTagPositioner:
         """
         timestamp, ranges = self._device_ranger_polling.get_ranges()
         position = self._multitag_positioner.get_position(timestamp, ranges, input)
-        if not position["success"]:
+        if not position["success"] or "fallback" in position:
             raise RuntimeError("Multitag positioning unsuccessful!")
 
         # Where c
@@ -107,11 +109,11 @@ class TwoTagPositioner:
                 yaw=position["state"]["orientation"][2]
             ),
             covariance=[
-                c[0],   c[1], 0, 0, 0,  c[4],
-                c[6],   c[7], 0, 0, 0, c[10],
-                0,         0, 0, 0, 0,     0,
-                0,         0, 0, 0, 0,     0,
-                0,         0, 0, 0, 0,     0,
-                c[24], c[25], 0, 0, 0,  c[28]
+                c[0][0],   c[0][1], 0, 0, 0,  c[0][4],
+                c[1][0],   c[1][1], 0, 0, 0,  c[1][4],
+                0,         0,       0, 0, 0,  0,
+                0,         0,       0, 0, 0,  0,
+                0,         0,       0, 0, 0,  0,
+                c[4][0],   c[4][1], 0, 0, 0,  c[4][4]
             ]
         )

@@ -13,7 +13,7 @@ from tf.transformations import quaternion_from_euler
 
 class TwoTagPositionerNode:
     def __init__(self, tags, anchors, uwb_settings, world_frame_id, sensor_frame_id, expected_frequency,
-                 warning_success_rate):
+                 warning_success_rate, height_2_5d):
         self._warning_success_rate = warning_success_rate
         self._unsuccessful_updates = 0
         self._successful_updates = 0
@@ -22,7 +22,8 @@ class TwoTagPositionerNode:
             return tag_or_anchor._replace(position=Position(*[int(p * 1e3) for p in tag_or_anchor.position]))
 
         self._two_tag_positioner = TwoTagPositioner([_position_to_mm(tag) for tag in tags],
-                                                    [_position_to_mm(anchor) for anchor in anchors], uwb_settings)
+                                                    [_position_to_mm(anchor) for anchor in anchors],
+                                                    uwb_settings, int(height_2_5d * 1e3))
 
         self._world_frame_id = world_frame_id
         self._sensor_frame_id = sensor_frame_id
@@ -89,7 +90,7 @@ class TwoTagPositionerNode:
                             c[0] / 1e6,  c[1] / 1e6,  c[2] / 1e6,  c[3] / 1e3,  c[4] / 1e3,  c[5] / 1e3,
                             c[6] / 1e6,  c[7] / 1e6,  c[8] / 1e6,  c[9] / 1e3,  c[10] / 1e3, c[11] / 1e3,
                             c[12] / 1e6, c[13] / 1e6, c[14] / 1e6, c[15] / 1e3, c[16] / 1e3, c[17] / 1e3,
-                            c[18] / 1e3, c[19] / 1e3, c[20] / 1e3, c[21],       c[22],       c[34],
+                            c[18] / 1e3, c[19] / 1e3, c[20] / 1e3, c[21],       c[22],       c[23],
                             c[24] / 1e3, c[25] / 1e3, c[26] / 1e3, c[27],       c[28],       c[29],
                             c[30] / 1e3, c[31] / 1e3, c[32] / 1e3, c[33],       c[34],       c[35]
                         ]
@@ -139,7 +140,8 @@ if __name__ == '__main__':
                                              rospy.get_param("~world_frame_id", "map"),
                                              rospy.get_param("~sensor_frame_id", "pozyx"),
                                              rospy.get_param("~expected_frequency", 5),
-                                             rospy.get_param("~warning_success_rate", 0.8))
+                                             rospy.get_param("~warning_success_rate", 0.8),
+                                             rospy.get_param("~height_2_5d", 0.1))
             ros_pozyx.spin()
         except rospy.ROSInterruptException as e:
             rospy.logwarn(e)
