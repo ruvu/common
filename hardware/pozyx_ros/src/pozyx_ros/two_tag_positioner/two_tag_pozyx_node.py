@@ -7,11 +7,17 @@ from tf2_ros import StaticTransformBroadcaster
 from two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
 
 from std_msgs.msg import Header
+from diagnostic_msgs.msg import DiagnosticStatus
 from tf.transformations import quaternion_from_euler
 
 
 class TwoTagPositionerNode:
-    def __init__(self, tags, anchors, uwb_settings, world_frame_id, sensor_frame_id, expected_frequency):
+    def __init__(self, tags, anchors, uwb_settings, world_frame_id, sensor_frame_id, expected_frequency,
+                 warning_success_rate):
+        self._warning_success_rate = warning_success_rate
+        self._unsuccessful_updates = 0
+        self._successful_updates = 0
+
         def _position_to_mm(tag_or_anchor):
             return tag_or_anchor._replace(position=Position(*[int(p * 1e3) for p in tag_or_anchor.position]))
 
@@ -31,6 +37,7 @@ class TwoTagPositionerNode:
         self._frequency_status = diagnostic_updater.FrequencyStatus(
             diagnostic_updater.FrequencyStatusParam({'min': expected_frequency, 'max': expected_frequency}))
         self._diagnostic_updater.add(self._frequency_status)
+        self._diagnostic_updater.add("UWB Positioning", self._uwb_positioning_diagnostics)
 
         self._anchor_broadcaster = StaticTransformBroadcaster()
         self._anchor_broadcaster.sendTransform([
@@ -43,6 +50,20 @@ class TwoTagPositionerNode:
                 )
             )
         for anchor in anchors])
+
+    def _uwb_positioning_diagnostics(self, stat):
+        success_rate = float(self._successful_updates) / (self._unsuccessful_updates + self._successful_updates)
+        if success_rate < self._warning_success_rate:
+            stat.summary(DiagnosticStatus.WARN, "Success rate too low: {}".format(success_rate))
+        else:
+            stat.summary(DiagnosticStatus.OK, "Success rate: {}".format(success_rate))
+
+        stat.add("Position update success rate", success_rate)
+
+        self._unsuccessful_updates = 0
+        self._successful_updates = 0
+
+        return stat
 
     def spin(self):
         while not rospy.is_shutdown():
@@ -68,8 +89,10 @@ class TwoTagPositionerNode:
 
                 self._frequency_status.tick()
             except RuntimeError as runtime_error:
+                self._unsuccessful_updates += 1 
                 rospy.logerr(runtime_error)
             else:
+                self._successful_updates += 1 
                 rospy.logdebug("Position update succesful: %s", estimate)
 
             self._diagnostic_updater.update()
@@ -106,7 +129,8 @@ if __name__ == '__main__':
             ros_pozyx = TwoTagPositionerNode(tags, anchors, uwb_settings,
                                              rospy.get_param("~world_frame_id", "map"),
                                              rospy.get_param("~sensor_frame_id", "pozyx"),
-                                             rospy.get_param("~expected_frequency", 15.0))
+                                             rospy.get_param("~expected_frequency", 5),
+                                             rospy.get_param("~warning_success_rate", 0.8))
             ros_pozyx.spin()
         except rospy.ROSInterruptException as e:
             rospy.logwarn(e)
