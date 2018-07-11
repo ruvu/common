@@ -1,7 +1,9 @@
 import diagnostic_updater
 import rospy
-from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion
+from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion, TransformStamped, Transform, Vector3
 from nav_msgs.msg import Odometry
+from tf2_ros import StaticTransformBroadcaster
+
 from two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
 
 from std_msgs.msg import Header
@@ -10,7 +12,12 @@ from tf.transformations import quaternion_from_euler
 
 class TwoTagPositionerNode:
     def __init__(self, tags, anchors, uwb_settings, world_frame_id, sensor_frame_id, expected_frequency):
-        self._two_tag_positioner = TwoTagPositioner(tags, anchors, uwb_settings)
+        def _position_to_mm(tag_or_anchor):
+            tag_or_anchor.position = Position(*[int(p * 1e3) for p in tag_or_anchor.position])
+            return tag_or_anchor
+
+        self._two_tag_positioner = TwoTagPositioner([_position_to_mm(tag) for tag in tags],
+                                                    [_position_to_mm(anchor) for anchor in anchors], uwb_settings)
 
         self._world_frame_id = world_frame_id
         self._sensor_frame_id = sensor_frame_id
@@ -25,6 +32,17 @@ class TwoTagPositionerNode:
         self._frequency_status = diagnostic_updater.FrequencyStatus(
             diagnostic_updater.FrequencyStatusParam({'min': expected_frequency, 'max': expected_frequency}))
         self._diagnostic_updater.add(self._frequency_status)
+
+        self._anchor_broadcaster = StaticTransformBroadcaster()
+        for anchor in anchors:
+            self._anchor_broadcaster.sendTransform(TransformStamped(
+                header=Header(frame_id=world_frame_id, stamp=rospy.Time.now()),
+                child_frame_id="anchor_{}".format(anchor.network_id),
+                transorm=Transform(
+                    translation=Vector3(**anchor.position),
+                    rotation=Quaternion(w=1)  # Unit quaternion
+                )
+            ))
 
     def spin(self):
         while not rospy.is_shutdown():
@@ -60,14 +78,11 @@ class TwoTagPositionerNode:
 if __name__ == '__main__':
     rospy.init_node('two_tag_pozyx_node')
 
-    def _get_position(v):
-        return Position(*[int(p * 1e3) for p in Position(**v)])
-
     try:
         rospy.loginfo("Parsing anchors ..")
-        anchors = [Anchor(d['network_id'], _get_position(d['position'])) for d in rospy.get_param('~anchors', [])]
+        anchors = [Anchor(d['network_id'], Position(**d['position'])) for d in rospy.get_param('~anchors', [])]
         rospy.loginfo("Parsing tags ..")
-        tags = [Tag(d['serial_port'], _get_position(d['position'])) for d in rospy.get_param('~tags', [])]
+        tags = [Tag(d['serial_port'], Position(**d['position'])) for d in rospy.get_param('~tags', [])]
         rospy.loginfo("Parsing uwb_settings ..")
         uwb_settings = UWBSettings(**rospy.get_param('~uwb_settings', {
             'channel': 5,
