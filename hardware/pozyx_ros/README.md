@@ -50,7 +50,7 @@ anchors: # Anchors used for localization
 
 Publishes the UWB ranges
 
-### [two_tags_pozyx_node.py](scripts/two_tag_pozyx_node.py)
+### [two_tags_pozyx_node.py](scripts/two_tag_pozyx_node)
 
 Publish the estimated pose using two pozyx tags
 

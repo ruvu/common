@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 import diagnostic_updater
 import rospy
 from geometry_msgs.msg import PoseWithCovariance, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
-from pozyx_ros.two_tag_positioner.two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
+from two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
 
 from std_msgs.msg import Header
 from tf.transformations import quaternion_from_euler
@@ -64,8 +62,11 @@ if __name__ == '__main__':
         return Position(p / 1e3 for p in v)
 
     try:
+        rospy.loginfo("Parsing anchors ..")
         anchors = [Anchor(d['network_id'], _get_position(d['position'])) for d in rospy.get_param('~anchors', [])]
+        rospy.loginfo("Parsing tags ..")
         tags = [Tag(d['serial_port'], _get_position(d['position'])) for d in rospy.get_param('~tags', [])]
+        rospy.loginfo("Parsing uwb_settings ..")
         uwb_settings = UWBSettings(**rospy.get_param('~uwb_settings', {
             'channel': 5,
             'bitrate': 2,
@@ -81,7 +82,7 @@ if __name__ == '__main__':
             raise ValueError("~tags should be of size 2")
     except KeyError as e:
         rospy.logerr("Missing key {} in specification".format(e))
-    except ValueError as e:
+    except Exception as e:
         rospy.logerr("{}".format(e))
     else:
         try:
