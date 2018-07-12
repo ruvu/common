@@ -15,7 +15,7 @@ Tag = namedtuple('Tag', 'serial_port frame_id')
 class RangingNode:
     def __init__(self, tags, anchor_ids, uwb_settings, expected_frequency):
         tag_connections = [get_tag_connection(tag.serial_port, uwb_settings) for tag in tags]
-        self._tag_id_to_frame_id = zip([tag.frame_id for tag in tags], [tc.network_id for tc in tag_connections])
+        self._tag_id_to_frame_id = dict(zip([tc.network_id for tc in tag_connections], [tag.frame_id for tag in tags]))
 
         self._device_ranger_polling = DeviceRangerPolling(
             pozyx_serials={tc.network_id: tc.serial_connection for tc in tag_connections},
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        tags = [Tag(*tag) for tag in rospy.get_param('~tags', [])]
+        tags = [Tag(**tag) for tag in rospy.get_param('~tags', [])]
     except KeyError as e:
         rospy.logfatal("Missing key {} for item in ~tags".format(e))
         sys.exit(1)
