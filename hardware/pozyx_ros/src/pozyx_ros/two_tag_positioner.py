@@ -3,6 +3,8 @@ from algorithms.multi_tag_positioner import MultiTagPositioner
 
 from device import DeviceRangerPolling
 
+from two_tag_positioner_types import *
+
 
 class TwoTagPositioner:
     def __init__(self, tags, anchors, uwb_settings, height_2_5d):
