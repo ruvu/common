@@ -20,12 +20,12 @@ def get_tag_connection(tag_serial_port, uwb_settings):
 
     result_set_uwb_settings = serial_connection.setUWBSettings(pypozyx.UWBSettings(*uwb_settings))
     if result_set_uwb_settings != pypozyx.POZYX_SUCCESS:
-        raise RuntimeError("Failed to set UWB settings for tag on serial port {}".format(tag.serial_port))
+        raise RuntimeError("Failed to set UWB settings for tag on serial port {}".format(tag_serial_port))
 
     tag_id_object = pypozyx.NetworkID()
     result_get_network_id = serial_connection.getNetworkId(tag_id_object)
 
     if result_get_network_id != pypozyx.POZYX_SUCCESS:
-        raise RuntimeError("Failed to obtain network id from tag on serial port {}".format(tag.serial_port))
+        raise RuntimeError("Failed to obtain network id from tag on serial port {}".format(tag_serial_port))
 
-    return TagConnection(serial_connection, int(str(tag_id_object), 0), tag.position)
+    return TagConnection(serial_connection, int(str(tag_id_object), 0))

@@ -1,4 +1,5 @@
 import binascii
+import struct
 import time
 
 from pypozyx import *
