@@ -12,6 +12,7 @@
 
   <build_depend>roslint</build_depend>
 
+  <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>pika</exec_depend>
   <exec_depend>roslib</exec_depend>
   <exec_depend>rospy</exec_depend>

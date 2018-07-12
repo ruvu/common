@@ -11,6 +11,7 @@ parser.add_argument('--host', type=str, default='localhost', help='The RabbitMQ 
 parser.add_argument('--username', type=str, default='', help='The RabbitMQ username')
 parser.add_argument('--password', type=str, default='', help='The RabbitMQ password')
 parser.add_argument('--rate', type=float, default=0, help='The rate of sending')
+parser.add_argument('--heartbeat', type=float, default=0, help='Heartbeat check for contacting the server')
 parser.add_argument('queue_name', metavar='QUEUE', type=str, help='RabbitMQ queue name')
 parser.add_argument('msg', metavar='MSG', type=str, help='JSON string to send over the queue')
 
@@ -18,10 +19,10 @@ args = parser.parse_args()
 
 # Setup RabbitMQ connection
 if args.username:
-    parameters = pika.ConnectionParameters(host=args.host, credentials=pika.PlainCredentials(args.username,
-                                                                                             args.password))
+    parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat,
+                                           credentials=pika.PlainCredentials(args.username, args.password))
 else:
-    parameters = pika.ConnectionParameters(host=args.host)
+    parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat)
 
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()

@@ -4,15 +4,18 @@ import socket
 import threading
 from functools import partial
 
+import diagnostic_updater
 import pika
 import rospy
+import sys
 from rospy_message_converter import json_message_converter
 from ruvu_rabbitmq_bridge import get_topic_name_msg_type_dict
 
 
 class RabbitMQBridge(object):
     def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_username, rabbitmq_password,
-                 rabbitmq_queue_prefix, ros_publisher_queue_size, queue_empty_timeout):
+                 rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat, ros_publisher_queue_size,
+                 ros_queue_empty_timeout):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: Dictionary that maps topic_names to message types, subscribers on the ROS end
@@ -21,29 +24,44 @@ class RabbitMQBridge(object):
         :param rabbitmq_username: The RabbitMQ username
         :param rabbitmq_password: The RabbitMQ password
         :param rabbitmq_queue_prefix: The ROS topic names equal the RabbitMQ queue names but prepended with this prefix
+        :param rabbitmq_reconnect_timeout: How long to wait before reconnecting if the initial server connection fails
+        :param rabbitmq_heartbeat: Rabbitmq connection heartbeat
         :param ros_publisher_queue_size: ROS publisher queue size
-        :param queue_empty_timeout: When there is no incoming ROS message, wait for x seconds
+        :param ros_queue_empty_timeout: When there is no incoming ROS message, wait for x seconds
         """
         self._ros_subscribers = {}
         self._ros_publishers = {}
         self._rabbitmq_subscribers = {}
         self._rabbitmq_publishers = {}
         self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
-        self._queue_empty_timeout = queue_empty_timeout
+        self._queue_empty_timeout = ros_queue_empty_timeout
 
         if rabbitmq_username:
-            parameters = pika.ConnectionParameters(host=rabbitmq_host,
+            parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
                                                    credentials=pika.PlainCredentials(rabbitmq_username,
                                                                                      rabbitmq_password))
-            rospy.loginfo("Connecting to {} (with credentials)".format(rabbitmq_host))
         else:
-            parameters = pika.ConnectionParameters(host=rabbitmq_host)
-            rospy.loginfo("Connecting to {}".format(rabbitmq_host))
-        self._rabbitmq_write_connection = pika.BlockingConnection(parameters)
-        self._rabbitmq_write_channel = self._rabbitmq_write_connection.channel()
+            parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat)
 
-        self._rabbitmq_read_connection = pika.BlockingConnection(parameters)
-        self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
+        while not rospy.is_shutdown():
+            try:
+                if rabbitmq_username:
+                    rospy.loginfo("Connecting to {} (with credentials)".format(rabbitmq_host))
+                else:
+                    rospy.loginfo("Connecting to {}".format(rabbitmq_host))
+                self._rabbitmq_write_connection = pika.BlockingConnection(parameters)
+                self._rabbitmq_write_channel = self._rabbitmq_write_connection.channel()
+
+                self._rabbitmq_read_connection = pika.BlockingConnection(parameters)
+                self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
+            except pika.exceptions.ConnectionClosed as e:
+                if rabbitmq_reconnect_timeout > 0:
+                    rospy.logerr("%s - Reconnecting in %.2f seconds", e, rabbitmq_reconnect_timeout)
+                    rospy.sleep(rabbitmq_reconnect_timeout)
+                else:
+                    raise
+            else:
+                break
 
         self._ros_q = Queue.Queue()  # input queue for ROS msgs
         for topic_name, topic_msg_type in subscribers.iteritems():
@@ -67,6 +85,10 @@ class RabbitMQBridge(object):
             self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name)
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
                                                       no_ack=True)
+
+        self._diagnostic_updater = diagnostic_updater.Updater()
+        self._diagnostic_updater.setHardwareID(rabbitmq_host)
+        self._diagnostic_updater.add(diagnostic_updater.Heartbeat())
 
     def _ros_msg_callback(self, topic_name, msg):
         """
@@ -116,6 +138,9 @@ class RabbitMQBridge(object):
             except Queue.Empty:
                 pass
 
+            if self._rabbitmq_write_connection.is_open:
+                self._diagnostic_updater.update()
+
     def spin(self):
         """
         Spins the bridge, starts the read channel and makes sure that a shutdown is handled properly.
@@ -123,7 +148,10 @@ class RabbitMQBridge(object):
 
         def shutdown_hook():
             rospy.loginfo("Shutting down RabbitMQ read channel ...")
-            self._rabbitmq_read_channel.stop_consuming()
+            try:
+                self._rabbitmq_read_channel.stop_consuming()
+            except AssertionError:
+                pass
 
         rospy.on_shutdown(shutdown_hook)
 
@@ -131,7 +159,11 @@ class RabbitMQBridge(object):
 
         ros_msg_handler_thread = threading.Thread(target=self._ros_msg_handler_thread)
         ros_msg_handler_thread.start()
-        self._rabbitmq_read_channel.start_consuming()
+        try:
+            self._rabbitmq_read_channel.start_consuming()
+        except pika.exceptions.ConnectionClosed as e:
+            rospy.logfatal(e)
+            rospy.signal_shutdown(str(e))
 
         ros_msg_handler_thread.join()
 
@@ -141,14 +173,21 @@ class RabbitMQBridge(object):
 if __name__ == '__main__':
     rospy.init_node('rabbitmq_bridge')
 
-    bridge = RabbitMQBridge(
-        get_topic_name_msg_type_dict(rospy.get_param('~subscribers')),
-        get_topic_name_msg_type_dict(rospy.get_param('~publishers')),
-        rospy.get_param('~rabbitmq_host', 'localhost'),
-        rospy.get_param('~rabbitmq_username', ''),
-        rospy.get_param('~rabbitmq_password', ''),
-        rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
-        rospy.get_param('~ros_publisher_queue_size', 10),
-        rospy.get_param('~queue_empty_timeout', 0.01)
-    )
-    bridge.spin()
+    try:
+        bridge = RabbitMQBridge(
+            get_topic_name_msg_type_dict(rospy.get_param('~subscribers')),
+            get_topic_name_msg_type_dict(rospy.get_param('~publishers')),
+            rospy.get_param('~rabbitmq_host', 'localhost'),
+            rospy.get_param('~rabbitmq_username', ''),
+            rospy.get_param('~rabbitmq_password', ''),
+            rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
+            rospy.get_param('~rabbitmq_reconnect_timeout', 5),
+            rospy.get_param('~rabbitmq_heartbeat', 0),  # Node will stay alive even when the server cannot be reached
+            rospy.get_param('~ros_publisher_queue_size', 10),
+            rospy.get_param('~queue_empty_timeout', 0.01)
+        )
+    except Exception as e:
+        rospy.logfatal(e)
+        sys.exit(1)
+    else:
+        bridge.spin()
