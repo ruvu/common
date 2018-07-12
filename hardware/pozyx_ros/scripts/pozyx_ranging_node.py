@@ -1,16 +1,21 @@
 #!/usr/bin/env python
+from collections import namedtuple
 
 import diagnostic_updater
 import rospy
+import sys
 from pozyx_msgs.msg import Ranges, Range
 from pozyx_ros.device import DeviceRangerPolling
 from pozyx_ros.tag_connection import get_tag_connection, UWBSettings
 from std_msgs.msg import Header
 
+Tag = namedtuple('Tag', 'serial_port frame_id')
+
 
 class RangingNode:
-    def __init__(self, tag_serial_ports, anchor_ids, uwb_settings, expected_frequency):
-        tag_connections = [get_tag_connection(tag_serial_port, uwb_settings) for tag_serial_port in tag_serial_ports]
+    def __init__(self, tags, anchor_ids, uwb_settings, expected_frequency):
+        tag_connections = [get_tag_connection(tag.serial_port, uwb_settings) for tag in tags]
+        self._tag_id_to_frame_id = zip([tag.frame_id for tag in tags], [tc.network_id for tc in tag_connections])
 
         self._device_ranger_polling = DeviceRangerPolling(
             pozyx_serials={tc.network_id: tc.serial_connection for tc in tag_connections},
@@ -22,7 +27,7 @@ class RangingNode:
 
         # Initialize diagnostics publisher
         self._diagnostic_updater = diagnostic_updater.Updater()
-        self._diagnostic_updater.setHardwareID("_".join(tag_serial_ports))
+        self._diagnostic_updater.setHardwareID("_".join([tag.serial_port for tag in tags]))
 
         # Add frequency monitoring
         self._frequency_status = diagnostic_updater.FrequencyStatus(
@@ -35,7 +40,7 @@ class RangingNode:
             self._ranges_publisher.publish(Ranges(
                 ranges=[Range(
                     header=Header(
-                        frame_id="pozyx_{}".format(tag_id),
+                        frame_id=self._tag_id_to_frame_id[tag_id],
                         stamp=rospy.Time.from_sec(timestamp)
                     ),
                     network_id=tag_id,
@@ -57,17 +62,24 @@ if __name__ == '__main__':
             'prf': 2,
             'plen': 0x04,
             'gain_db': 30.0
-        }))  # 6810 kbit/s 64plen
+        }))  # 6810 kbit/s 64 plen
     except KeyError as e:
-        rospy.logerr("Missing key {} in ~uwb_settings".format(e))
-    else:
-        try:
-            ranging_node = RangingNode(rospy.get_param("~tag_serial_ports", []),
-                                       rospy.get_param("~anchor_ids", []),
-                                       uwb_settings,
-                                       rospy.get_param("~expected_frequency", 5))
-            ranging_node.spin()
-        except rospy.ROSInterruptException as e:
-            rospy.logwarn(e)
-        except RuntimeError as e:
-            rospy.logerr(e)
+        rospy.logfatal("Missing key {} in ~uwb_settings".format(e))
+        sys.exit(1)
+
+    try:
+        tags = [Tag(*tag) for tag in rospy.get_param('~tags', [])]
+    except KeyError as e:
+        rospy.logfatal("Missing key {} for item in ~tags".format(e))
+        sys.exit(1)
+
+    try:
+        ranging_node = RangingNode(tags,
+                                   rospy.get_param("~anchor_ids", []),
+                                   uwb_settings,
+                                   rospy.get_param("~expected_frequency", 5))
+        ranging_node.spin()
+    except rospy.ROSInterruptException as e:
+        rospy.logwarn(e)
+    except RuntimeError as e:
+        rospy.logfatal(e)
