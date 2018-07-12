@@ -19,6 +19,7 @@ variables:
         ruvu_teleop
         pepper_hardware
         pozyx_ros
+        pozyx_msgs
         opc_ros
         opc_msgs
     IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH

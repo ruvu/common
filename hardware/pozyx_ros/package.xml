@@ -19,6 +19,7 @@
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>pozyx_msgs</exec_depend>
   <exec_depend>python-numpy</exec_depend>
   <exec_depend>python-pypozyx-pip</exec_depend>
   <exec_depend>python-pykalman</exec_depend>

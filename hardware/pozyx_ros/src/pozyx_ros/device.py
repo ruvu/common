@@ -1,14 +1,13 @@
-import struct
 import binascii
 import time
-from pypozyx import *
 
+from pypozyx import *
 
 RANGE_OFFSET = -125
 
 
 def get_amount_rangings(p):
-    s = 'F,%0.2x,%s,%i\r' % (0xC7, Data([0]).byte_data, 1+1)
+    s = 'F,%0.2x,%s,%i\r' % (0xC7, Data([0]).byte_data, 1 + 1)
     try:
         r = p.serialExchange(s)
     except SerialException:
@@ -19,22 +18,27 @@ def get_amount_rangings(p):
 
 
 def get_rangeinfo(p, amount):
-    s = 'F,%0.2x,%s,%i\r' % (0xC7, format(amount, '02x'), 1+(amount*7))
-    #print(type(struct.pack("<B", amount).hex()))
+    s = 'F,%0.2x,%s,%i\r' % (0xC7, format(amount, '02x'), 1 + (amount * 7))
+    # print(type(struct.pack("<B", amount).hex()))
     try:
         r = p.serialExchange(s)
     except SerialException:
         return POZYX_FAILURE, []
     ret = binascii.unhexlify(r[2:])
     data = []
-    for i in range(0,amount):
-        network_id, distance, seq = struct.unpack("<HIB", ret[i*7:i*7+7])
+    for i in range(0, amount):
+        network_id, distance, seq = struct.unpack("<HIB", ret[i * 7:i * 7 + 7])
         data.append((network_id, distance, seq))
     return POZYX_SUCCESS, data
 
 
 class DeviceRangerPolling(object):
     def __init__(self, pozyx_serials, anchor_ids, **kwargs):
+        if not pozyx_serials:
+            raise RuntimeError("DeviceRangerPolling pozyx_serials list is empty")
+        if not anchor_ids:
+            raise RuntimeError("DeviceRangerPolling anchor_ids list is empty")
+
         self.pozyx_serials = pozyx_serials
         self.anchor_ids = anchor_ids
         self.tag_anchor_ranges = None

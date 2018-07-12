@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pozyx_msgs</name>
+  <version>0.1.0</version>
+  <description>ROS package for Pozyx specific messages.</description>
+
+  <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>
+
+  <license>TODO</license>
+
+  <author email="rein@ruvu.nl">Rein Appeldoorn</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <depend>std_msgs</depend>
+</package>

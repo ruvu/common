@@ -7,7 +7,7 @@ from std_msgs.msg import Header
 from tf.transformations import quaternion_from_euler
 from tf2_ros import StaticTransformBroadcaster
 
-from two_tag_positioner import Tag, Anchor, Position, UWBSettings, TwoTagPositioner, Input, Velocity2D
+from pozyx_types import Tag, Anchor, Position, UWBSettings, Input, Velocity2D
 
 
 class TwoTagPositionerNode:
@@ -123,7 +123,7 @@ class TwoTagPositionerNode:
 
 
 if __name__ == '__main__':
-    rospy.init_node('two_tag_pozyx_node')
+    rospy.init_node('two_tag_positioner_node')
 
     try:
         rospy.loginfo("Parsing anchors ..")

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python `rospack find pozyx_ros`/src/pozyx_ros/two_tag_positioner/two_tag_positioner_node.py $@
