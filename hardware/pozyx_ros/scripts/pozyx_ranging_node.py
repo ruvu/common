@@ -38,6 +38,9 @@ class RangingNode:
         while not rospy.is_shutdown():
             timestamp, ranges = self._device_ranger_polling.get_ranges()
             self._ranges_publisher.publish(Ranges(
+                header=Header(
+                    stamp=rospy.Time.from_sec(timestamp)
+                ),
                 ranges=[Range(
                     header=Header(
                         frame_id=self._tag_id_to_frame_id[tag_id],
