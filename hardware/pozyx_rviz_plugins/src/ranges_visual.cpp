@@ -58,7 +58,6 @@ void RangesVisual::updateVisual(const Ogre::Vector3& position, const Ogre::Quate
   text_visual_->setCaption(ss.str());
   text_visual_->setColor(color);
   text_visual_->setCharacterHeight(character_height);
-  text_visual_->setTextAlignment(rviz::MovableText::H_LEFT, rviz::MovableText::V_ABOVE);
 }
 
 void RangesVisual::removeRangesOlderThanTime(double stamp)

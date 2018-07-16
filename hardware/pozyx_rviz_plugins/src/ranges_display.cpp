@@ -91,8 +91,6 @@ void RangesDisplay::processMessage(const pozyx_msgs::Range::ConstPtr& msg)
 {
   ROS_DEBUG("Processing range msg");
 
-  ros::Time now = ros::Time::now();
-
   // Update the visual properties based on the rviz state (fixed frame and properties)
   for (const auto& frame_id_ranges_visual_pair : frame_id_ranges_visual_map_)
   {
@@ -102,7 +100,7 @@ void RangesDisplay::processMessage(const pozyx_msgs::Range::ConstPtr& msg)
     // Transform to rviz fixed frame
     Ogre::Vector3 position;
     Ogre::Quaternion orientation;
-    if (!context_->getFrameManager()->getTransform(frame_id, now, position, orientation))
+    if (!context_->getFrameManager()->getTransform(frame_id, msg->header.stamp, position, orientation))
     {
       ROS_WARN("Error transforming from frame %s to frame %s", frame_id.c_str(), qPrintable(fixed_frame_));
       return;
@@ -111,7 +109,7 @@ void RangesDisplay::processMessage(const pozyx_msgs::Range::ConstPtr& msg)
                                 offset_z_property_->getFloat());
 
     visual.updateVisual(position, orientation, color_property_->getOgreColor(), character_height_property_->getFloat(),
-                        offset_vector, now.toSec() - range_lifetime_property_->getFloat());
+                        offset_vector, msg->header.stamp.toSec() - range_lifetime_property_->getFloat());
   }
 
   // Initialize if the frame id does not exist yet
