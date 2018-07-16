@@ -1,8 +1,18 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
 #pragma once
 
 #include <rviz/ogre_helpers/mesh_shape.h>
 #include <rviz/ogre_helpers/billboard_line.h>
 #include <rviz/ogre_helpers/movable_text.h>
+
+#include <map>
+#include <string>
+#include <utility>
 
 namespace Ogre
 {
@@ -13,7 +23,6 @@ class ColorValue;
 
 namespace pozyx_rviz_plugins
 {
-
 class RangesVisual
 {
 public:
@@ -21,7 +30,8 @@ public:
   virtual ~RangesVisual();
 
   void updateRangeInfo(int32_t remote_network_id, double distance, double rssi, double stamp);
-  void updateVisual(const Ogre::Vector3& position, const Ogre::Quaternion& orientation, double stamp);
+  void updateVisual(const Ogre::Vector3& position, const Ogre::Quaternion& orientation, const Ogre::ColourValue& color,
+                    float character_height, const Ogre::Vector3& offset, double stamp);
 
 private:
   void removeRangesOlderThanTime(double stamp);
@@ -34,4 +44,3 @@ private:
 };
 
 }  // namespace pozyx_rviz_plugins
-

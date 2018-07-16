@@ -1,19 +1,25 @@
+//
+// Copyright (c) 2018 RUVU Robotics
+//
+// @author Rein Appeldoorn
+//
+
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 #include <rviz/ogre_helpers/movable_text.h>
+#include <vector>
 
-#include "ranges_visual.h"
+#include "./ranges_visual.h"
 
 namespace pozyx_rviz_plugins
 {
-
 RangesVisual::RangesVisual(Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node)
 {
   scene_manager_ = scene_manager;
   frame_node_ = parent_node->createChildSceneNode();
 
-  text_visual_.reset(new rviz::MovableText(""));
+  text_visual_.reset(new rviz::MovableText("-"));
   frame_node_->attachObject(text_visual_.get());
 }
 
@@ -28,12 +34,14 @@ void RangesVisual::updateRangeInfo(int32_t remote_network_id, double distance, d
   ranges_text_[remote_network_id].first = stamp;
 
   std::stringstream ss;
-  ss << "- " << remote_network_id << ": distance=" << distance << ", rssi=" << rssi << ", stamp=" << stamp;
+  ss << "" << remote_network_id << ": " << distance << "m";
 
   ranges_text_[remote_network_id].second = ss.str();
 }
 
-void RangesVisual::updateVisual(const Ogre::Vector3& position, const Ogre::Quaternion& orientation, double stamp)
+void RangesVisual::updateVisual(const Ogre::Vector3& position, const Ogre::Quaternion& orientation,
+                                const Ogre::ColourValue& color, float character_height, const Ogre::Vector3& offset,
+                                double stamp)
 {
   removeRangesOlderThanTime(stamp);
 
@@ -41,11 +49,16 @@ void RangesVisual::updateVisual(const Ogre::Vector3& position, const Ogre::Quate
   frame_node_->setOrientation(orientation);
 
   std::stringstream ss;
+  ss << "Ranges [" << ranges_text_.size() << "]:\n\n";
   for (auto it : ranges_text_)
   {
     ss << it.second.second << "\n";
   }
+  frame_node_->translate(offset);
   text_visual_->setCaption(ss.str());
+  text_visual_->setColor(color);
+  text_visual_->setCharacterHeight(character_height);
+  text_visual_->setTextAlignment(rviz::MovableText::H_LEFT, rviz::MovableText::V_ABOVE);
 }
 
 void RangesVisual::removeRangesOlderThanTime(double stamp)
@@ -67,4 +80,4 @@ void RangesVisual::removeRangesOlderThanTime(double stamp)
   }
 }
 
-} // namespace pozyx_rviz_plugins
+}  // namespace pozyx_rviz_plugins
