@@ -30,21 +30,28 @@ Example parameter file:
 
 ```
 subscribers:
-  - topic: string_to_rabbitmq
+  - topic: prefix/string_to_rabbitmq
     message_type: std_msgs/String
+    exchange: Example.Exchange
+    durable: true
   - topic: float_to_rabbitmq
     message_type: std_msgs/Float32
+    exchange: Example.Exchange2
+    durable: false
 publishers:
   - topic: string_from_rabbitmq
     message_type: std_msgs/String
-  - topic: twist_from_rabbitmq
+    exchange: Example.Exchange
+    durable: true
+  - topic: prefix/twist_from_rabbitmq
     message_type: geometry_msgs/Twist
+    exchange: Example.Exchange2
+    durable: false
 rabbitmq_host: localhost
 rabbitmq_username: ''
 rabbitmq_password: ''
-#rabbitmq_queue_prefix: custom_prefix # defaults to current hostname
 rabbitmq_reconnect_timeout: 5
 rabbitmq_heartbeat: 0
+#rabbitmq_queue_prefix: custom_prefix # defaults to current hostname
 ros_publisher_queue_size: 10 # defaults to 10
-queue_empty_timeout: 0.01
 ```

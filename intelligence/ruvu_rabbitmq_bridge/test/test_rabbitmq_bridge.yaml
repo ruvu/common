@@ -1,13 +1,21 @@
 subscribers:
   - topic: prefix/string_to_rabbitmq
     message_type: std_msgs/String
+    exchange: Example.Exchange
+    durable: true
   - topic: float_to_rabbitmq
     message_type: std_msgs/Float32
+    exchange: Example.Exchange2
+    durable: false
 publishers:
   - topic: string_from_rabbitmq
     message_type: std_msgs/String
+    exchange: Example.Exchange
+    durable: true
   - topic: prefix/twist_from_rabbitmq
     message_type: geometry_msgs/Twist
+    exchange: Example.Exchange2
+    durable: false
 rabbitmq_host: localhost
 rabbitmq_username: ''
 rabbitmq_password: ''

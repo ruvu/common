@@ -9,17 +9,17 @@ import pika
 import rospy
 import sys
 from rospy_message_converter import json_message_converter
-from ruvu_rabbitmq_bridge import get_topic_name_msg_type_dict
+from ruvu_rabbitmq_bridge import get_topic_bridges
 
 
 class RabbitMQBridge(object):
     def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_username, rabbitmq_password,
-                 rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat, ros_publisher_queue_size,
-                 ros_queue_empty_timeout):
+                 rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat,
+                 ros_publisher_queue_size, ros_queue_empty_timeout):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
-        :param subscribers: Dictionary that maps topic_names to message types, subscribers on the ROS end
-        :param publishers: Dictionary that maps topic_names to message types, publishers on the ROS end
+        :param subscribers: ROS subscriber topic bridges
+        :param publishers: ROS publishers topic bridges
         :param rabbitmq_host: Specifies where the RabbitMQ server is running
         :param rabbitmq_username: The RabbitMQ username
         :param rabbitmq_password: The RabbitMQ password
@@ -64,25 +64,32 @@ class RabbitMQBridge(object):
                 break
 
         self._ros_q = Queue.Queue()  # input queue for ROS msgs
-        for topic_name, topic_msg_type in subscribers.iteritems():
+        for subscriber in subscribers:
             # Create ROS subscriber
-            self._ros_subscribers[topic_name] = rospy.Subscriber(
-                topic_name, topic_msg_type, partial(self._ros_msg_callback, topic_name)
+            self._ros_subscribers[subscriber.topic] = rospy.Subscriber(
+                subscriber.topic, subscriber.message_type, partial(self._ros_msg_callback, subscriber)
             )
 
-            # Create RabbitMQ Publisher
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + topic_name
-            self._rabbitmq_write_channel.queue_declare(queue=rabbitmq_queue_name)
+            if subscriber.exchange:
+                self._rabbitmq_write_channel.exchange_declare(exchange=subscriber.exchange, durable=subscriber.durable)
 
-        for topic_name, topic_msg_type in publishers.iteritems():
+            # Create RabbitMQ Publisher
+            rabbitmq_queue_name = self._rabbitmq_queue_prefix + subscriber.topic
+            self._rabbitmq_write_channel.queue_declare(queue=rabbitmq_queue_name, durable=subscriber.durable)
+
+        for publisher in publishers:
             # Create ROS publisher
-            self._ros_publishers[topic_name] = rospy.Publisher(
-                topic_name, topic_msg_type, queue_size=ros_publisher_queue_size
+            self._ros_publishers[publisher.topic] = rospy.Publisher(
+                publisher.topic, publisher.message_type, queue_size=ros_publisher_queue_size
             )
 
             # Create RabbitMQ subscriber
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + topic_name
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name)
+            rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable)
+
+            if publisher.exchange:
+                self._rabbitmq_read_channel.queue_bind(exchange=publisher.exchange, queue=rabbitmq_queue_name)
+
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
                                                       no_ack=True)
 
@@ -90,21 +97,21 @@ class RabbitMQBridge(object):
         self._diagnostic_updater.setHardwareID(rabbitmq_host)
         self._diagnostic_updater.add(diagnostic_updater.Heartbeat())
 
-    def _ros_msg_callback(self, topic_name, msg):
+    def _ros_msg_callback(self, subscriber, msg):
         """
         Message callback of incoming ROS message
-        :param topic_name: Topic on which the msg was received
+        :param subscriber: Subscriber bridge information
         :param msg: Incoming message
         """
-        self._ros_q.put((topic_name, msg))
+        self._ros_q.put((subscriber, msg))
 
-    def _publish_ros_msg_rabbitmq(self, topic_name, msg):
-        rabbitmq_queue_name = self._rabbitmq_queue_prefix + topic_name
+    def _publish_ros_msg_rabbitmq(self, subscriber, msg):
+        rabbitmq_queue_name = self._rabbitmq_queue_prefix + subscriber.topic
         body = json_message_converter.convert_ros_message_to_json(msg)
         rospy.logdebug(
             "Publishing RabbitMQ message with body {} to queue {}".format(body, rabbitmq_queue_name))
         self._rabbitmq_write_channel.basic_publish(
-            exchange='',
+            exchange=subscriber.exchange,
             routing_key=rabbitmq_queue_name,
             body=body
         )
@@ -118,15 +125,15 @@ class RabbitMQBridge(object):
         :param body: Incoming message contents
         """
         if method.routing_key.startswith(self._rabbitmq_queue_prefix):
-            topic_name = method.routing_key[len(self._rabbitmq_queue_prefix):]
+            topic = method.routing_key[len(self._rabbitmq_queue_prefix):]
 
-            publisher = self._ros_publishers[topic_name]
+            publisher = self._ros_publishers[topic]
             try:
                 msg = json_message_converter.convert_json_to_ros_message(publisher.type, body)
             except ValueError as e:
                 rospy.logerr("Conversion to ROS msg failed: {}".format(e))
             else:
-                rospy.logdebug("Publishing ROS message {} to topic {}".format(topic_name, msg))
+                rospy.logdebug("Publishing ROS message {} to topic {}".format(topic, msg))
                 publisher.publish(msg)
         else:
             rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
@@ -175,8 +182,8 @@ if __name__ == '__main__':
 
     try:
         bridge = RabbitMQBridge(
-            get_topic_name_msg_type_dict(rospy.get_param('~subscribers')),
-            get_topic_name_msg_type_dict(rospy.get_param('~publishers')),
+            get_topic_bridges(rospy.get_param('~subscribers')),
+            get_topic_bridges(rospy.get_param('~publishers')),
             rospy.get_param('~rabbitmq_host', 'localhost'),
             rospy.get_param('~rabbitmq_username', ''),
             rospy.get_param('~rabbitmq_password', ''),
