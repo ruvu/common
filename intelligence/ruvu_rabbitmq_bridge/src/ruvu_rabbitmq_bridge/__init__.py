@@ -1,19 +1,25 @@
 from roslib.message import get_message_class
+from collections import namedtuple
+
+TopicBridge = namedtuple("TopicBridge", "topic message_type durable exchange")
 
 
-def get_topic_name_msg_type_dict(param_value):
+def get_topic_bridges(param_value):
     """
-    Returns a dictionary that maps topic names to message types
     :param param_value: Parameter dictionary value
-    :return: A dictionary that maps topic names to message types
+    :return: A list with named tuples
     """
     if not isinstance(param_value, list):
         raise ValueError("Should be a list")
 
-    dictionary = {}
+    bridges = []
     for item in param_value:
-        if not isinstance(item, dict) or "topic" not in item or "message_type" not in item:
-            raise ValueError("Should be a dictionary with a topic and message_type key")
-        dictionary[item['topic']] = get_message_class(item['message_type'])
+        if not isinstance(item, dict):
+            raise ValueError("Bridge item should be a dictionary")
+        try:
+            item['message_type'] = get_message_class(item['message_type'])
+            bridges.append(TopicBridge(**item))
+        except KeyError as e:
+            raise ValueError('Missing key {} in topic bridge item'.format(e))
 
-    return dictionary
+    return bridges
