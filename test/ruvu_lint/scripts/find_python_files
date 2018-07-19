@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+find -type f | file --mime-type -0 -f - | grep --text text/x-python | cut -d '' -f1 | xargs echo
