@@ -25,12 +25,18 @@ ${find_python_files_err}")
     endif(find_python_files_result)
     separate_arguments(find_python_files_deps_result)
 
-    # ROS Lint
+    # python
     find_package(roslint)
     roslint_python(${find_python_files_deps_result})
+
+    # c++
+    set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
+    roslint_cpp()
+
+    # linter fails are able to break the build
     roslint_add_test()
 
-    # Catkin lint
+    # catkin_lint
     find_program(CATKIN_LINT catkin_lint REQUIRED)
     execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
     if(NOT ${lint_result} EQUAL 0)
