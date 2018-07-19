@@ -25,8 +25,12 @@ ${find_python_files_err}")
     endif(find_python_files_result)
     separate_arguments(find_python_files_deps_result)
 
-    # python
     find_package(roslint)
+
+    # create the main roslint target, even when there are no files
+    _roslint_create_targets()
+
+    # python
     roslint_python(${find_python_files_deps_result})
 
     # c++
