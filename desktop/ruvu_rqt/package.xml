@@ -10,7 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
+  <build_depend>ruvu_lint</build_depend>
 
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
@@ -19,7 +19,7 @@
   <exec_depend>rqt_gui_py</exec_depend>
   <exec_depend>tf2</exec_depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
 
   <export>
     <rqt_gui plugin="${prefix}/plugin.xml"/>

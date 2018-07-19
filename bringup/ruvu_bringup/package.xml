@@ -8,9 +8,9 @@
 
   <license>TODO</license>
 
-  <build_depend>roslint</build_depend>
+  <build_depend>ruvu_lint</build_depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
 </package>

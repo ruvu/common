@@ -10,7 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
+  <build_depend>ruvu_lint</build_depend>
 
   <depend>mbf_costmap_core</depend>
   <depend>mbf_costmap_nav</depend>
@@ -18,6 +18,6 @@
   <depend>mbf_msgs</depend>
   <depend>geometry_msgs</depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
   <test_depend>roslaunch</test_depend>
 </package>

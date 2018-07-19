@@ -4,7 +4,18 @@ project(ruvu_gazebo_plugins)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs control_msgs actionlib sensor_msgs tf2_ros roslint nav_msgs gazebo_ros)
+find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  control_msgs
+  gazebo_ros
+  geometry_msgs
+  nav_msgs
+  roscpp
+  ruvu_lint
+  ruvu_lint
+  sensor_msgs
+  tf2_ros
+)
 #include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -42,6 +53,8 @@ target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZ
 ## TEST ##
 ###########
 
+ruvu_lint_add_test()
+
 if (CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
     add_rostest(test/disable_physics_world.test)
@@ -50,18 +63,6 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/twist_teleport_urdf_world.test)
     add_rostest(test/twist_teleport_world.test)
     add_rostest(test/single_joint_position_lifter_world.test)
-
-    # ROS Lint
-    set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
-    roslint_cpp()
-    roslint_add_test()
-
-    # Catkin lint
-    find_program(CATKIN_LINT catkin_lint REQUIRED)
-    execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-    if(NOT ${lint_result} EQUAL 0)
-        message(FATAL_ERROR "catkin_lint failed")
-    endif()
 endif()
 
 #############

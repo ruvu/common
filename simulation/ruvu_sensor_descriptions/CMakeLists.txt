@@ -8,16 +8,10 @@ project(ruvu_sensor_descriptions)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  ruvu_lint
   xacro
 )
 
 catkin_package()
 
-if (CATKIN_ENABLE_TESTING)
-    # Catkin lint
-    find_program(CATKIN_LINT catkin_lint REQUIRED)
-    execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-    if(NOT ${lint_result} EQUAL 0)
-    message(FATAL_ERROR "catkin_lint failed")
-    endif()
-endif()
+ruvu_lint_add_test()
