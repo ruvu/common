@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ruvu_web)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS ruvu_lint)
 
 catkin_package()
 
