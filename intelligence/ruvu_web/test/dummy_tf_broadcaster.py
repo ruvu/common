@@ -1,14 +1,16 @@
-#!/usr/bin/env python  
-import rospy
+#!/usr/bin/env python
 import math
 
-import tf2_ros
 import geometry_msgs.msg
+import rospy
+import tf2_ros
 
 x = 0
 y = 0
 yaw = 0
 dt = 0.1
+
+
 def callback(msg):
     # Update state
     global x, y, yaw
@@ -30,6 +32,7 @@ def callback(msg):
     t.transform.rotation.w = math.cos(yaw / 2.0)
 
     br.sendTransform(t)
+
 
 if __name__ == '__main__':
     rospy.init_node('dummy_tf_broadcaster')
