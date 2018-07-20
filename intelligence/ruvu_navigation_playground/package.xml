@@ -10,6 +10,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>ruvu_lint</build_depend>
+
   <exec_depend>asr_ftc_local_planner</exec_depend>
   <exec_depend>carrot_planner</exec_depend>
   <exec_depend>dwa_local_planner</exec_depend>
