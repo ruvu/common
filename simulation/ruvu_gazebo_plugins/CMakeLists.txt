@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   roscpp
   ruvu_lint
-  ruvu_lint
   sensor_msgs
   tf2_ros
 )
