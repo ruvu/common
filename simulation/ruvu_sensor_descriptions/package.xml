@@ -12,5 +12,7 @@
 
   <depend>xacro</depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <build_depend>ruvu_lint</build_depend>
+
+  <test_depend>ruvu_lint</test_depend>
 </package>

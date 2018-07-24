@@ -10,6 +10,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>ruvu_lint</build_depend>
+
   <exec_depend>asr_ftc_local_planner</exec_depend>
   <exec_depend>carrot_planner</exec_depend>
   <exec_depend>dwa_local_planner</exec_depend>
@@ -30,6 +32,6 @@
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>xacro</exec_depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
   <test_depend>roslaunch</test_depend>
 </package>

@@ -10,7 +10,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
+  <build_depend>ruvu_lint</build_depend>
 
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>pika</exec_depend>
@@ -19,7 +19,7 @@
   <exec_depend>rospy_message_converter</exec_depend>
 
   <test_depend>geometry_msgs</test_depend>
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
   <test_depend>rostest</test_depend>
   <test_depend>std_msgs</test_depend>
 </package>
