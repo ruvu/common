@@ -17,8 +17,8 @@ args = parser.parse_args()
 
 # Setup RabbitMQ connection
 if args.username:
-    parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat,
-                                           credentials=pika.PlainCredentials(args.username, args.password))
+    parameters = pika.ConnectionParameters(
+        host=args.host, heartbeat=args.heartbeat, credentials=pika.PlainCredentials(args.username, args.password))
 else:
     parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat)
 connection = pika.BlockingConnection(parameters)
@@ -27,6 +27,7 @@ channel.queue_declare(queue=args.queue_name, durable=args.durable)
 
 if args.exchange:
     channel.queue_bind(exchange=args.exchange, queue=args.queue_name)
+
 
 def callback(channel, method, properties, body):
     dictionary = json.loads(body)
@@ -37,6 +38,7 @@ def callback(channel, method, properties, body):
     print "properties: ", properties
     print "body: ", body
     print "dictionary: ", dictionary
+
 
 channel.basic_consume(callback, queue=args.queue_name, no_ack=True)
 

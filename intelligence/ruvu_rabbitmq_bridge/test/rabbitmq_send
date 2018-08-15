@@ -21,8 +21,8 @@ args = parser.parse_args()
 
 # Setup RabbitMQ connection
 if args.username:
-    parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat,
-                                           credentials=pika.PlainCredentials(args.username, args.password))
+    parameters = pika.ConnectionParameters(
+        host=args.host, heartbeat=args.heartbeat, credentials=pika.PlainCredentials(args.username, args.password))
 else:
     parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat)
 
