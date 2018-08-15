@@ -9,19 +9,24 @@ parser.add_argument('--host', type=str, default='localhost', help='The RabbitMQ 
 parser.add_argument('--username', type=str, default='', help='The RabbitMQ username')
 parser.add_argument('--password', type=str, default='', help='The RabbitMQ password')
 parser.add_argument('--heartbeat', type=float, default=0, help='Heartbeat check for contacting the server')
+parser.add_argument('--durable', action='store_true', help='Whether the queue is durable')
+parser.add_argument('--exchange', type=str, default='', help='Exchange')
 parser.add_argument('queue_name', metavar='QUEUE', type=str, help='RabbitMQ queue name')
 
 args = parser.parse_args()
 
 # Setup RabbitMQ connection
 if args.username:
-    parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat,
-                                           credentials=pika.PlainCredentials(args.username, args.password))
+    parameters = pika.ConnectionParameters(
+        host=args.host, heartbeat=args.heartbeat, credentials=pika.PlainCredentials(args.username, args.password))
 else:
     parameters = pika.ConnectionParameters(host=args.host, heartbeat=args.heartbeat)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
-channel.queue_declare(queue=args.queue_name)
+channel.queue_declare(queue=args.queue_name, durable=args.durable)
+
+if args.exchange:
+    channel.queue_bind(exchange=args.exchange, queue=args.queue_name)
 
 
 def callback(channel, method, properties, body):
@@ -33,6 +38,7 @@ def callback(channel, method, properties, body):
     print "properties: ", properties
     print "body: ", body
     print "dictionary: ", dictionary
+
 
 channel.basic_consume(callback, queue=args.queue_name, no_ack=True)
 
