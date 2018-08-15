@@ -12,6 +12,8 @@ parser.add_argument('--username', type=str, default='', help='The RabbitMQ usern
 parser.add_argument('--password', type=str, default='', help='The RabbitMQ password')
 parser.add_argument('--rate', type=float, default=0, help='The rate of sending')
 parser.add_argument('--heartbeat', type=float, default=0, help='Heartbeat check for contacting the server')
+parser.add_argument('--durable', action='store_true', help='Whether the queue is durable')
+parser.add_argument('--exchange', type=str, default='', help='Exchange')
 parser.add_argument('queue_name', metavar='QUEUE', type=str, help='RabbitMQ queue name')
 parser.add_argument('msg', metavar='MSG', type=str, help='JSON string to send over the queue')
 
@@ -26,7 +28,10 @@ else:
 
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
-channel.queue_declare(queue=args.queue_name)
+channel.queue_declare(queue=args.queue_name, durable=args.durable)
+
+if args.exchange:
+    channel.queue_bind(exchange=args.exchange, queue=args.queue_name)
 
 # Make sure we have valid json
 dictionary = json.loads(args.msg)
