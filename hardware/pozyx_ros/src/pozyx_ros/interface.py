@@ -1,3 +1,6 @@
+import numpy as np
+from positioning.tag import Tag
+
 class Point(object):
     """
     A position
@@ -60,7 +63,14 @@ class Pose2DWithCovariance(object):
 
 class DeviceLocation(object):
     def __init__(self, network_id, point):
-        pass
+        """
+
+        :param network_id: Id of the tag
+        :param point: point in meters
+        :type point: Point
+        """
+        self.network_id = network_id
+        self.point = point
 
 
 class UWBRange(object):
@@ -74,7 +84,10 @@ class UWBRange(object):
         :param distance: in meters
         :param timestamp: Time in seconds since the Epoch.
         """
-        pass
+        self.network_id = network_id
+        self.remote_network_id = remote_network_id
+        self.distance = distance
+        self.timestamp = timestamp
 
 
 class MultiTagPositionerError(RuntimeError):
@@ -90,9 +103,13 @@ class MultiTagPositioner(object):
         :param height_2_5d: Height constraint of the positioner in world frame
         :type height_2_5d: float
         """
-        pass
+        self.tag = Tag(tag_type='EUROTEC',
+                       anchor_positions = {str(al.network_id): [int(1000*al.point.x), int(1000*al.point.y), int(1000*al.point.z)] for al in anchor_locations},
+                       multitag_positions = {str(tl.network_id): [int(1000*tl.point.x), int(1000*tl.point.y), int(1000*tl.point.z)] for tl in tag_locations},
+                       height_2_5d = int(1000*height_2_5d))
+        self.old_odom_pose = None
 
-    def get_position(self, uwb_ranges, odom_pose):
+    def get_position(self, uwb_ranges, odom_pose=None):
         """
         Update the positioner with new ranges and the latest odom pose. Returns the new estimated pose.
 
@@ -106,4 +123,45 @@ class MultiTagPositioner(object):
         :except: When the positioner is unable to determine a position, an exception will be thrown
         :exception: MultiTagPositionerError
         """
-        pass
+        timestamp = 0  # process uwb_ranges
+        positioning_input = {}
+        for uwb_range in uwb_ranges:
+            positioning_input[(str(uwb_range.network_id), str(uwb_range.remote_network_id))] = int(1000*uwb_range.distance)
+            timestamp = max(timestamp, uwb_range.timestamp)
+        if timestamp == 0:
+            raise MultiTagPositionerError('No input timestamp provided')
+        odom_pose_change = None  # process odom_pose
+        if odom_pose is not None:
+            if self.old_odom_pose is not None:
+                lopyc = np.cos(self.old_odom_pose.yaw)
+                lopys = np.sin(self.old_odom_pose.yaw)
+                odom_pose_change = {'position': [1000*(lopyc * (odom_pose.x - self.old_odom_pose.x) +
+                                                       lopys * (odom_pose.y - self.old_odom_pose.y)),
+                                                 1000*(-lopys * (odom_pose.x - self.old_odom_pose.x) +
+                                                       lopyc * (odom_pose.y - self.old_odom_pose.y)),
+                                                 0],
+                                    'orientation': odom_pose.yaw - self.old_odom_pose.yaw}
+            self.old_odom_pose = odom_pose
+        extra_input = {'prediction': {'pose_change': odom_pose_change}} if odom_pose_change is not None else {}
+        positioning_output = self.tag.get_tag_loc(timestamp, positioning_input, **extra_input)  # calculate new pose
+        if not positioning_output['success']:  # raise error if no success
+            raise MultiTagPositionerError('Positioning update not successful')
+        if (not 'position' in positioning_output['state'] or  # raise error if fallback positioner was used
+            not 'orientation' in positioning_output['state'] or 
+            not 'velocity' in positioning_output['state'] or 
+            not 'orientation_velocity' in positioning_output['state'] or
+            not 'covariance' in positioning_output['diagnostics']):
+            raise MultiTagPositionerError('Non-standard positioning output')
+        covariance = []  # covert covariance format
+        for i in range(6):
+            i_factor = 1e-3 if i < 4 else 1e0
+            for j in range(6):
+                j_factor = 1e-3 if j < 4 else 1e0
+                covariance.append(positioning_output['diagnostics']['covariance'][i][j]*i_factor*j_factor)
+        return Pose2DWithCovariance(positioning_output['state']['position'][0]/1000.,  # format output
+                                    positioning_output['state']['position'][1]/1000.,
+                                    positioning_output['state']['orientation'],
+                                    positioning_output['state']['velocity'][0]/1000.,
+                                    positioning_output['state']['velocity'][1]/1000.,
+                                    positioning_output['state']['orientation_velocity'],
+                                    covariance)
