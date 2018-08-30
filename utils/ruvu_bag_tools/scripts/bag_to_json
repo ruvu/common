@@ -27,10 +27,10 @@ for infile in args.infiles:
         with Bag(infile) as bag:
             data = []
 
-            for topic, msg, t in bag.read_messages(topics=args.topics):
+            for topic, message, t in bag.read_messages(topics=args.topics):
                 data.append({
                     "topic": topic,
-                    "msg": convert_ros_message_to_dictionary(msg),
+                    "message": convert_ros_message_to_dictionary(message),
                     "timestamp": t.to_sec(),
                 })
 
