@@ -1,4 +1,5 @@
 import os
+import rospy
 from collections import namedtuple
 
 import pypozyx
@@ -21,6 +22,10 @@ def get_tag_connection(tag_serial_port, uwb_settings):
     result_set_uwb_settings = serial_connection.setUWBSettings(pypozyx.UWBSettings(*uwb_settings))
     if result_set_uwb_settings != pypozyx.POZYX_SUCCESS:
         raise RuntimeError("Failed to set UWB settings for tag on serial port {}".format(tag_serial_port))
+
+    setting = pypozyx.UWBSettings()
+    serial_connection.getUWBSettings(setting)
+    rospy.loginfo("Tag UWB Settings: %s", setting)
 
     tag_id_object = pypozyx.NetworkID()
     result_get_network_id = serial_connection.getNetworkId(tag_id_object)
