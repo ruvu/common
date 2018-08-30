@@ -23,13 +23,14 @@ class Pose2D(object):
     A 2d pose (position + orientation)
     """
 
-    def __init__(self, x, y, yaw):
+    def __init__(self, timestamp, x, y, yaw):
         """
 
         :param x: in meters
         :param y: in meters
         :param yaw: in radians
         """
+        self.timestamp = timestamp
         self.x = x
         self.y = y
         self.yaw = yaw
@@ -40,7 +41,7 @@ class Pose2DWithCovariance(object):
     A 2d pose (position + orientation) with covariance
     """
 
-    def __init__(self, x, y, yaw, vx, vy, vyaw, covariance):
+    def __init__(self, timestamp, x, y, yaw, vx, vy, vyaw, covariance):
         """
 
         :param x: in meters
@@ -52,6 +53,7 @@ class Pose2DWithCovariance(object):
         :param covariance: List of length 6x6 with row major order
         :type covariance: list
         """
+        self.timestamp = timestamp
         self.x = x
         self.y = y
         self.yaw = yaw
@@ -158,7 +160,8 @@ class MultiTagPositioner(object):
             for j in range(6):
                 j_factor = 1e-3 if j < 4 else 1e0
                 covariance.append(positioning_output['diagnostics']['covariance'][i][j]*i_factor*j_factor)
-        return Pose2DWithCovariance(positioning_output['state']['position'][0]/1000.,  # format output
+        return Pose2DWithCovariance(timestamp,
+                                    positioning_output['state']['position'][0]/1000.,  # format output
                                     positioning_output['state']['position'][1]/1000.,
                                     positioning_output['state']['orientation'],
                                     positioning_output['state']['velocity'][0]/1000.,

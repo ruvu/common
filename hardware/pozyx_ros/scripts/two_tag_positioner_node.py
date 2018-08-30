@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import numpy as np
+import logging
 
 import PyKDL
 import diagnostic_updater
+import numpy as np
 import pozyx_ros.interface as interface
 import rospy
 from diagnostic_msgs.msg import DiagnosticStatus
@@ -23,9 +24,9 @@ def xyzw_to_numpy(orientation):
     return np.array([orientation.x, orientation.y, orientation.z, orientation.w])
 
 
-def pose_to_pose2d(pose, timestamp):
+def pose_to_pose2d(timestamp, pose):
     q = xyzw_to_numpy(pose.orientation)
-    return interface.Pose2D(pose.position.x, pose.position.y, euler_from_quaternion(q)[2], timestamp)
+    return interface.Pose2D(timestamp, pose.position.x, pose.position.y, euler_from_quaternion(q)[2])
 
 
 def pose2d_with_covariance_to_odom(pose):
@@ -157,7 +158,7 @@ class TwoTagPositionerNode:
             ranges = [
                 interface.UWBRange(network_id=r.network_id, remote_network_id=r.remote_network_id, distance=r.distance,
                                    timestamp=r.header.stamp.to_sec()) for r in msg.ranges]
-            odom_pose = pose_to_pose2d(self._odom_msg.pose.pose, self._odom_msg.header.stamp.to_sec())
+            odom_pose = pose_to_pose2d(self._odom_msg.header.stamp.to_sec(), self._odom_msg.pose.pose)
 
             try:
                 rospy.logdebug("Calling positioning update ...")
