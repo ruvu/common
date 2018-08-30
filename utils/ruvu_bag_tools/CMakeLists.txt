@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ruvu_bag_tools)
 
-find_package(catkin REQUIRED COMPONENTS roslint)
+find_package(catkin REQUIRED COMPONENTS ruvu_lint)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -23,19 +23,4 @@ install(PROGRAMS
 ## Testing ##
 #############
 
-if (CATKIN_ENABLE_TESTING)
-  # Catkin lint
-  find_program(CATKIN_LINT catkin_lint REQUIRED)
-  execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-  if(NOT ${lint_result} EQUAL 0)
-      message(FATAL_ERROR "catkin_lint failed")
-  endif()
-
-  # ROS Lint
-  file(GLOB_RECURSE PYTHON_SCRIPTS scripts/*)
-  roslint_python(${PYTHON_SCRIPTS})
-  roslint_add_test()
-
-  ## Add folders to be run by python nosetests
-  # catkin_add_nosetests(test)
-endif()
+ruvu_lint_add_test()

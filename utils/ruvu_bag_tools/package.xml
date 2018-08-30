@@ -10,7 +10,5 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
-
-  <test_depend>python-catkin-lint</test_depend>
+  <depend>ruvu_lint</depend>
 </package>
