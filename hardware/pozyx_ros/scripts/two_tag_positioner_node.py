@@ -11,7 +11,7 @@ from geometry_msgs.msg import Quaternion, TransformStamped, Transform, Vector3, 
     TwistWithCovariance, Twist
 from nav_msgs.msg import Odometry
 from pozyx_msgs.msg import Ranges
-from std_msgs.msg import Header
+from std_msgs.msg import Header, String
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from tf2_ros import StaticTransformBroadcaster, Buffer, TransformListener, LookupException, TransformBroadcaster
 
@@ -204,8 +204,21 @@ class TwoTagPositionerNode:
         self._diagnostic_updater.update()
 
 
+class Handler(logging.Handler):
+    def __init__(self, *args, **kwargs):
+        super(Handler, self).__init__(*args, **kwargs)
+        self.pub = rospy.Publisher('~pozyx_tracing', String, queue_size=10)
+
+    def emit(self, record):
+        self.pub.publish(record.getMessage())
+
+
 if __name__ == '__main__':
     rospy.init_node('two_tag_positioner_node')
+
+    logger = logging.getLogger('pozyx_ros.interface')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(Handler())
 
     try:
         anchors = rospy.get_param('~anchors')

@@ -1,5 +1,11 @@
+import logging
+from json import dumps
+
 import numpy as np
 from positioning.tag import Tag
+
+logger = logging.getLogger(__name__)
+
 
 class Point(object):
     """
@@ -145,6 +151,11 @@ class MultiTagPositioner(object):
                                     'orientation': odom_pose.yaw - self.old_odom_pose.yaw}
             self.old_odom_pose = odom_pose
         extra_input = {'prediction': {'pose_change': odom_pose_change}} if odom_pose_change is not None else {}
+
+        logger.debug(dumps({'func': 'get_position',
+                            'timestamp': timestamp,
+                            'positioning_input': {str(k): v for (k, v) in positioning_input.items()},
+                            'extra_input': extra_input}))
         positioning_output = self.tag.get_tag_loc(timestamp, positioning_input, **extra_input)  # calculate new pose
         if not positioning_output['success']:  # raise error if no success
             raise MultiTagPositionerError('Positioning update not successful')
