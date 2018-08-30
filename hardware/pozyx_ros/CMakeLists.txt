@@ -41,6 +41,6 @@ endif()
 install(PROGRAMS
   scripts/pozyx_positioning_node.py
   scripts/pozyx_ranging_node.py
-  scripts/two_tag_positioner_node
+  scripts/two_tag_positioner_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
