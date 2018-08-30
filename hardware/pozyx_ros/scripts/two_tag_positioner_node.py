@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 import diagnostic_updater
 import numpy as np
+import pozyx_ros.interface as interface
 import rospy
 from diagnostic_msgs.msg import DiagnosticStatus
-from geometry_msgs.msg import Quaternion, TransformStamped, Transform, Vector3
+from geometry_msgs.msg import Quaternion, TransformStamped, Transform, Vector3, Pose, Point, PoseWithCovariance, \
+    TwistWithCovariance, Twist
 from nav_msgs.msg import Odometry
 from pozyx_msgs.msg import Ranges
-from pozyx_ros.interface import MultiTagPositioner, DeviceLocation, Point, UWBRange, Pose2D
 from std_msgs.msg import Header
-from tf.transformations import euler_from_quaternion
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from tf2_ros import StaticTransformBroadcaster, Buffer, TransformListener, LookupException
 
 
@@ -22,14 +23,23 @@ def xyzw_to_numpy(orientation):
 
 def pose_to_pose2d(pose):
     q = xyzw_to_numpy(pose.orientation)
-    return Pose2D(pose.position.x, pose.position.y, euler_from_quaternion(q)[2])
+    return interface.Pose2D(pose.position.x, pose.position.y, euler_from_quaternion(q)[2])
+
+
+def pose2d_with_covariance_to_odom(pose):
+    position = Point(pose.x, pose.y, 0)
+    orientation = Quaternion(*quaternion_from_euler(0, 0, pose.yaw))
+    pose_with_covarience = PoseWithCovariance(pose=Pose(position=position, orientation=orientation),
+                                              covariance=pose.covariance)
+    twist = TwistWithCovariance(twist=Twist(linear=Vector3(pose.vx, pose.vy, 0), angular=Vector3(0, 0, pose.vyaw)))
+    return Odometry(pose=pose_with_covarience, twist=twist)
 
 
 class TwoTagPositionerNode:
     def __init__(self, anchors, tag_frame_ids, robot_frame_id, world_frame_id, expected_frequency, warn_success_rate):
         height_2_5d, tag_id_position_map = self._get_height_2_5d_and_tag_id_position_map(tag_frame_ids,
                                                                                          robot_frame_id)
-        self._multitag_positioner = MultiTagPositioner(
+        self._multitag_positioner = interface.MultiTagPositioner(
             anchor_locations=anchors,
             tag_locations=tag_id_position_map,
             height_2_5d=height_2_5d
@@ -96,14 +106,14 @@ class TwoTagPositionerNode:
                             rospy.sleep(tf_error_sleep_time)
                         else:
                             t = transform.transform.translation
-                            h = int(t.z * 1e3)
-                            tag_id_position_map[r.network_id] = Point(t.x * 1e3, int(t.y * 1e3), 0)
+                            tag_id_position_map[r.network_id] = interface.Point(t.x, t.y, 0)
                             if height_2_5d_mm is None:
-                                height_2_5d_mm = h
-                            elif h != height_2_5d_mm:
+                                height_2_5d_mm = t.z
+                            elif t.z != height_2_5d_mm:
                                 raise RuntimeError("{} should be on the same height w.r.t {}", tag_frame_ids,
                                                    robot_frame_id)
-        return height_2_5d_mm / 1000, [DeviceLocation(network_id=i, point=p) for (i, p) in tag_id_position_map.items()]
+        return height_2_5d_mm, [interface.DeviceLocation(network_id=i, point=p) for (i, p) in
+                                tag_id_position_map.items()]
 
     def _uwb_positioning_diagnostics(self, stat):
         success_rate = float(self._successful_updates) / (self._unsuccessful_updates + self._successful_updates)
@@ -130,71 +140,29 @@ class TwoTagPositionerNode:
         else:
             current_time = rospy.get_time()
 
-            ranges = [UWBRange(network_id=r.network_id, remote_network_id=r.remote_network_id, distance=r.distance,
-                               timestamp=r.header.stamp.to_sec()) for r in msg.ranges]
+            ranges = [
+                interface.UWBRange(network_id=r.network_id, remote_network_id=r.remote_network_id, distance=r.distance,
+                                   timestamp=r.header.stamp.to_sec()) for r in msg.ranges]
             odom_pose = pose_to_pose2d(self._odom_msg.pose.pose)
 
             try:
                 rospy.logdebug("Calling positioning update ...")
                 position = self._multitag_positioner.get_position(ranges, odom_pose=odom_pose)
-                if not position["success"] or "fallback" in position:
-                    raise RuntimeError("Multitag positioning unsuccessful!")
-
                 rospy.logdebug("Positioning update took %.3f seconds", rospy.get_time() - current_time)
 
-                # def _position_to_output(p):
-                #     c = p["diagnostics"]["covariance"]
-                #     return Output(
-                #         position=Position(
-                #             x=p["state"]["position"][0],
-                #             y=p["state"]["position"][1],
-                #             z=p["state"]["position"][2]
-                #         ),
-                #         orientation=Orientation(
-                #             roll=p["state"]["orientation"][1],
-                #             pitch=p["state"]["orientation"][0],
-                #             yaw=p["state"]["orientation"][2]
-                #         ),
-                #         covariance=[
-                #             c[0][0], c[0][1], 0, 0, 0, c[0][4],
-                #             c[1][0], c[1][1], 0, 0, 0, c[1][4],
-                #             0, 0, 0, 0, 0, 0,
-                #             0, 0, 0, 0, 0, 0,
-                #             0, 0, 0, 0, 0, 0,
-                #             c[4][0], c[4][1], 0, 0, 0, c[4][4]
-                #         ]
-                #     )
-                #
-                # estimate = _position_to_output(position)
-                #
-                # c = estimate.covariance
-                # self._pose_publisher.publish(Odometry(
-                #     header=Header(
-                #         stamp=rospy.Time.now(),
-                #         frame_id=self._world_frame_id
-                #     ),
-                #     child_frame_id=self._robot_frame_id,
-                #     pose=PoseWithCovariance(
-                #         pose=Pose(position=Point(*[p / 1e3 for p in estimate.position]),
-                #                   orientation=Quaternion(*quaternion_from_euler(0, 0, estimate.orientation.yaw))),
-                #         covariance=[
-                #             c[0] / 1e6, c[1] / 1e6, c[2] / 1e6, c[3] / 1e3, c[4] / 1e3, c[5] / 1e3,
-                #             c[6] / 1e6, c[7] / 1e6, c[8] / 1e6, c[9] / 1e3, c[10] / 1e3, c[11] / 1e3,
-                #             c[12] / 1e6, c[13] / 1e6, c[14] / 1e6, c[15] / 1e3, c[16] / 1e3, c[17] / 1e3,
-                #             c[18] / 1e3, c[19] / 1e3, c[20] / 1e3, c[21], c[22], c[23],
-                #             c[24] / 1e3, c[25] / 1e3, c[26] / 1e3, c[27], c[28], c[29],
-                #             c[30] / 1e3, c[31] / 1e3, c[32] / 1e3, c[33], c[34], c[35]
-                #         ]
-                #     )
-                # ))
+                odom = pose2d_with_covariance_to_odom(position)
 
+                odom.header = Header(stamp=rospy.Time.now(), frame_id=self._world_frame_id)
+                odom.child_frame_id = self._robot_frame_id
+
+                self._pose_publisher.publish(odom)
                 self._frequency_status.tick()
             except RuntimeError as runtime_error:
                 self._unsuccessful_updates += 1
                 rospy.logerr(runtime_error)
             else:
                 self._successful_updates += 1
-                rospy.logdebug("Position update succesful: %s", estimate)
+                rospy.logdebug("Position update succesful")
 
         self._diagnostic_updater.update()
 
@@ -204,7 +172,8 @@ if __name__ == '__main__':
 
     try:
         anchors = rospy.get_param('~anchors')
-        anchors = [DeviceLocation(network_id=d['network_id'], point=Point(**d['position'])) for d in anchors]
+        anchors = [interface.DeviceLocation(network_id=d['network_id'], point=interface.Point(**d['position'])) for d in
+                   anchors]
 
         tag_frame_ids = rospy.get_param("~tag_frame_ids", ["uwb_tag_left", "uwb_tag_right"])
 
