@@ -157,6 +157,7 @@ class MultiTagPositioner(object):
                             'positioning_input': {str(k): v for (k, v) in positioning_input.items()},
                             'extra_input': extra_input}))
         positioning_output = self.tag.get_tag_loc(timestamp, positioning_input, **extra_input)  # calculate new pose
+        logger.debug(dumps({'func': 'get_position_output', 'output': positioning_output}))
         if not positioning_output['success']:  # raise error if no success
             raise MultiTagPositionerError('Positioning update not successful')
         if (not 'position' in positioning_output['state'] or  # raise error if fallback positioner was used
