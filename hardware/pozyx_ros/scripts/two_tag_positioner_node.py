@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import diagnostic_updater
 import numpy as np
+
+import PyKDL
+import diagnostic_updater
 import pozyx_ros.interface as interface
 import rospy
 from diagnostic_msgs.msg import DiagnosticStatus
@@ -10,7 +12,7 @@ from nav_msgs.msg import Odometry
 from pozyx_msgs.msg import Ranges
 from std_msgs.msg import Header
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from tf2_ros import StaticTransformBroadcaster, Buffer, TransformListener, LookupException
+from tf2_ros import StaticTransformBroadcaster, Buffer, TransformListener, LookupException, TransformBroadcaster
 
 
 def point_to_vector(point):
@@ -21,9 +23,9 @@ def xyzw_to_numpy(orientation):
     return np.array([orientation.x, orientation.y, orientation.z, orientation.w])
 
 
-def pose_to_pose2d(pose):
+def pose_to_pose2d(pose, timestamp):
     q = xyzw_to_numpy(pose.orientation)
-    return interface.Pose2D(pose.position.x, pose.position.y, euler_from_quaternion(q)[2])
+    return interface.Pose2D(pose.position.x, pose.position.y, euler_from_quaternion(q)[2], timestamp)
 
 
 def pose2d_with_covariance_to_odom(pose):
@@ -35,8 +37,15 @@ def pose2d_with_covariance_to_odom(pose):
     return Odometry(pose=pose_with_covarience, twist=twist)
 
 
+def pose_to_kdl(msg):
+    return PyKDL.Frame(PyKDL.Rotation.Quaternion(msg.orientation.x, msg.orientation.y,
+                                                 msg.orientation.z, msg.orientation.w),
+                       PyKDL.Vector(msg.position.x, msg.position.y, msg.position.z))
+
+
 class TwoTagPositionerNode:
-    def __init__(self, anchors, tag_frame_ids, robot_frame_id, world_frame_id, expected_frequency, warn_success_rate):
+    def __init__(self, anchors, tag_frame_ids, robot_frame_id, world_frame_id, publish_tf, odom_timeout,
+                 expected_frequency, warn_success_rate):
         height_2_5d, tag_id_position_map = self._get_height_2_5d_and_tag_id_position_map(tag_frame_ids,
                                                                                          robot_frame_id)
         self._multitag_positioner = interface.MultiTagPositioner(
@@ -79,6 +88,9 @@ class TwoTagPositionerNode:
                 )
             )
             for anchor in anchors])
+
+        self._odom_timeout = odom_timeout
+        self._tf_broadcaster = TransformBroadcaster() if publish_tf else None
 
     @staticmethod
     def _get_height_2_5d_and_tag_id_position_map(tag_frame_ids, robot_frame_id, tf_error_sleep_time=2):
@@ -135,6 +147,8 @@ class TwoTagPositionerNode:
     def _ranges_callback(self, msg):
         if self._odom_msg is None:
             rospy.logwarn_throttle(1.0, "No odom message received, skipping ranges message")
+        elif rospy.get_time() - self._odom_msg.header.stamp.to_sec() > self._odom_timeout:
+            rospy.logwarn("Odom message too old, last received at %.3f", self._odom_msg.header.stamp.to_sec())
         elif not msg.ranges:
             rospy.logwarn("No ranges in message!")
         else:
@@ -143,26 +157,48 @@ class TwoTagPositionerNode:
             ranges = [
                 interface.UWBRange(network_id=r.network_id, remote_network_id=r.remote_network_id, distance=r.distance,
                                    timestamp=r.header.stamp.to_sec()) for r in msg.ranges]
-            odom_pose = pose_to_pose2d(self._odom_msg.pose.pose)
+            odom_pose = pose_to_pose2d(self._odom_msg.pose.pose, self._odom_msg.header.stamp.to_sec())
 
             try:
                 rospy.logdebug("Calling positioning update ...")
                 position = self._multitag_positioner.get_position(ranges, odom_pose=odom_pose)
                 rospy.logdebug("Positioning update took %.3f seconds", rospy.get_time() - current_time)
 
-                odom = pose2d_with_covariance_to_odom(position)
+                localization_odom_msg = pose2d_with_covariance_to_odom(position)
 
-                odom.header = Header(stamp=rospy.Time.now(), frame_id=self._world_frame_id)
-                odom.child_frame_id = self._robot_frame_id
+                localization_odom_msg.header = Header(stamp=rospy.Time.from_sec(position.timestamp),
+                                                      frame_id=self._world_frame_id)
+                localization_odom_msg.child_frame_id = self._robot_frame_id
 
-                self._pose_publisher.publish(odom)
+                self._pose_publisher.publish(localization_odom_msg)
                 self._frequency_status.tick()
             except RuntimeError as runtime_error:
                 self._unsuccessful_updates += 1
                 rospy.logerr(runtime_error)
             else:
                 self._successful_updates += 1
-                rospy.logdebug("Position update succesful")
+                rospy.logdebug("Position update successful")
+
+                if self._tf_broadcaster:
+                    # NOTE: we neglect the difference in time between odom and range. We assume here that the odom
+                    # message are coming in with a much higher rate than the ranges.
+                    odom_to_base_link = pose_to_kdl(self._odom_msg.pose.pose)
+                    map_to_base_link = pose_to_kdl(localization_odom_msg.pose.pose)
+
+                    # map->base_link = map->odom * odom->base_link
+                    # map->odom = inv(odom->base_link) * map->base_link
+                    map_to_odom = odom_to_base_link.Inverse() * map_to_base_link
+
+                    self._tf_broadcaster.sendTransform(
+                        TransformStamped(
+                            header=self._odom_msg.header,
+                            child_frame_id=self._odom_msg.header.frame_id,
+                            transform=Transform(
+                                translation=Vector3(*map_to_odom.p),
+                                rotation=Quaternion(*map_to_odom.M.GetQuaternion())
+                            )
+                        )
+                    )
 
         self._diagnostic_updater.update()
 
@@ -192,6 +228,8 @@ if __name__ == '__main__':
                                                            tag_frame_ids,
                                                            rospy.get_param("~robot_frame_id", "base_link"),
                                                            rospy.get_param("~world_frame_id", "map"),
+                                                           rospy.get_param("~publish_tf", False),
+                                                           rospy.get_param("~odom_timeout", 0.1),
                                                            rospy.get_param("~expected_frequency", 5),
                                                            rospy.get_param("~warning_success_rate", 0.8))
             rospy.spin()
