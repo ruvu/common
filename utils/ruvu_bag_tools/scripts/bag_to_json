@@ -34,8 +34,5 @@ for infile in args.infiles:
                     "timestamp": t.to_sec(),
                 })
 
-            if not data:
-                logger.error('Processed %d messages', len(data))
-            else:
-                json.dump(data, outfile, separators=(',', ':'))
-                logger.info('Processed %d messages', len(data))
+            json.dump(data, outfile, separators=(',', ':'))
+            logger.info('Processed %d messages', len(data))
