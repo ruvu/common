@@ -3,7 +3,7 @@ import binascii
 import time
 from pypozyx import *
 
-RANGE_OFFSET = -250
+RANGE_OFFSET = 0
 
 
 def get_amount_rangings(p):
