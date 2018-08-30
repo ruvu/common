@@ -188,11 +188,11 @@ class TwoTagPositionerNode:
 
                     # map->base_link = map->odom * odom->base_link
                     # map->odom = inv(odom->base_link) * map->base_link
-                    map_to_odom = odom_to_base_link.Inverse() * map_to_base_link
+                    map_to_odom = map_to_base_link * odom_to_base_link.Inverse()
 
                     self._tf_broadcaster.sendTransform(
                         TransformStamped(
-                            header=self._odom_msg.header,
+                            header=localization_odom_msg.header,
                             child_frame_id=self._odom_msg.header.frame_id,
                             transform=Transform(
                                 translation=Vector3(*map_to_odom.p),
