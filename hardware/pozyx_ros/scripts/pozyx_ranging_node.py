@@ -14,9 +14,12 @@ Tag = namedtuple('Tag', 'serial_port frame_id')
 
 class RangingNode:
     def __init__(self, tags, anchor_ids, uwb_settings, expected_frequency):
+        rospy.loginfo("Getting tag connections ..")
         tag_connections = [get_tag_connection(tag.serial_port, uwb_settings) for tag in tags]
         self._tag_id_to_frame_id = dict(zip([tc.network_id for tc in tag_connections], [tag.frame_id for tag in tags]))
+        rospy.loginfo(self._tag_id_to_frame_id)
 
+        rospy.loginfo("Constructing DeviceRangerPolling")
         self._device_ranger_polling = DeviceRangerPolling(
             pozyx_serials={tc.network_id: tc.serial_connection for tc in tag_connections},
             anchor_ids=anchor_ids
@@ -34,9 +37,13 @@ class RangingNode:
             diagnostic_updater.FrequencyStatusParam({'min': expected_frequency, 'max': expected_frequency}))
         self._diagnostic_updater.add(self._frequency_status)
 
+        rospy.loginfo("RangingNode initialized  ")
+
     def spin(self):
         while not rospy.is_shutdown():
+            rospy.logdebug("Getting ranges ...")
             timestamp, ranges = self._device_ranger_polling.get_ranges()
+            rospy.logdebug("Got %d ranges", len(ranges))
             self._ranges_publisher.publish(Ranges(
                 header=Header(
                     stamp=rospy.Time.from_sec(timestamp)
