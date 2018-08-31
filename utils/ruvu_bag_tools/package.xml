@@ -11,4 +11,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>ruvu_lint</depend>
+
+  <exec_depend>rosbag</exec_depend>
+  <exec_depend>rospy_message_converter</exec_depend>
 </package>
