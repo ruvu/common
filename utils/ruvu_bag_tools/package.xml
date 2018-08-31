@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ruvu_bag_tools</name>
+  <version>0.0.0</version>
+  <description>The ruvu_bag_tools package</description>
+
+  <maintainer email="ramon@ruvu.nl">ramon</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>ruvu_lint</depend>
+
+  <exec_depend>rosbag</exec_depend>
+  <exec_depend>rospy_message_converter</exec_depend>
+</package>
