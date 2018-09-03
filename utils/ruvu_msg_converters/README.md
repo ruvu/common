@@ -80,3 +80,13 @@ Pose stamped as tf
 
 - `pose` (incoming `geometry_msgs/PoseStamped`)
 - `/tf`
+
+### tf_to_pose_stamped
+Publishes a tf transform as a PoseStamped.
+
+#### Parameters
+- `~target_frame`: The frame to which data should be transformed
+- `~source_frame`: The frame where the data originated
+
+#### Topics
+- `pose` (outgoing `geometry_msgs/PoseStamped`)
