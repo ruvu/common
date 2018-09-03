@@ -4,7 +4,7 @@ ROS Wrapper for the pozyx localization system
 
 ## Nodes
 
-### [pozyx_node.py](scripts/pozyx_positioning_node.py)
+### [pozyx_positioning_node.py](scripts/pozyx_positioning_node.py)
 
 Publishes the UWB Pose and the on-board sensor data. This nodes assumes a tag connected to the robot and anchors connected to the world.
 
@@ -50,7 +50,7 @@ anchors: # Anchors used for localization
 
 Publishes the UWB ranges
 
-### [two_tags_pozyx_node.py](scripts/two_tag_positioner_node)
+### [two_tags_pozyx_positioning_node.py](scripts/two_tag_positioner_node)
 
 Publish the estimated pose using two pozyx tags
 
