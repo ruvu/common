@@ -28,7 +28,7 @@ if (CATKIN_ENABLE_TESTING)
     # Launch check
     find_package(roslaunch REQUIRED)
     roslaunch_add_file_check(test/test_pozyx_ros.test)
-    roslaunch_add_file_check(test/test_two_tags_pozyx_ros.test)
+    roslaunch_add_file_check(test/test_two_tag_pozyx_ros.test)
 
     # Catkin lint
     find_program(CATKIN_LINT catkin_lint REQUIRED)
@@ -39,9 +39,8 @@ if (CATKIN_ENABLE_TESTING)
 endif()
 
 install(PROGRAMS
-  scripts/two_tags_pozyx_node.py
-  scripts/two_tags_pozyx_socket_node.py
-  scripts/pozyx_node.py
-  scripts/range_info_node.py
+  scripts/pozyx_positioning_node.py
+  scripts/pozyx_ranging_node.py
+  scripts/two_tag_positioner_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

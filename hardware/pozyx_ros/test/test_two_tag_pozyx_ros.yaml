@@ -1,0 +1,54 @@
+anchors:
+  - network_id: 23602
+    position:
+      x: 9.719
+      y: 8.997
+      z: 4.099
+  - network_id: 12123
+    position:
+      x: 0.001
+      y: 0
+      z: 4.141
+  - network_id: 26476
+    position:
+      x: 0
+      y: 8.951
+      z: 4.092
+  - network_id: 52659
+    position:
+      x: 9.735
+      y: 18.694
+      z: 4.109
+  - network_id: 43083
+    position:
+      x: 9.720
+      y: 0.465
+      z: 4.129
+  - network_id: 35448
+    position:
+      x: 0.005
+      y: 18.658
+      z: 4.115
+
+tags:
+  - serial_port: /dev/sensors/pozyx_1-2
+    position:
+      x: 0
+      y: -0.35
+      z: 0
+  - serial_port: /dev/sensors/pozyx_1-2
+    position:
+      x: 0
+      y: 0.35
+      z: 0
+
+uwb_settings:
+  channel: 5
+  bitrate: 2
+  prf: 2
+  plen: 0x04
+  gain_db: 30.0
+
+expected_frequency: 8
+world_frame_id: map # ID of the frame attached to the world
+sensor_frame_id: uwb # ID of the sensor frame

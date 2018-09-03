@@ -19,9 +19,17 @@
   <exec_depend>diagnostic_updater</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>pozyx_msgs</exec_depend>
+  <exec_depend>python-numpy</exec_depend>
+  <exec_depend>python-pykalman</exec_depend>
   <exec_depend>python-pypozyx-pip</exec_depend>
+  <exec_depend>python-scipy</exec_depend>
+  <exec_depend>python_orocos_kdl</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf</exec_depend>
 
   <depend>std_msgs</depend>
 
