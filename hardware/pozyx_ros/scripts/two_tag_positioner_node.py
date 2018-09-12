@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import logging
-import numpy as np
 
 import PyKDL
 import diagnostic_updater
+import numpy as np
 import pozyx_ros.interface as interface
 import rospy
 from diagnostic_msgs.msg import DiagnosticStatus
@@ -51,7 +51,9 @@ class TwoTagPositionerNode:
         self._world_frame_id = world_frame_id
         self._robot_frame_id = robot_frame_id
 
+        self._map_to_odom = None
         self._tf_broadcaster = TransformBroadcaster() if publish_tf else None
+        rospy.Timer(rospy.Duration(1.0 / rospy.get_param('tf_frequency', 100)), self._publish_tf)
 
         self._odom_msg = None
         self._odom_subscriber = rospy.Subscriber("odom", Odometry, self._odom_callback, queue_size=1)
@@ -188,11 +190,18 @@ class TwoTagPositionerNode:
                 self._successful_updates += 1
                 rospy.logdebug("Position update successful")
 
-                self.publish_tf(localization_odom_msg)
+                self._queue_tf_for_publish(localization_odom_msg)
 
                 self._diagnostic_updater.update()
 
-    def publish_tf(self, localization_odom_msg):
+    def _uwb_pose_callback(self, pose):
+        if self._odom_msg is None:
+            rospy.logwarn_throttle(1.0, "No odom message received, skipping uwb pose message")
+            return
+
+        self._queue_tf_for_publish(pose)
+
+    def _queue_tf_for_publish(self, localization_odom_msg):
         if not self._tf_broadcaster:
             return
 
@@ -203,25 +212,21 @@ class TwoTagPositionerNode:
 
         # map->base_link = map->odom * odom->base_link
         # map->odom = inv(odom->base_link) * map->base_link
-        map_to_odom = map_to_base_link * odom_to_base_link.Inverse()
+        self._map_to_odom = map_to_base_link * odom_to_base_link.Inverse()
 
+    def _publish_tf(self, _):
+        if not self._map_to_odom:
+            return
         self._tf_broadcaster.sendTransform(
             TransformStamped(
-                header=localization_odom_msg.header,
+                header=Header(stamp=rospy.Time.now(), frame_id=self._world_frame_id),
                 child_frame_id=self._odom_msg.header.frame_id,
                 transform=Transform(
-                    translation=Vector3(*map_to_odom.p),
-                    rotation=Quaternion(*map_to_odom.M.GetQuaternion())
+                    translation=Vector3(*self._map_to_odom.p),
+                    rotation=Quaternion(*self._map_to_odom.M.GetQuaternion())
                 )
             )
         )
-
-    def _uwb_pose_callback(self, pose):
-        if self._odom_msg is None:
-            rospy.logwarn_throttle(1.0, "No odom message received, skipping uwb pose message")
-            return
-
-        self.publish_tf(pose)
 
 
 class Handler(logging.Handler):
@@ -242,8 +247,8 @@ if __name__ == '__main__':
 
     try:
         anchors = rospy.get_param('~anchors')
-        anchors = [interface.DeviceLocation(network_id=d['network_id'], point=interface.Point(**d['position'])) for d in
-                   anchors]
+        anchors = [interface.DeviceLocation(network_id=d['network_id'], point=interface.Point(**d['position']))
+                   for d in anchors]
 
         tag_frame_ids = rospy.get_param("~tag_frame_ids", ["uwb_tag_left", "uwb_tag_right"])
 
