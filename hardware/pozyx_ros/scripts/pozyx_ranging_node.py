@@ -59,6 +59,7 @@ class RangingNode:
                 ) for (tag_id, anchor_id), distance_mm in ranges.iteritems()]
             ))
 
+            self._frequency_status.tick()
             self._diagnostic_updater.update()
 
 
