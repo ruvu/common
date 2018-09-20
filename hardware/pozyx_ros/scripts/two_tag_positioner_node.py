@@ -47,6 +47,22 @@ def pose_to_kdl(msg):
 class TwoTagPositionerNode:
     def __init__(self, anchors, tag_frame_ids, robot_frame_id, world_frame_id, publish_tf, odom_timeout,
                  expected_frequency, warn_success_rate):
+
+        self._world_frame_id = world_frame_id
+        self._robot_frame_id = robot_frame_id
+
+        self._map_to_odom = None
+        self._tf_broadcaster = TransformBroadcaster() if publish_tf else None
+        rospy.Timer(rospy.Duration(1.0 / rospy.get_param('tf_frequency', 100)), self._publish_tf)
+
+        self._odom_msg = None
+        self._odom_subscriber = rospy.Subscriber("odom", Odometry, self._odom_callback, queue_size=1)
+
+        if rospy.get_param('/use_sim_time', False):
+            rospy.logwarn('Simulation mode, only listening to uwb_pose and publishing tf')
+            self._uwb_pose_sub = rospy.Subscriber("uwb_pose", Odometry, self._uwb_pose_callback, queue_size=10)
+            return
+
         height_2_5d, tag_id_position_map = self._get_height_2_5d_and_tag_id_position_map(tag_frame_ids,
                                                                                          robot_frame_id)
         self._multitag_positioner = interface.MultiTagPositioner(
@@ -55,12 +71,7 @@ class TwoTagPositionerNode:
             height_2_5d=height_2_5d
         )
 
-        self._world_frame_id = world_frame_id
-        self._robot_frame_id = robot_frame_id
-
         self._ranges_subscriber = rospy.Subscriber("uwb_ranges", Ranges, self._ranges_callback, queue_size=1)
-        self._odom_msg = None
-        self._odom_subscriber = rospy.Subscriber("odom", Odometry, self._odom_callback, queue_size=1)
         self._pose_publisher = rospy.Publisher("uwb_pose", Odometry, queue_size=1)
 
         self._warn_success_rate = warn_success_rate
@@ -91,7 +102,6 @@ class TwoTagPositionerNode:
             for anchor in anchors])
 
         self._odom_timeout = odom_timeout
-        self._tf_broadcaster = TransformBroadcaster() if publish_tf else None
 
     @staticmethod
     def _get_height_2_5d_and_tag_id_position_map(tag_frame_ids, robot_frame_id, tf_error_sleep_time=2):
@@ -180,28 +190,43 @@ class TwoTagPositionerNode:
                 self._successful_updates += 1
                 rospy.logdebug("Position update successful")
 
-                if self._tf_broadcaster:
-                    # NOTE: we neglect the difference in time between odom and range. We assume here that the odom
-                    # message are coming in with a much higher rate than the ranges.
-                    odom_to_base_link = pose_to_kdl(self._odom_msg.pose.pose)
-                    map_to_base_link = pose_to_kdl(localization_odom_msg.pose.pose)
+                self._queue_tf_for_publish(localization_odom_msg)
 
-                    # map->base_link = map->odom * odom->base_link
-                    # map->odom = inv(odom->base_link) * map->base_link
-                    map_to_odom = map_to_base_link * odom_to_base_link.Inverse()
+                self._diagnostic_updater.update()
 
-                    self._tf_broadcaster.sendTransform(
-                        TransformStamped(
-                            header=localization_odom_msg.header,
-                            child_frame_id=self._odom_msg.header.frame_id,
-                            transform=Transform(
-                                translation=Vector3(*map_to_odom.p),
-                                rotation=Quaternion(*map_to_odom.M.GetQuaternion())
-                            )
-                        )
-                    )
+    def _uwb_pose_callback(self, pose):
+        if self._odom_msg is None:
+            rospy.logwarn_throttle(1.0, "No odom message received, skipping uwb pose message")
+            return
 
-        self._diagnostic_updater.update()
+        self._queue_tf_for_publish(pose)
+
+    def _queue_tf_for_publish(self, localization_odom_msg):
+        if not self._tf_broadcaster:
+            return
+
+        # NOTE: we neglect the difference in time between odom and range. We assume here that the odom
+        # message are coming in with a much higher rate than the ranges.
+        odom_to_base_link = pose_to_kdl(self._odom_msg.pose.pose)
+        map_to_base_link = pose_to_kdl(localization_odom_msg.pose.pose)
+
+        # map->base_link = map->odom * odom->base_link
+        # map->odom = inv(odom->base_link) * map->base_link
+        self._map_to_odom = map_to_base_link * odom_to_base_link.Inverse()
+
+    def _publish_tf(self, _):
+        if not self._map_to_odom:
+            return
+        self._tf_broadcaster.sendTransform(
+            TransformStamped(
+                header=Header(stamp=rospy.Time.now(), frame_id=self._world_frame_id),
+                child_frame_id=self._odom_msg.header.frame_id,
+                transform=Transform(
+                    translation=Vector3(*self._map_to_odom.p),
+                    rotation=Quaternion(*self._map_to_odom.M.GetQuaternion())
+                )
+            )
+        )
 
 
 class Handler(logging.Handler):
@@ -222,8 +247,8 @@ if __name__ == '__main__':
 
     try:
         anchors = rospy.get_param('~anchors')
-        anchors = [interface.DeviceLocation(network_id=d['network_id'], point=interface.Point(**d['position'])) for d in
-                   anchors]
+        anchors = [interface.DeviceLocation(network_id=d['network_id'], point=interface.Point(**d['position']))
+                   for d in anchors]
 
         tag_frame_ids = rospy.get_param("~tag_frame_ids", ["uwb_tag_left", "uwb_tag_right"])
 
