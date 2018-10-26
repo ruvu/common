@@ -65,7 +65,7 @@ class DeviceRangerPolling(object):
                                         ) not in self.tag_anchor_ranges:
                                         self.tag_anchor_ranges[(
                                             tag_id,
-                                            i[0])] = i[1] + RANGE_OFFSET
+                                            i[0])] = max(0, i[1] + RANGE_OFFSET)
             if not index_found or now_time > self.timeout_time:
                 self.timeout_time = now_time + self.timeout
                 if self.current_index is not None:

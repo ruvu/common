@@ -2,7 +2,7 @@ import logging
 from json import dumps
 
 import numpy as np
-from positioning.tag import Tag
+from pozyxpositioning.tag import Tag
 
 logger = logging.getLogger(__name__)
 
