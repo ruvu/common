@@ -19,6 +19,8 @@
 #include <geometry_msgs/Pose.h>
 #include <nav_msgs/Odometry.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf/transform_datatypes.h>
+#include <math.h>
 
 namespace gazebo
 {

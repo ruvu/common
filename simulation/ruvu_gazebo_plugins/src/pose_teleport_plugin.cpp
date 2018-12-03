@@ -5,8 +5,6 @@
 //
 
 #include "./pose_plugin.h"
-#include <tf/transform_datatypes.h>
-#include <math.h>
 
 namespace gazebo
 {
