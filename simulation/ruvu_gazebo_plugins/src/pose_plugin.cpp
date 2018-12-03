@@ -89,10 +89,11 @@ void PosePlugin::poseCallback(const geometry_msgs::Pose::ConstPtr& pose_msg)
 math::Pose PosePlugin::getCurrentPose(const common::Time& now)
 {
     math::Pose pose;
-    if (pose_msg_)// && (now - last_cmd_time_).Double() < cmd_timeout_)
+    if (pose_msg_)
     {
       pose.pos = math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
-      pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z, pose_msg_->orientation.w);
+      pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y,
+                                  pose_msg_->orientation.z, pose_msg_->orientation.w);
     }
     return pose;
 }
@@ -103,7 +104,6 @@ void PosePlugin::UpdateChild()
 
   common::Time now = model_->GetWorld()->GetSimTime();
   common::Time dt = now - last_update_time_;
-  //math::Pose pose = model_->GetWorldPose();
   geometry_msgs::Twist vel;
   math::Pose pose = getCurrentPose(now);
 
@@ -121,7 +121,6 @@ void PosePlugin::UpdateChild()
   Update(pose, model_);
 
   last_update_time_ = now;
-
 }
 
 void PosePlugin::updateOdometryPose(const math::Pose& pose)
