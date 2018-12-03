@@ -48,6 +48,9 @@ target_link_libraries(ruvu_twist_move ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${c
 add_library(ruvu_single_joint_position_lifter src/single_joint_position_lifter_plugin.cpp src/single_joint_position_lifter_plugin.h src/util.h)
 target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
+add_library(ruvu_pose_teleport src/pose_teleport_plugin.cpp src/pose_plugin.cpp src/pose_plugin.h src/util.h)
+target_link_libraries(ruvu_pose_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
 ###########
 ## TEST ##
 ###########
@@ -77,6 +80,7 @@ install(TARGETS
   ruvu_disable_physics
   ruvu_twist_teleport
   ruvu_twist_move
+  ruvu_pose_teleport
   ruvu_single_joint_position_lifter
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
