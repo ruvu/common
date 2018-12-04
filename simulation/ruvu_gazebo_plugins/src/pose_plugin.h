@@ -42,7 +42,7 @@ protected:
   //! \param pose The current pose of the model (derived from the input)
   //! \param model Pointer to the model, can be used to update the model
   //!
-  virtual void Update(const math::Pose& pose, physics::ModelPtr model) = 0;
+  void Update(const math::Pose& pose, physics::ModelPtr model);
 
   //!
   //! \brief odom_pose_ The state of the robot according to odometry

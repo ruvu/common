@@ -123,6 +123,28 @@ void PosePlugin::UpdateChild()
   last_update_time_ = now;
 }
 
+void PosePlugin::Update(const math::Pose& pose, physics::ModelPtr model)
+  {
+    math::Pose updated_pose = pose;
+
+    // Convert to from camera axis (x up, y front, z left) to model axis (x front, y, left, z up)
+    tf::Quaternion q(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    double camera_roll, camera_pitch, camera_yaw;
+    camera_roll = -roll + M_PI/2;
+    camera_pitch = -yaw + M_PI/2;
+    camera_yaw = -pitch;
+
+    tf::Quaternion q_camera = tf::createQuaternionFromRPY(camera_roll, camera_pitch , camera_yaw);
+    updated_pose.rot = math::Quaternion(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
+
+    // Update the model in gazebo
+    model->SetWorldPose(updated_pose);
+  }
+
 void PosePlugin::updateOdometryPose(const math::Pose& pose)
 {
   odom_pose_ = pose;
@@ -174,4 +196,5 @@ void PosePlugin::FiniChild()
   rosnode_->shutdown();
   callback_queue_thread_.join();
 }
+GZ_REGISTER_MODEL_PLUGIN(PosePlugin)
 }  // namespace gazebo
