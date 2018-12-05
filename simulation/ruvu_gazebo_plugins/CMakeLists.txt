@@ -39,7 +39,7 @@ catkin_package(
 add_library(ruvu_disable_physics src/disable_physics_plugin.cpp)
 target_link_libraries(ruvu_disable_physics ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(ruvu_twist_teleport src/twist_plugin.cpp src/twist_plugin.h src/util.h)
+add_library(ruvu_twist_teleport src/twist_teleport_plugin.cpp src/twist_plugin.cpp src/twist_plugin.h src/util.h)
 target_link_libraries(ruvu_twist_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
 add_library(ruvu_twist_move src/twist_move_plugin.cpp src/twist_plugin.cpp src/twist_plugin.h src/util.h)
