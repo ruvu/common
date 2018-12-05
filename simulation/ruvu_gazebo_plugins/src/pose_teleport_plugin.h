@@ -12,13 +12,10 @@
 #include <gazebo/physics/physics.hh>
 
 #include <ros/callback_queue.h>
-#include <ros/publisher.h>
 #include <ros/subscriber.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Pose.h>
-#include <nav_msgs/Odometry.h>
-#include <tf2_ros/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <math.h>
 
@@ -43,11 +40,6 @@ protected:
   //! \param model Pointer to the model, can be used to update the model
   //!
   void Update(const math::Pose& pose, physics::ModelPtr model);
-
-  //!
-  //! \brief odom_pose_ The state of the robot according to odometry
-  //!
-  math::Pose odom_pose_;
 
 private:
   //!
@@ -83,8 +75,6 @@ private:
   //! \param pose_msg Pose command
   //!
   geometry_msgs::PoseConstPtr pose_msg_;  // Last received pose_msg
-  common::Time last_cmd_time_;            // Time last received cmd_msg
-  double cmd_timeout_;                    // Base controller timeout
   ros::Subscriber pose_subscriber_;      // The ROS subcriber on the Pose msg
   void poseCallback(const geometry_msgs::Pose::ConstPtr& pose_msg);
 
@@ -96,37 +86,14 @@ private:
   //! \param now The current time
   //! \return Return the current pose
   //!
-  math::Pose getCurrentPose(const common::Time& now);
+  math::Pose getCurrentPose();
 
   //!
   //! \brief UpdateChild Called on every tick of the simulation; updates the position and velocity of the parent
   //!
   //! Also publishes the odometry if we exceed the step time of the odom
   //!
-  common::Time last_update_time_;  // Keep track of the last update time in order to calculate the dt
   void UpdateChild();
-
-  //!
-  //! \brief updateOdometryState Update the odometry state variables (x, y, yaw)
-  //! \param velocity Current (command) velocity
-  //! \param dt Time delta since last update
-  //!
-  virtual void updateOdometryPose(const math::Pose& pose);
-
-  //!
-  //! \brief publishOdometry Publish the odometry via ROS
-  //! \param velocity Current velocity
-  //! \param now Current time
-  //!
-  bool publish_tf_;
-  double odometry_rate_;               // Rate of the odometry publisher
-  ros::Publisher odometry_publisher_;  // Odometry publisher
-  nav_msgs::Odometry odom_msg_;        // The odom message to be published
-  geometry_msgs::TransformStamped transform_stamped_;
-  tf2_ros::TransformBroadcaster odom_broadcaster_;
-  std::vector<double> pose_covariance_;
-  std::vector<double> velocity_covariance_;
-  void publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now);
 
   //!
   //! \brief FiniChild Called on shutdown
