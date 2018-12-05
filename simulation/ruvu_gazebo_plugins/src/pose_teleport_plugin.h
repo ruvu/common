@@ -25,9 +25,9 @@
 namespace gazebo
 {
 //!
-//! \brief The PosePlugin class that alters a model based on a pose command
+//! \brief The PoseTeleportPlugin class that alters a model based on a pose command
 //!
-class PosePlugin : public ModelPlugin
+class PoseTeleportPlugin : public ModelPlugin
 {
 public:
   //!

@@ -6,12 +6,12 @@
 
 #include <string>
 
-#include "./pose_plugin.h"
+#include "./pose_teleport_plugin.h"
 #include "./util.h"
 
 namespace gazebo
 {
-void PosePlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
+void PoseTeleportPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
 {
   //! Store the model so that we can use it later
   model_ = model;
@@ -56,9 +56,9 @@ void PosePlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
 
   // subscribe to the command topic
   ros::SubscribeOptions so = ros::SubscribeOptions::create<geometry_msgs::Pose>(
-      command_topic, 1, boost::bind(&PosePlugin::poseCallback, this, _1), ros::VoidPtr(), &queue_);
+      command_topic, 1, boost::bind(&PoseTeleportPlugin::poseCallback, this, _1), ros::VoidPtr(), &queue_);
   pose_subscriber_ = rosnode_->subscribe(so);
-  callback_queue_thread_ = boost::thread(boost::bind(&PosePlugin::QueueThread, this));
+  callback_queue_thread_ = boost::thread(boost::bind(&PoseTeleportPlugin::QueueThread, this));
 
   // Initialize odometry publisher
   odometry_publisher_ = rosnode_->advertise<nav_msgs::Odometry>(odom_topic, 1);
@@ -67,10 +67,10 @@ void PosePlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   odom_pose_ = math::Pose::Zero;
 
   // listen to the update event (broadcast every simulation iteration)
-  update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&PosePlugin::UpdateChild, this));
+  update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&PoseTeleportPlugin::UpdateChild, this));
 }
 
-void PosePlugin::QueueThread()
+void PoseTeleportPlugin::QueueThread()
 {
   static const double timeout = 0.01;
   while (alive_ && rosnode_->ok())
@@ -79,14 +79,14 @@ void PosePlugin::QueueThread()
   }
 }
 
-void PosePlugin::poseCallback(const geometry_msgs::Pose::ConstPtr& pose_msg)
+void PoseTeleportPlugin::poseCallback(const geometry_msgs::Pose::ConstPtr& pose_msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   pose_msg_ = pose_msg;
   last_cmd_time_ = model_->GetWorld()->GetSimTime();
 }
 
-math::Pose PosePlugin::getCurrentPose(const common::Time& now)
+math::Pose PoseTeleportPlugin::getCurrentPose(const common::Time& now)
 {
     math::Pose pose;
     if (pose_msg_)
@@ -98,7 +98,7 @@ math::Pose PosePlugin::getCurrentPose(const common::Time& now)
     return pose;
 }
 
-void PosePlugin::UpdateChild()
+void PoseTeleportPlugin::UpdateChild()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -123,7 +123,7 @@ void PosePlugin::UpdateChild()
   last_update_time_ = now;
 }
 
-void PosePlugin::Update(const math::Pose& pose, physics::ModelPtr model)
+void PoseTeleportPlugin::Update(const math::Pose& pose, physics::ModelPtr model)
   {
     math::Pose updated_pose = pose;
 
@@ -145,12 +145,12 @@ void PosePlugin::Update(const math::Pose& pose, physics::ModelPtr model)
     model->SetWorldPose(updated_pose);
   }
 
-void PosePlugin::updateOdometryPose(const math::Pose& pose)
+void PoseTeleportPlugin::updateOdometryPose(const math::Pose& pose)
 {
   odom_pose_ = pose;
 }
 
-void PosePlugin::publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now)
+void PoseTeleportPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now)
 {
   odom_msg_.pose.pose.position.x = odom_pose_.pos.x;
   odom_msg_.pose.pose.position.y = odom_pose_.pos.y;
@@ -188,7 +188,7 @@ void PosePlugin::publishOdometry(const geometry_msgs::Twist& velocity, const com
   }
 }
 
-void PosePlugin::FiniChild()
+void PoseTeleportPlugin::FiniChild()
 {
   alive_ = false;
   queue_.clear();
@@ -196,5 +196,5 @@ void PosePlugin::FiniChild()
   rosnode_->shutdown();
   callback_queue_thread_.join();
 }
-GZ_REGISTER_MODEL_PLUGIN(PosePlugin)
+GZ_REGISTER_MODEL_PLUGIN(PoseTeleportPlugin)
 }  // namespace gazebo
