@@ -6,18 +6,13 @@
 
 #pragma once
 
-#include <vector>
 
 #include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
 
 #include <ros/callback_queue.h>
 #include <ros/subscriber.h>
-#include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
+#include <ros/node_handle.h>
 #include <geometry_msgs/Pose.h>
-#include <tf/transform_datatypes.h>
-#include <math.h>
 
 namespace gazebo
 {

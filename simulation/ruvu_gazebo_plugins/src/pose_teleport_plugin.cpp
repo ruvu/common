@@ -9,6 +9,9 @@
 #include "./pose_teleport_plugin.h"
 #include "./util.h"
 
+#include <tf/transform_datatypes.h>
+#include <gazebo/physics/physics.hh>
+
 namespace gazebo
 {
 void PoseTeleportPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
@@ -76,7 +79,6 @@ void PoseTeleportPlugin::UpdateChild()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  geometry_msgs::Twist vel;
   math::Pose pose = getCurrentPose();
 
   Update(pose, model_);
