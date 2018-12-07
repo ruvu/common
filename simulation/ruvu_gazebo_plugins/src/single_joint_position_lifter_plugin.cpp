@@ -129,7 +129,7 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
   math::Box box = model_->GetBoundingBox();
   math::Vector3 start = model_->GetWorldPose().pos;
   math::Vector3 end = start;
-  start.z = box.max.z + 0.00001;
+  start.z = box.max.z + 0.001;
   end.z += 1e3;
 
   std::string lift_entity_name;
