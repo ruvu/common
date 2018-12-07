@@ -67,6 +67,9 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
   double desired_position = goal.getGoal()->position;
   double lower_limit = joint_->GetLowerLimit(0).Radian();
   double upper_limit = joint_->GetUpperLimit(0).Radian();
+  double effor_limit = joint_->GetEffortLimit(0);
+  double vel_limit = joint_->GetVelocityLimit(0);
+
   ROS_INFO("Current position: %.2f; Desired position: %.2f", current_position, desired_position);
 
   if (desired_position >= lower_limit && desired_position <= upper_limit)
@@ -82,6 +85,8 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
       {
         lift_world_pose_relative_to_model_ = lift_model_->GetWorldPose() - model_->GetWorldPose();
       }
+      joint_->SetParam("fmax", 0, effor_limit);
+      joint_->SetParam("vel", 0, vel_limit);
     }
     else if (desired_position <
              current_position - 1e-3)  // dropping (if we are going down, we always drop the model we are lifting)
@@ -96,6 +101,8 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
       {
         ROS_WARN("SingleJointPositionLifterPlugin: No lift model attached, doing nothing.");
       }
+      joint_->SetParam("fmax", 0, effor_limit);
+      joint_->SetParam("vel", 0, -vel_limit);
     }
 
     ROS_DEBUG("SingleJointPositionLifterPlugin: Set joint to %.2f", desired_position);
@@ -122,7 +129,7 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
   math::Box box = model_->GetBoundingBox();
   math::Vector3 start = model_->GetWorldPose().pos;
   math::Vector3 end = start;
-  start.z = box.max.z + 0.00001;
+  start.z = box.max.z + 0.001;
   end.z += 1e3;
 
   std::string lift_entity_name;
