@@ -53,3 +53,7 @@ job:
     - cd $WORKSPACE
     - catkin build
     - catkin test --summary
+
+  artifacts:
+    reports:
+      junit: build/*/test_results/*/*.xml
