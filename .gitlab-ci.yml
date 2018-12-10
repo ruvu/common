@@ -55,5 +55,6 @@ job:
     - catkin test --summary
 
   artifacts:
+    expire_in: 1 week
     reports:
       junit: $WORKSPACE/build/*/test_results/*/*.xml
