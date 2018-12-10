@@ -56,4 +56,4 @@ job:
 
   artifacts:
     reports:
-      junit: build/*/test_results/*/*.xml
+      junit: $WORKSPACE/build/*/test_results/*/*.xml
