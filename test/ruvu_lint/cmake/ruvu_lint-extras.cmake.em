@@ -9,8 +9,6 @@ set(RUVU_LINT_SCRIPTS_DIR "@(CMAKE_CURRENT_SOURCE_DIR)/scripts")
 function(ruvu_lint_add_test)
   if (CATKIN_ENABLE_TESTING)
     # find all python files, including shebang
-    execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-
     ## Call out to find_python_files to look for python files
     message(STATUS "find_python_files in ${CMAKE_CURRENT_SOURCE_DIR}")
     execute_process(COMMAND "${RUVU_LINT_SCRIPTS_DIR}/find_python_files"
