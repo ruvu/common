@@ -44,7 +44,13 @@ ${find_python_files_err}")
 
     # catkin_lint
     find_program(CATKIN_LINT catkin_lint REQUIRED)
-    execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+
+    if(NOT CATKIN_LINT_OPTS)
+      set(CATKIN_LINT_OPTS "-W2")
+    endif()
+    separate_arguments(CATKIN_LINT_OPTS)
+
+    execute_process(COMMAND "${CATKIN_LINT}" ${CATKIN_LINT_OPTS} "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
     if(NOT ${lint_result} EQUAL 0)
       message(FATAL_ERROR "catkin_lint failed")
     endif()
