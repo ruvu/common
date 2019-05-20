@@ -127,8 +127,8 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
       model_->GetWorld()->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
 
   math::Box box = model_->GetBoundingBox();
-  math::Vector3 start = model_->GetWorldPose().pos;
-  math::Vector3 end = start;
+  ignition::math::Vector3 start = model_->GetWorldPose().pos;
+  ignition::math::Vector3 end = start;
   start.z = box.max.z + 0.001;
   end.z += 1e3;
 

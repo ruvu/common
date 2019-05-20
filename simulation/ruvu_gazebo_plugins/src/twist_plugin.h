@@ -44,7 +44,7 @@ protected:
   //! \param model Pointer to the model, can be used to update the model
   //!
   virtual void Update(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& twist,
-                      const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity,
+                      const ignition::math::Vector3& world_linear_velocity, const ignition::math::Vector3& world_angular_velocity,
                       double dt, physics::ModelPtr model) = 0;
 
   //!

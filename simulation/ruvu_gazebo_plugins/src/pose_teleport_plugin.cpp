@@ -78,7 +78,7 @@ void PoseTeleportPlugin::UpdateChild()
   std::lock_guard<std::mutex> lock(mutex_);
 
   ignition::math::Pose3d pose = pose;
-  pose.pos = math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
+  pose.pos = ignition::math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
   pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
                               pose_msg_->orientation.w);
 
