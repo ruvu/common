@@ -102,7 +102,7 @@ void TwistPlugin::UpdateChild()
 
   common::Time now = model_->GetWorld()->GetSimTime();
   common::Time dt = now - last_update_time_;
-  ignition::math::Pose3d pose = model_->GetWorldPose();
+  ignition::math::Pose3d pose = model_->GetWorldPose().Ign();
   geometry_msgs::Twist vel = getCurrentVelocity(now);
 
   updateOdometryPose(pose, vel, dt);
@@ -117,8 +117,8 @@ void TwistPlugin::UpdateChild()
   }
 
   // Calculate the velocities based on last pose
-  ignition::math::Vector3 world_linear_velocity = pose.rot * ignition::math::Vector3(vel.linear.x, vel.linear.y, vel.linear.z);
-  ignition::math::Vector3 world_angular_velocity = pose.rot * ignition::math::Vector3(vel.angular.x, vel.angular.y, vel.angular.z);
+  ignition::math::Vector3d world_linear_velocity = pose.Rot() * ignition::math::Vector3d(vel.linear.x, vel.linear.y, vel.linear.z);
+  ignition::math::Vector3d world_angular_velocity = pose.Rot() * ignition::math::Vector3d(vel.angular.x, vel.angular.y, vel.angular.z);
 
   Update(pose, vel, world_linear_velocity, world_angular_velocity, dt.Double(), model_);
 
@@ -133,14 +133,14 @@ void TwistPlugin::updateOdometryPose(const ignition::math::Pose3d& pose, const g
 
 void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const common::Time& now)
 {
-  odom_msg_.pose.pose.position.x = odom_pose_.pos.x;
-  odom_msg_.pose.pose.position.y = odom_pose_.pos.y;
-  odom_msg_.pose.pose.position.z = odom_pose_.pos.z;
+  odom_msg_.pose.pose.position.x = odom_pose_.Pos().X();
+  odom_msg_.pose.pose.position.y = odom_pose_.Pos().Y();
+  odom_msg_.pose.pose.position.z = odom_pose_.Pos().Z();
 
-  odom_msg_.pose.pose.orientation.x = odom_pose_.rot.x;
-  odom_msg_.pose.pose.orientation.y = odom_pose_.rot.y;
-  odom_msg_.pose.pose.orientation.z = odom_pose_.rot.z;
-  odom_msg_.pose.pose.orientation.w = odom_pose_.rot.w;
+  odom_msg_.pose.pose.orientation.x = odom_pose_.Rot().X();
+  odom_msg_.pose.pose.orientation.y = odom_pose_.Rot().Y();
+  odom_msg_.pose.pose.orientation.z = odom_pose_.Rot().Z();
+  odom_msg_.pose.pose.orientation.w = odom_pose_.Rot().W();
 
   for (int i = 0; i < odom_msg_.pose.covariance.size(); i++)
   {
@@ -158,9 +158,9 @@ void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const co
 
   // Publish transform
   transform_stamped_.header.stamp = ros::Time(now.Double());
-  transform_stamped_.transform.translation.x = odom_pose_.pos.x;
-  transform_stamped_.transform.translation.y = odom_pose_.pos.y;
-  transform_stamped_.transform.translation.z = odom_pose_.pos.z;
+  transform_stamped_.transform.translation.x = odom_pose_.Pos().X();
+  transform_stamped_.transform.translation.y = odom_pose_.Pos().Y();
+  transform_stamped_.transform.translation.z = odom_pose_.Pos().Z();
   transform_stamped_.transform.rotation = odom_msg_.pose.pose.orientation;
 
   if (publish_tf_)

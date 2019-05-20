@@ -83,7 +83,7 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
       lift_model_ = getModelAboveUs();
       if (lift_model_)
       {
-        lift_world_pose_relative_to_model_ = lift_model_->GetWorldPose() - model_->GetWorldPose();
+        lift_world_pose_relative_to_model_ = lift_model_->GetWorldPose().Ign() - model_->GetWorldPose().Ign();
       }
       joint_->SetParam("fmax", 0, effor_limit);
       joint_->SetParam("vel", 0, vel_limit);
@@ -126,11 +126,11 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
   physics::RayShapePtr rayShape = boost::dynamic_pointer_cast<physics::RayShape>(
       model_->GetWorld()->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
 
-  ignition::math::Box box = model_->GetBoundingBox();
-  ignition::math::Vector3 start = model_->GetWorldPose().pos;
-  ignition::math::Vector3 end = start;
-  start.z = box.max.z + 0.001;
-  end.z += 1e3;
+  ignition::math::Box box = model_->GetBoundingBox().Ign();
+  ignition::math::Vector3d start = model_->GetWorldPose().pos.Ign();
+  ignition::math::Vector3d end = start;
+  start.Z() = box.Max().Z() + 0.001;
+  end.Z() += 1e3;
 
   std::string lift_entity_name;
   double nearest_distance;
@@ -175,7 +175,7 @@ void SingleJointPositionLifterPlugin::UpdateChild()
 
   if (lift_model_)
   {
-    ignition::math::Pose3d model_pose = model_->GetWorldPose();
+    ignition::math::Pose3d model_pose = model_->GetWorldPose().Ign();
     lift_model_->SetWorldPose(lift_world_pose_relative_to_model_ + model_pose);
   }
 }

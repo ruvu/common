@@ -30,22 +30,22 @@ protected:
     double dyaw = velocity.angular.z * dt.Double();
 
     // Convert it to odom frame
-    odom_pose_.pos.x += cos_yaw * dx - sin_yaw * dy;
-    odom_pose_.pos.y += sin_yaw * dx + cos_yaw * dy;
+    odom_pose_.Pos().X() += cos_yaw * dx - sin_yaw * dy;
+    odom_pose_.Pos().Y() += sin_yaw * dx + cos_yaw * dy;
     yaw_ += dyaw;
-    odom_pose_.rot = ignition::math::Quaterniond(0, 0, yaw_);
+    odom_pose_.Rot() = ignition::math::Quaterniond(0, 0, yaw_);
   }
 
   void Update(const ignition::math::Pose3d& /*pose*/, const geometry_msgs::Twist& /*twist*/,
-              const ignition::math::Vector3& world_linear_velocity, const ignition::math::Vector3& world_angular_velocity, double /*dt*/,
+              const ignition::math::Vector3d& world_linear_velocity, const ignition::math::Vector3d& world_angular_velocity, double /*dt*/,
               physics::ModelPtr model)
   {
-    ignition::math::Vector3 linear_velocity = model->GetWorldLinearVel();
-    linear_velocity.x = world_linear_velocity.x;  // constrain
-    linear_velocity.y = world_linear_velocity.y;  // z
+    ignition::math::Vector3d linear_velocity = model->GetWorldLinearVel().Ign();
+    linear_velocity.X() = world_linear_velocity.X();  // constrain
+    linear_velocity.Y() = world_linear_velocity.Y();  // z
 
-    ignition::math::Vector3 angular_velocity = model->GetWorldAngularVel();
-    angular_velocity.z = world_angular_velocity.z;  // constrain roll and pitch
+    ignition::math::Vector3d angular_velocity = model->GetWorldAngularVel().Ign();
+    angular_velocity.Z() = world_angular_velocity.Z();  // constrain roll and pitch
 
     // Update the model in gazebo
     model->SetLinearVel(linear_velocity);
