@@ -19,7 +19,8 @@ class TwistMovePlugin : public TwistPlugin
 protected:
   double yaw_ = 0;
 
-  void updateOdometryPose(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& velocity, const common::Time& dt)
+  void updateOdometryPose(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& velocity,
+                          const common::Time& dt)
   {
     double sin_yaw = sin(yaw_);
     double cos_yaw = cos(yaw_);
@@ -37,8 +38,8 @@ protected:
   }
 
   void Update(const ignition::math::Pose3d& /*pose*/, const geometry_msgs::Twist& /*twist*/,
-              const ignition::math::Vector3d& world_linear_velocity, const ignition::math::Vector3d& world_angular_velocity, double /*dt*/,
-              physics::ModelPtr model)
+              const ignition::math::Vector3d& world_linear_velocity,
+              const ignition::math::Vector3d& world_angular_velocity, double /*dt*/, physics::ModelPtr model)
   {
     ignition::math::Vector3d linear_velocity = model->GetWorldLinearVel().Ign();
     linear_velocity.X() = world_linear_velocity.X();  // constrain

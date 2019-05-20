@@ -117,8 +117,10 @@ void TwistPlugin::UpdateChild()
   }
 
   // Calculate the velocities based on last pose
-  ignition::math::Vector3d world_linear_velocity = pose.Rot() * ignition::math::Vector3d(vel.linear.x, vel.linear.y, vel.linear.z);
-  ignition::math::Vector3d world_angular_velocity = pose.Rot() * ignition::math::Vector3d(vel.angular.x, vel.angular.y, vel.angular.z);
+  ignition::math::Vector3d world_linear_velocity =
+      pose.Rot() * ignition::math::Vector3d(vel.linear.x, vel.linear.y, vel.linear.z);
+  ignition::math::Vector3d world_angular_velocity =
+      pose.Rot() * ignition::math::Vector3d(vel.angular.x, vel.angular.y, vel.angular.z);
 
   Update(pose, vel, world_linear_velocity, world_angular_velocity, dt.Double(), model_);
 
