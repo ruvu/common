@@ -79,7 +79,7 @@ void PoseTeleportPlugin::UpdateChild()
 
   ignition::math::Pose3d pose = pose;
   pose.pos = ignition::math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
-  pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
+  pose.rot = ignition::math::Quaterniond(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
                               pose_msg_->orientation.w);
 
   // Convert to from camera axis (x up, y front, z left) to model axis (x front, y, left, z up)
@@ -94,7 +94,7 @@ void PoseTeleportPlugin::UpdateChild()
   camera_yaw = -pitch;
 
   tf::Quaternion q_camera = tf::createQuaternionFromRPY(camera_roll, camera_pitch, camera_yaw);
-  pose.rot = math::Quaternion(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
+  pose.rot = ignition::math::Quaterniond(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
 
   // Update the model in gazebo
   model_->SetWorldPose(pose);

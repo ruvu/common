@@ -27,7 +27,7 @@ protected:
     if (world_angular_velocity.GetLength() > 0)
     {
       updated_pose.rot =
-          math::Quaternion(world_angular_velocity, world_angular_velocity.GetLength() * dt) * updated_pose.rot;
+          ignition::math::Quaterniond(world_angular_velocity, world_angular_velocity.GetLength() * dt) * updated_pose.rot;
     }
 
     // Update the model in gazebo

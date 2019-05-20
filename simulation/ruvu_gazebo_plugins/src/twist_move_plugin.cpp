@@ -33,7 +33,7 @@ protected:
     odom_pose_.pos.x += cos_yaw * dx - sin_yaw * dy;
     odom_pose_.pos.y += sin_yaw * dx + cos_yaw * dy;
     yaw_ += dyaw;
-    odom_pose_.rot = math::Quaternion(0, 0, yaw_);
+    odom_pose_.rot = ignition::math::Quaterniond(0, 0, yaw_);
   }
 
   void Update(const ignition::math::Pose3d& /*pose*/, const geometry_msgs::Twist& /*twist*/,
