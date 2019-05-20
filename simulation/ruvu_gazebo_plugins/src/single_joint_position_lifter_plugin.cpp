@@ -126,7 +126,7 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
   physics::RayShapePtr rayShape = boost::dynamic_pointer_cast<physics::RayShape>(
       model_->GetWorld()->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
 
-  math::Box box = model_->GetBoundingBox();
+  ignition::math::Box box = model_->GetBoundingBox();
   ignition::math::Vector3 start = model_->GetWorldPose().pos;
   ignition::math::Vector3 end = start;
   start.z = box.max.z + 0.001;
