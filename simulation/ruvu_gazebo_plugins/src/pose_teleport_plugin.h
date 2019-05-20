@@ -6,7 +6,6 @@
 
 #pragma once
 
-
 #include <gazebo/gazebo.hh>
 
 #include <ros/callback_queue.h>
@@ -70,7 +69,7 @@ private:
   //! \param pose_msg Pose command
   //!
   geometry_msgs::PoseConstPtr pose_msg_;  // Last received pose_msg
-  ros::Subscriber pose_subscriber_;      // The ROS subcriber on the Pose msg
+  ros::Subscriber pose_subscriber_;       // The ROS subcriber on the Pose msg
   void poseCallback(const geometry_msgs::Pose::ConstPtr& pose_msg);
 
   //!

@@ -36,6 +36,10 @@ catkin_package(
 ## Build ##
 ###########
 
+# show headers in qtcreator
+FILE(GLOB_RECURSE HEADERS "src/*.h")
+add_custom_target(headers SOURCES ${HEADERS})
+
 add_library(ruvu_disable_physics src/disable_physics_plugin.cpp)
 target_link_libraries(ruvu_disable_physics ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
@@ -57,15 +61,17 @@ target_link_libraries(ruvu_pose_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} 
 
 ruvu_lint_add_test()
 
-# if (CATKIN_ENABLE_TESTING)
-#     find_package(rostest REQUIRED)
-#     add_rostest(test/disable_physics_world.test)
-#     add_rostest(test/twist_move_world.test)
-#     # add_rostest(test/twist_move_urdf_world.test)
-#     # add_rostest(test/twist_teleport_urdf_world.test)
-#     # add_rostest(test/twist_teleport_world.test)
-#     # add_rostest(test/single_joint_position_lifter_world.test)
-# endif()
+ if (CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  # add_rostest(test/disable_physics_world.test)
+  # add_rostest(test/pose_teleport_world.test)
+  # add_rostest(test/single_joint_position_lifter_world.test)
+  # add_rostest(test/twist_move_urdf_world.test)
+  # add_rostest(test/twist_move_world.test)
+  # add_rostest(test/twist_teleport_urdf_world.test)
+  # add_rostest(test/twist_teleport_world.test)
+ endif()
 
 #############
 ## Install ##
