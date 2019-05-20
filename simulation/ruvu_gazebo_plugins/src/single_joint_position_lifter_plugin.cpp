@@ -175,7 +175,7 @@ void SingleJointPositionLifterPlugin::UpdateChild()
 
   if (lift_model_)
   {
-    math::Pose model_pose = model_->GetWorldPose();
+    ignition::math::Pose3d model_pose = model_->GetWorldPose();
     lift_model_->SetWorldPose(lift_world_pose_relative_to_model_ + model_pose);
   }
 }

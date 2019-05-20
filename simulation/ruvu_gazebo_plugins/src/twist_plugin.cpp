@@ -64,7 +64,7 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   odometry_publisher_ = rosnode_->advertise<nav_msgs::Odometry>(odom_topic, 1);
 
   // Initialize odom state
-  odom_pose_ = math::Pose::Zero;
+  odom_pose_ = ignition::math::Pose3d::Zero;
 
   // listen to the update event (broadcast every simulation iteration)
   update_connection_ = event::Events::ConnectWorldUpdateBegin(boost::bind(&TwistPlugin::UpdateChild, this));
@@ -102,7 +102,7 @@ void TwistPlugin::UpdateChild()
 
   common::Time now = model_->GetWorld()->GetSimTime();
   common::Time dt = now - last_update_time_;
-  math::Pose pose = model_->GetWorldPose();
+  ignition::math::Pose3d pose = model_->GetWorldPose();
   geometry_msgs::Twist vel = getCurrentVelocity(now);
 
   updateOdometryPose(pose, vel, dt);
@@ -125,7 +125,7 @@ void TwistPlugin::UpdateChild()
   last_update_time_ = now;
 }
 
-void TwistPlugin::updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity,
+void TwistPlugin::updateOdometryPose(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& velocity,
                                      const common::Time& dt)
 {
   odom_pose_ = pose;

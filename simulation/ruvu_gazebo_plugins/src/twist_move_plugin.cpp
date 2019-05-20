@@ -19,7 +19,7 @@ class TwistMovePlugin : public TwistPlugin
 protected:
   double yaw_ = 0;
 
-  void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt)
+  void updateOdometryPose(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& velocity, const common::Time& dt)
   {
     double sin_yaw = sin(yaw_);
     double cos_yaw = cos(yaw_);
@@ -36,7 +36,7 @@ protected:
     odom_pose_.rot = math::Quaternion(0, 0, yaw_);
   }
 
-  void Update(const math::Pose& /*pose*/, const geometry_msgs::Twist& /*twist*/,
+  void Update(const ignition::math::Pose3d& /*pose*/, const geometry_msgs::Twist& /*twist*/,
               const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity, double /*dt*/,
               physics::ModelPtr model)
   {

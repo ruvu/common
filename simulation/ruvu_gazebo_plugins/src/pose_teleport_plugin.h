@@ -33,7 +33,7 @@ protected:
   //! \param pose The current pose of the model (derived from the input)
   //! \param model Pointer to the model, can be used to update the model
   //!
-  void Update(const math::Pose& pose, physics::ModelPtr model);
+  void Update(const ignition::math::Pose3d& pose, physics::ModelPtr model);
 
 private:
   //!
@@ -80,7 +80,7 @@ private:
   //! \param now The current time
   //! \return Return the current pose
   //!
-  math::Pose getCurrentPose();
+  ignition::math::Pose3d getCurrentPose();
 
   //!
   //! \brief UpdateChild Called on every tick of the simulation; updates the position and velocity of the parent
