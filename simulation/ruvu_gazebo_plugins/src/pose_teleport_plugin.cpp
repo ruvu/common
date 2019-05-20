@@ -31,9 +31,9 @@ void PoseTeleportPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   if (!ros::isInitialized())
   {
     ROS_FATAL_STREAM_NAMED("pose_teleport", "PoseTeleportPlugin"
-                                                 << ": A ROS node for Gazebo has not been initialized, "
-                                                 << "unable to load plugin. Load the Gazebo system plugin "
-                                                 << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+                                                << ": A ROS node for Gazebo has not been initialized, "
+                                                << "unable to load plugin. Load the Gazebo system plugin "
+                                                << "'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
     return;
   }
   rosnode_.reset(new ros::NodeHandle(robot_namespace));
@@ -65,14 +65,14 @@ void PoseTeleportPlugin::poseCallback(const geometry_msgs::Pose::ConstPtr& pose_
 
 math::Pose PoseTeleportPlugin::getCurrentPose()
 {
-    math::Pose pose;
-    if (pose_msg_)
-    {
-      pose.pos = math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
-      pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y,
-                                  pose_msg_->orientation.z, pose_msg_->orientation.w);
-    }
-    return pose;
+  math::Pose pose;
+  if (pose_msg_)
+  {
+    pose.pos = math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
+    pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
+                                pose_msg_->orientation.w);
+  }
+  return pose;
 }
 
 void PoseTeleportPlugin::UpdateChild()
@@ -85,26 +85,26 @@ void PoseTeleportPlugin::UpdateChild()
 }
 
 void PoseTeleportPlugin::Update(const math::Pose& pose, physics::ModelPtr model)
-  {
-    math::Pose updated_pose = pose;
+{
+  math::Pose updated_pose = pose;
 
-    // Convert to from camera axis (x up, y front, z left) to model axis (x front, y, left, z up)
-    tf::Quaternion q(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
-    tf::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
+  // Convert to from camera axis (x up, y front, z left) to model axis (x front, y, left, z up)
+  tf::Quaternion q(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
+  tf::Matrix3x3 m(q);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
 
-    double camera_roll, camera_pitch, camera_yaw;
-    camera_roll = -roll + M_PI/2;
-    camera_pitch = -yaw + M_PI/2;
-    camera_yaw = -pitch;
+  double camera_roll, camera_pitch, camera_yaw;
+  camera_roll = -roll + M_PI / 2;
+  camera_pitch = -yaw + M_PI / 2;
+  camera_yaw = -pitch;
 
-    tf::Quaternion q_camera = tf::createQuaternionFromRPY(camera_roll, camera_pitch , camera_yaw);
-    updated_pose.rot = math::Quaternion(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
+  tf::Quaternion q_camera = tf::createQuaternionFromRPY(camera_roll, camera_pitch, camera_yaw);
+  updated_pose.rot = math::Quaternion(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
 
-    // Update the model in gazebo
-    model->SetWorldPose(updated_pose);
-  }
+  // Update the model in gazebo
+  model->SetWorldPose(updated_pose);
+}
 
 void PoseTeleportPlugin::FiniChild()
 {
