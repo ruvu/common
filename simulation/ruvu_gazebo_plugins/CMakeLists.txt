@@ -36,6 +36,10 @@ catkin_package(
 ## Build ##
 ###########
 
+# show headers in qtcreator
+FILE(GLOB_RECURSE HEADERS "src/*.h")
+add_custom_target(headers SOURCES ${HEADERS})
+
 add_library(ruvu_disable_physics src/disable_physics_plugin.cpp)
 target_link_libraries(ruvu_disable_physics ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
