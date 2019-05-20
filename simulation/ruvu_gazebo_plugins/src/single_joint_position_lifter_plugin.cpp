@@ -29,7 +29,11 @@ void SingleJointPositionLifterPlugin::Load(physics::ModelPtr model, sdf::Element
     ROS_FATAL("Could not find joint with name %s in model.", joint_name.c_str());
     return;
   }
+#if GAZEBO_MAJOR_VERSION >= 8
+  joint_position_ = joint_->Position(0);
+#else
   joint_position_ = joint_->GetAngle(0).Radian();
+#endif
 
   // Ensure that ROS has been initialized (required for using ROS COM)
   if (!ros::isInitialized())
@@ -65,8 +69,13 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
 
   double current_position = joint_position_;
   double desired_position = goal.getGoal()->position;
+#if GAZEBO_MAJOR_VERSION >= 8
+  double lower_limit = joint_->LowerLimit();
+  double upper_limit = joint_->UpperLimit();
+#else
   double lower_limit = joint_->GetLowerLimit(0).Radian();
   double upper_limit = joint_->GetUpperLimit(0).Radian();
+#endif
   double effor_limit = joint_->GetEffortLimit(0);
   double vel_limit = joint_->GetVelocityLimit(0);
 
@@ -83,7 +92,11 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
       lift_model_ = getModelAboveUs();
       if (lift_model_)
       {
+#if GAZEBO_MAJOR_VERSION >= 8
+        lift_world_pose_relative_to_model_ = lift_model_->WorldPose() - model_->WorldPose();
+#else
         lift_world_pose_relative_to_model_ = lift_model_->GetWorldPose().Ign() - model_->GetWorldPose().Ign();
+#endif
       }
       joint_->SetParam("fmax", 0, effor_limit);
       joint_->SetParam("vel", 0, vel_limit);
@@ -121,13 +134,24 @@ void SingleJointPositionLifterPlugin::goalCallback(SingleJointPositionActionServ
 
 physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 {
-  model_->GetWorld()->GetPhysicsEngine()->InitForThread();
+#if GAZEBO_MAJOR_VERSION >= 8
+  auto physics = model_->GetWorld()->Physics();
+#else
+  auto physics = model_->GetWorld()->GetPhysicsEngine();
+#endif
+  physics->InitForThread();
 
-  physics::RayShapePtr rayShape = boost::dynamic_pointer_cast<physics::RayShape>(
-      model_->GetWorld()->GetPhysicsEngine()->CreateShape("ray", physics::CollisionPtr()));
+  physics::RayShapePtr rayShape =
+      boost::dynamic_pointer_cast<physics::RayShape>(physics->CreateShape("ray", physics::CollisionPtr()));
 
+#if GAZEBO_MAJOR_VERSION >= 8
+  ignition::math::Box box = model_->BoundingBox();
+  ignition::math::Vector3d start = model_->WorldPose().Pos();
+#else
   ignition::math::Box box = model_->GetBoundingBox().Ign();
   ignition::math::Vector3d start = model_->GetWorldPose().pos.Ign();
+#endif
+
   ignition::math::Vector3d end = start;
   start.Z() = box.Max().Z() + 0.001;
   end.Z() += 1e3;
@@ -139,7 +163,11 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
   ROS_INFO_STREAM("Shooting ray from " << start << " to " << end);
   rayShape->GetIntersection(nearest_distance, lift_entity_name);
 
+#if GAZEBO_MAJOR_VERSION >= 8
+  physics::EntityPtr e = model_->GetWorld()->EntityByName(lift_entity_name);
+#else
   physics::EntityPtr e = model_->GetWorld()->GetEntity(lift_entity_name);
+#endif
 
   if (e)
   {
@@ -161,7 +189,11 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
 void SingleJointPositionLifterPlugin::UpdateChild()
 {
   std::lock_guard<std::mutex> lock(mutex_);
+#if GAZEBO_MAJOR_VERSION >= 8
+  common::Time now = model_->GetWorld()->SimTime();
+#else
   common::Time now = model_->GetWorld()->GetSimTime();
+#endif
   if (state_publish_rate_ > 0.0)
   {
     double seconds_since_last_publish = (now - common::Time(joint_state_msg_.header.stamp.toSec())).Double();
@@ -175,7 +207,11 @@ void SingleJointPositionLifterPlugin::UpdateChild()
 
   if (lift_model_)
   {
+#if GAZEBO_MAJOR_VERSION >= 8
+    ignition::math::Pose3d model_pose = model_->WorldPose();
+#else
     ignition::math::Pose3d model_pose = model_->GetWorldPose().Ign();
+#endif
     lift_model_->SetWorldPose(lift_world_pose_relative_to_model_ + model_pose);
   }
 }

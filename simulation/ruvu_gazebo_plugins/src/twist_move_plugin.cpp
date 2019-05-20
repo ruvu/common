@@ -41,11 +41,17 @@ protected:
               const ignition::math::Vector3d& world_linear_velocity,
               const ignition::math::Vector3d& world_angular_velocity, double /*dt*/, physics::ModelPtr model)
   {
+#if GAZEBO_MAJOR_VERSION >= 8
+    ignition::math::Vector3d linear_velocity = model->WorldLinearVel();
+    ignition::math::Vector3d angular_velocity = model->WorldAngularVel();
+#else
     ignition::math::Vector3d linear_velocity = model->GetWorldLinearVel().Ign();
+    ignition::math::Vector3d angular_velocity = model->GetWorldAngularVel().Ign();
+#endif
+
     linear_velocity.X() = world_linear_velocity.X();  // constrain
     linear_velocity.Y() = world_linear_velocity.Y();  // z
 
-    ignition::math::Vector3d angular_velocity = model->GetWorldAngularVel().Ign();
     angular_velocity.Z() = world_angular_velocity.Z();  // constrain roll and pitch
 
     // Update the model in gazebo

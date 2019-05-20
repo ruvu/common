@@ -38,7 +38,11 @@ void TwistPlugin::Load(physics::ModelPtr model, sdf::ElementPtr sdf)
   transform_stamped_.child_frame_id = odom_msg_.child_frame_id;
 
   //! Store last update, required for calculating the dt
+#if GAZEBO_MAJOR_VERSION >= 8
+  last_update_time_ = model_->GetWorld()->SimTime();
+#else
   last_update_time_ = model_->GetWorld()->GetSimTime();
+#endif
 
   //! Make sure that if we finish, we also shutdown the callback thread
   alive_ = true;
@@ -83,7 +87,12 @@ void TwistPlugin::twistCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   cmd_msg_ = cmd_msg;
+
+#if GAZEBO_MAJOR_VERSION >= 8
+  last_cmd_time_ = model_->GetWorld()->SimTime();
+#else
   last_cmd_time_ = model_->GetWorld()->GetSimTime();
+#endif
 }
 
 geometry_msgs::Twist TwistPlugin::getCurrentVelocity(const common::Time& now)
@@ -100,9 +109,15 @@ void TwistPlugin::UpdateChild()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
+#if GAZEBO_MAJOR_VERSION >= 8
+  common::Time now = model_->GetWorld()->SimTime();
+  ignition::math::Pose3d pose = model_->WorldPose();
+#else
   common::Time now = model_->GetWorld()->GetSimTime();
-  common::Time dt = now - last_update_time_;
   ignition::math::Pose3d pose = model_->GetWorldPose().Ign();
+#endif
+
+  common::Time dt = now - last_update_time_;
   geometry_msgs::Twist vel = getCurrentVelocity(now);
 
   updateOdometryPose(pose, vel, dt);
