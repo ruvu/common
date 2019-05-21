@@ -17,7 +17,6 @@ variables:
         ruvu_rabbitmq_bridge
         ruvu_rviz_plugins
         ruvu_teleop
-        pepper_hardware
         pozyx_ros
         pozyx_msgs
         opc_ros
