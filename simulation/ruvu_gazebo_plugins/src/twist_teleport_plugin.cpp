@@ -16,18 +16,19 @@ namespace gazebo
 class TwistTeleportPlugin : public TwistPlugin
 {
 protected:
-  void Update(const math::Pose& pose, const geometry_msgs::Twist& /*twist*/, const math::Vector3& world_linear_velocity,
-              const math::Vector3& world_angular_velocity, double dt, physics::ModelPtr model)
+  void Update(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& /*twist*/,
+              const ignition::math::Vector3d& world_linear_velocity,
+              const ignition::math::Vector3d& world_angular_velocity, double dt, physics::ModelPtr model)
   {
     // Calculate the updated pose
-    math::Pose updated_pose = pose;
-    updated_pose.pos += dt * world_linear_velocity;
+    ignition::math::Pose3d updated_pose = pose;
+    updated_pose.Pos() += dt * world_linear_velocity;
 
     // Only perform if we have a velocity vector
-    if (world_angular_velocity.GetLength() > 0)
+    if (world_angular_velocity.Length() > 0)
     {
-      updated_pose.rot =
-          math::Quaternion(world_angular_velocity, world_angular_velocity.GetLength() * dt) * updated_pose.rot;
+      updated_pose.Rot() = ignition::math::Quaterniond(world_angular_velocity, world_angular_velocity.Length() * dt) *
+                           updated_pose.Rot();
     }
 
     // Update the model in gazebo

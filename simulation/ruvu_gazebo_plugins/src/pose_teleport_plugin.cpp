@@ -64,9 +64,9 @@ void PoseTeleportPlugin::poseCallback(const geometry_msgs::Pose::ConstPtr& pose_
   pose_msg_ = pose_msg;
 }
 
-math::Pose PoseTeleportPlugin::getCurrentPose()
+ignition::math::Pose3d PoseTeleportPlugin::getCurrentPose()
 {
-  math::Pose pose;
+  ignition::math::Pose3d pose;
   if (pose_msg_)
   {
   }
@@ -77,13 +77,13 @@ void PoseTeleportPlugin::UpdateChild()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  math::Pose pose = pose;
-  pose.pos = math::Vector3(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
-  pose.rot = math::Quaternion(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
-                              pose_msg_->orientation.w);
+  ignition::math::Pose3d pose = pose;
+  pose.Pos() = ignition::math::Vector3d(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
+  pose.Rot() = ignition::math::Quaterniond(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
+                                           pose_msg_->orientation.w);
 
   // Convert to from camera axis (x up, y front, z left) to model axis (x front, y, left, z up)
-  tf::Quaternion q(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
+  tf::Quaternion q(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W());
   tf::Matrix3x3 m(q);
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
@@ -94,7 +94,7 @@ void PoseTeleportPlugin::UpdateChild()
   camera_yaw = -pitch;
 
   tf::Quaternion q_camera = tf::createQuaternionFromRPY(camera_roll, camera_pitch, camera_yaw);
-  pose.rot = math::Quaternion(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
+  pose.Rot() = ignition::math::Quaterniond(q_camera[0], q_camera[1], q_camera[2], q_camera[3]);
 
   // Update the model in gazebo
   model_->SetWorldPose(pose);

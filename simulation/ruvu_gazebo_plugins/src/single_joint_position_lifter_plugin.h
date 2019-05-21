@@ -46,7 +46,7 @@ private:
   //! \brief lift_model_ Pointer to the model we are lifting
   //!
   physics::ModelPtr lift_model_;
-  math::Pose lift_world_pose_relative_to_model_;
+  ignition::math::Pose3d lift_world_pose_relative_to_model_;
 
   //!
   //! \brief joint_ Pointer to the joint that needs to be actuated

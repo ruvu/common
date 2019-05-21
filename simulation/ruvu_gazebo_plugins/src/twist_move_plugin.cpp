@@ -19,7 +19,8 @@ class TwistMovePlugin : public TwistPlugin
 protected:
   double yaw_ = 0;
 
-  void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt)
+  void updateOdometryPose(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& velocity,
+                          const common::Time& dt)
   {
     double sin_yaw = sin(yaw_);
     double cos_yaw = cos(yaw_);
@@ -30,22 +31,28 @@ protected:
     double dyaw = velocity.angular.z * dt.Double();
 
     // Convert it to odom frame
-    odom_pose_.pos.x += cos_yaw * dx - sin_yaw * dy;
-    odom_pose_.pos.y += sin_yaw * dx + cos_yaw * dy;
+    odom_pose_.Pos().X() += cos_yaw * dx - sin_yaw * dy;
+    odom_pose_.Pos().Y() += sin_yaw * dx + cos_yaw * dy;
     yaw_ += dyaw;
-    odom_pose_.rot = math::Quaternion(0, 0, yaw_);
+    odom_pose_.Rot() = ignition::math::Quaterniond(0, 0, yaw_);
   }
 
-  void Update(const math::Pose& /*pose*/, const geometry_msgs::Twist& /*twist*/,
-              const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity, double /*dt*/,
-              physics::ModelPtr model)
+  void Update(const ignition::math::Pose3d& /*pose*/, const geometry_msgs::Twist& /*twist*/,
+              const ignition::math::Vector3d& world_linear_velocity,
+              const ignition::math::Vector3d& world_angular_velocity, double /*dt*/, physics::ModelPtr model)
   {
-    math::Vector3 linear_velocity = model->GetWorldLinearVel();
-    linear_velocity.x = world_linear_velocity.x;  // constrain
-    linear_velocity.y = world_linear_velocity.y;  // z
+#if GAZEBO_MAJOR_VERSION >= 8
+    ignition::math::Vector3d linear_velocity = model->WorldLinearVel();
+    ignition::math::Vector3d angular_velocity = model->WorldAngularVel();
+#else
+    ignition::math::Vector3d linear_velocity = model->GetWorldLinearVel().Ign();
+    ignition::math::Vector3d angular_velocity = model->GetWorldAngularVel().Ign();
+#endif
 
-    math::Vector3 angular_velocity = model->GetWorldAngularVel();
-    angular_velocity.z = world_angular_velocity.z;  // constrain roll and pitch
+    linear_velocity.X() = world_linear_velocity.X();  // constrain
+    linear_velocity.Y() = world_linear_velocity.Y();  // z
+
+    angular_velocity.Z() = world_angular_velocity.Z();  // constrain roll and pitch
 
     // Update the model in gazebo
     model->SetLinearVel(linear_velocity);

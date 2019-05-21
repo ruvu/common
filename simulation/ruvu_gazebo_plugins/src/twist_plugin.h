@@ -43,14 +43,14 @@ protected:
   //! \param dt Delta time since last call
   //! \param model Pointer to the model, can be used to update the model
   //!
-  virtual void Update(const math::Pose& pose, const geometry_msgs::Twist& twist,
-                      const math::Vector3& world_linear_velocity, const math::Vector3& world_angular_velocity,
-                      double dt, physics::ModelPtr model) = 0;
+  virtual void Update(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& twist,
+                      const ignition::math::Vector3d& world_linear_velocity,
+                      const ignition::math::Vector3d& world_angular_velocity, double dt, physics::ModelPtr model) = 0;
 
   //!
   //! \brief odom_pose_ The state of the robot according to odometry
   //!
-  math::Pose odom_pose_;
+  ignition::math::Pose3d odom_pose_;
 
 private:
   //!
@@ -114,7 +114,8 @@ private:
   //! \param velocity Current (command) velocity
   //! \param dt Time delta since last update
   //!
-  virtual void updateOdometryPose(const math::Pose& pose, const geometry_msgs::Twist& velocity, const common::Time& dt);
+  virtual void updateOdometryPose(const ignition::math::Pose3d& pose, const geometry_msgs::Twist& velocity,
+                                  const common::Time& dt);
 
   //!
   //! \brief publishOdometry Publish the odometry via ROS

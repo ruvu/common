@@ -41,8 +41,13 @@ protected:
   //!
   void OnUpdate(const gazebo::common::UpdateInfo& /*info*/)
   {
+#if GAZEBO_MAJOR_VERSION >= 8
+    if (world_->PhysicsEnabled())
+      world_->SetPhysicsEnabled(false);
+#else
     if (world_->GetEnablePhysicsEngine())
       world_->EnablePhysicsEngine(false);
+#endif
   }
 };
 
