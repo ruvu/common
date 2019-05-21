@@ -22,7 +22,7 @@ roslaunch ruvu_navigation_playground default_in_empty_world.test
 | Controller name | Notes |
 |-----------------|-------|
 | [dwa_local_planner/DWAPlannerROS](http://wiki.ros.org/dwa_local_planner) | Hard to configure for line following |
-| [simple_local_planner/PurePlannerROS (simple_local_planner)](https://github.com/robotics-upo/upo_robot_navigation/tree/master/simple_local_planner) | Works out of the box but not with sparse paths |
+| [simple_local_planner/PurePlannerROS (simple_local_planner)](https://github.com/robotics-upo/upo_robot_navigation/tree/master/simple_local_planner) | Works out of the box but not with sparse paths. Does not work yet on melodic. |
 | [ftc_local_planner/FTCPlanner](http://wiki.ros.org/asr_ftc_local_planner)| Does not work out of the box, no proper nav_core interface, bad code |
 | [eband_local_planner/EBandPlannerROS](http://wiki.ros.org/eband_local_planner) | A lot of parameters, most probably too complex |
 | [pose_follower/PoseFollower](https://github.com/ros-planning/navigation_experimental/tree/hydro-devel/pose_follower) | Sends NaN sometimes |

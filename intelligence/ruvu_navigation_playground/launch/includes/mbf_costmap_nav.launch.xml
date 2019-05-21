@@ -11,7 +11,6 @@
 
     <!-- controllers -->
     <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/dwa.yaml" command="load" ns="dwa" />
-    <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/simple_local_planner.yaml" command="load" ns="simple_local_planner" />
     <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/ftc.yaml" command="load" ns="ftc" />
     <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/eband.yaml" command="load" ns="eband" />
     <rosparam file="$(find ruvu_navigation_playground)/parameters/controllers/pose_follower.yaml" command="load" ns="pose_follower" />
