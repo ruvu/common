@@ -26,7 +26,6 @@
   <exec_depend>ruvu_gazebo_plugins</exec_depend>
   <exec_depend>ruvu_mbf</exec_depend>
   <exec_depend>ruvu_rviz_plugins</exec_depend>
-  <exec_depend>simple_local_planner</exec_depend>
   <exec_depend>rqt_reconfigure</exec_depend>
   <exec_depend>rviz</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
