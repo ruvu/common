@@ -8,7 +8,7 @@ if [ -z "$1" ]
 then
     _error "Please provide a [network_interface, e.g. eno1, eth0] as first argument"
 else
-    _INTERFACE_IP="$(ip -json -4 addr show wlo1 | jq '.[].addr_info[0].local' -r | grep -v null)"
+    _INTERFACE_IP="$(ip -json -4 addr show "$1" | jq '.[].addr_info[0].local' -r | grep -v null)"
     if [ $_INTERFACE_IP ]
     then
         echo "=> [ruvu_bringup] Setting ROS_IP to $_INTERFACE_IP ($1)"
