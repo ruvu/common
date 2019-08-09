@@ -8,17 +8,19 @@ from std_msgs.msg import Header
 
 
 class CmdVelToStamped(object):
-    def __init__(self):
+    def __init__(self, frame_id):
         # listen to only the latest message because we determine the stamp here
         self.subscriber = rospy.Subscriber("input", Twist, self.callback, queue_size=1)
         self.publisher = rospy.Publisher('output', TwistStamped, queue_size=10)
+        self.frame_id = frame_id
 
     def callback(self, twist):
-        msg = TwistStamped(header=Header(stamp=rospy.Time.now()), twist=twist)
+        msg = TwistStamped(header=Header(stamp=rospy.Time.now(), frame_id=self.frame_id), twist=twist)
         self.publisher.publish(msg)
 
 
 if __name__ == '__main__':
     rospy.init_node(os.path.basename(__file__))
-    CmdVelToStamped()
+
+    CmdVelToStamped(rospy.get_param('~frame_id', ''))
     rospy.spin()
