@@ -36,9 +36,26 @@ before_script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
 
 stages:
+    - black
     - build
     - test
     - release
+
+black:
+    image:
+        name: unibeautify/black
+        entrypoint: ["/bin/sh", "-c"]
+    stage: black
+    except:
+        - schedule
+    before_script: []
+    script:
+        - apk add --no-cache --update file
+        # find python scripts
+        # https://askubuntu.com/questions/785094/find-all-python-files-in-linux-file-system
+        - cd /builds/${CI_PROJECT_PATH}
+        - PYTHON_SCRIPTS=$(find . -path ./.git -prune -o -type f ! -name "*.*" | while read -r in ; do if file -i "${in}" | grep -q x-python ; then echo "${in}" ; fi ; done)
+        - black --check -l 120 . ${PYTHON_SCRIPTS}
 
 .build-on-schedule:
     stage: build
