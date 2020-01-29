@@ -2,9 +2,6 @@ image: docker:git
 
 variables:
     PACKAGES: >
-        behavior_chatter
-        behavior_simple_navigation
-        flexbe_behaviors
         opc_msgs
         opc_ros
         pozyx_msgs
