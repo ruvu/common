@@ -10,10 +10,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
-
   <run_depend>flexbe_core</run_depend>
   <run_depend>rospy</run_depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
 </package>

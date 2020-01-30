@@ -5,8 +5,8 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   pozyx_msgs
+  ruvu_lint
   rviz
-  roslint
 )
 
 catkin_package()
@@ -48,20 +48,7 @@ add_library(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
-# Tests
-if (CATKIN_ENABLE_TESTING)
-    # ROS Lint
-    set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
-    roslint_cpp()
-    roslint_add_test()
-
-    # Catkin lint
-    find_program(CATKIN_LINT catkin_lint REQUIRED)
-    execute_process(COMMAND "${CATKIN_LINT}" "-q" "-W2" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-    if(NOT ${lint_result} EQUAL 0)
-      message(FATAL_ERROR "catkin_lint failed")
-    endif()
-endif()
+ruvu_lint_add_test()
 
 install(FILES
   plugin_description.xml

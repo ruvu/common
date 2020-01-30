@@ -10,13 +10,11 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
-
   <depend>pozyx_msgs</depend>
   <depend>qtbase5-dev</depend>
   <depend>rviz</depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend>ruvu_lint</test_depend>
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml"/>
