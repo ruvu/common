@@ -4,6 +4,7 @@ project(opc_msgs)
 find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
+  ruvu_lint
 )
 
 ## Generate messages in the 'msg' folder
@@ -22,3 +23,4 @@ catkin_package(
   CATKIN_DEPENDS message_runtime std_msgs
 )
 
+ruvu_lint_add_test()

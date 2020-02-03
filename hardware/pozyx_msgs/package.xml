@@ -15,4 +15,6 @@
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
   <depend>std_msgs</depend>
+
+  <test_depend>ruvu_lint</test_depend>
 </package>

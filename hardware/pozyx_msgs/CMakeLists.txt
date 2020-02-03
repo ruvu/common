@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(pozyx_msgs)
 
-find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  std_msgs
+  ruvu_lint
+)
 
 ## Generate messages in the 'msg' folder
 add_message_files(
@@ -17,3 +21,5 @@ generate_messages(
 catkin_package(
     CATKIN_DEPENDS message_runtime std_msgs
 )
+
+ruvu_lint_add_test()
