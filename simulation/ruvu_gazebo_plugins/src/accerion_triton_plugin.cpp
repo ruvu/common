@@ -59,13 +59,13 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
     this->robot_namespace_ =
       _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
 
-  if (!_sdf->HasElement("sensor_frame_id"))
+  if (!_sdf->HasElement("sensorFrameId"))
   {
-    ROS_FATAL_NAMED( "triton",  "triton plugin missing <sensor_frame_id>, cannot proceed");
+    ROS_FATAL_NAMED( "triton",  "triton plugin missing <sensorFrameId>, cannot proceed");
     return;
   }
   else
-    this->link_name_ = _sdf->GetElement("sensor_frame_id")->Get<std::string>();
+    this->link_name_ = _sdf->GetElement("sensorFrameId")->Get<std::string>();
 
   this->link_ = _parent->GetLink(this->link_name_);
   if (!this->link_)
@@ -83,13 +83,13 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   else
     this->topic_name_ = _sdf->GetElement("topicName")->Get<std::string>();
 
-  if (!_sdf->HasElement("frameName"))
+  if (!_sdf->HasElement("parentFrameId"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <frameName>, defaults to world");
+    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <parentFrameId>, defaults to world");
     this->frame_name_ = "world";
   }
   else
-    this->frame_name_ = _sdf->GetElement("frameName")->Get<std::string>();
+    this->frame_name_ = _sdf->GetElement("parentFrameId")->Get<std::string>();
 
   if (!_sdf->HasElement("xyzOffset"))
   {
@@ -153,13 +153,13 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   else
     this->xyThreshold_ = _sdf->GetElement("xyThreshold")->Get<double>();
 
-  if (!_sdf->HasElement("delay"))
+  if (!_sdf->HasElement("publishDelay"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <delay>, defaults to 0.0");
+    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <publishDelay>, defaults to 0.0");
     this->delay_ = 0.0;
   }
   else
-    this->delay_ = _sdf->GetElement("delay")->Get<double>();
+    this->delay_ = _sdf->GetElement("publishDelay")->Get<double>();
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
