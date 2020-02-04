@@ -97,17 +97,8 @@ namespace gazebo
     /// \brief save last_time
     private: common::Time last_loop_time_;
     private: common::Time last_publish_time_;
-    private: ignition::math::Vector3d last_vpos_;
-    private: ignition::math::Vector3d last_veul_;
-    private: ignition::math::Vector3d apos_;
-    private: ignition::math::Vector3d aeul_;
-    private: ignition::math::Vector3d last_frame_vpos_;
-    private: ignition::math::Vector3d last_frame_veul_;
-    private: ignition::math::Vector3d frame_apos_;
-    private: ignition::math::Vector3d frame_aeul_;
 
     // rate control
-    private: double loop_rate_;
     private: double max_publish_rate_;
 
     // triton match parameters
