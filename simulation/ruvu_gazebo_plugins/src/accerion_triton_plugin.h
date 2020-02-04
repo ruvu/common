@@ -103,6 +103,7 @@ namespace gazebo
 
     // triton match parameters
     private: ignition::math::Vector2d xyGridResolution_;
+    private: ignition::math::Vector2d xyGridOffset_;
     private: double xyThreshold_;
 
     // sensor delay
@@ -114,6 +115,9 @@ namespace gazebo
 
     /// \brief Gaussian noise generator
     private: double GaussianKernel(double mu, double sigma);
+
+    /// \brief Pattern recognition checker
+    private: bool CheckPatternDetection(ignition::math::Pose3d pose);
 
     /// \brief for setting ROS name space
     private: std::string robot_namespace_;

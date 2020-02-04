@@ -114,15 +114,16 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   }
   else
     this->gaussian_noise_ = _sdf->GetElement("gaussianNoise")->Get<double>();
-    
+
   if (!_sdf->HasElement("maxPublishRate"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <maxPublishRate>, defaults to 0.0"
-             " (as fast as possible)");
+    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <maxPublishRate>, defaults to 0.0 (as fast as possible)");
     this->max_publish_rate_ = 0;
   }
   else
+  {
     this->max_publish_rate_ = _sdf->GetElement("maxPublishRate")->Get<double>();
+  }
 
   if (!_sdf->HasElement("xyGridResolution"))
   {
@@ -132,7 +133,16 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   else
   {
     this->xyGridResolution_ = _sdf->GetElement("xyGridResolution")->Get<ignition::math::Vector2d>();
-    assert(this->xyGridResolution_[0] > 0 && this->xyGridResolution_[1]);
+  }
+
+  if (!_sdf->HasElement("xyGridOffset"))
+  {
+    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <xyGridOffset>, defaults to 0s");
+    this->xyGridOffset_ = ignition::math::Vector2d(0, 0);
+  }
+  else
+  {
+    this->xyGridOffset_ = _sdf->GetElement("xyGridOffset")->Get<ignition::math::Vector2d>();
   }
 
   if (!_sdf->HasElement("xyThreshold"))
@@ -241,7 +251,6 @@ void AccerionTritonPlugin::UpdateChild()
 
   // Update loop time
   this->last_loop_time_ = cur_time;
-
   // Rate control
   if (this->max_publish_rate_ > 0 &&
       (cur_time-this->last_publish_time_).Double() < (1.0/this->max_publish_rate_))
@@ -302,8 +311,8 @@ void AccerionTritonPlugin::UpdateChild()
       pose.Rot().Normalize();
 
       // check if sensor would match image
-      if (std::abs(std::fmod(pose.Pos().X(), this->xyGridResolution_.X())) > this->xyThreshold_ &&
-          std::abs(std::fmod(pose.Pos().Y(), this->xyGridResolution_.Y())) > this->xyThreshold_)
+
+      if (!this->CheckPatternDetection(pose))
       {
         this->lock.unlock();
         return;
@@ -395,5 +404,26 @@ void AccerionTritonPlugin::TritonQueueThread()
   {
     this->triton_queue_.callAvailable(ros::WallDuration(timeout));
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Check if sensor is triggered
+bool AccerionTritonPlugin::CheckPatternDetection(ignition::math::Pose3d pose)
+{
+  bool match_x = (this->xyGridResolution_.X() > 0 &&
+    std::abs(std::fmod(pose.Pos().X() - this->xyGridOffset_.X(), this->xyGridResolution_.X())) <= this->xyThreshold_);
+  bool match_y = (this->xyGridResolution_.Y() > 0 &&
+    std::abs(std::fmod(pose.Pos().Y() - this->xyGridOffset_.Y(), this->xyGridResolution_.Y())) <= this->xyThreshold_);
+
+  if (this->xyGridResolution_.X() == 0 || this->xyGridResolution_.Y() == 0)
+    return true;
+  if (this->xyGridResolution_.X() < 0 && match_y)
+    return true;
+  if (this->xyGridResolution_.Y() < 0 && match_x)
+    return true;
+  if ((this->xyGridResolution_.X() > 0 && this->xyGridResolution_.Y() > 0) && (match_x || match_y))
+    return true;
+  return false;
+
 }
 }
