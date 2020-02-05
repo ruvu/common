@@ -125,41 +125,61 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
     this->max_publish_rate_ = _sdf->GetElement("maxPublishRate")->Get<double>();
   }
 
-  if (!_sdf->HasElement("xyGridResolution"))
+  if (!_sdf->HasElement("GridResolutionX"))
   {
-    ROS_FATAL_NAMED("triton", "triton plugin missing <xyGridResolution>, cannot proceed");
+    ROS_FATAL_NAMED("triton", "triton plugin missing <GridResolutionX>, cannot proceed");
     return;
   }
   else
   {
-    this->xyGridResolution_ = _sdf->GetElement("xyGridResolution")->Get<ignition::math::Vector2d>();
+    this->grid_resolution_x_ = _sdf->GetElement("GridResolutionX")->Get<double>();
   }
 
-  if (!_sdf->HasElement("xyGridOffset"))
+  if (!_sdf->HasElement("GridResolutionY"))
   {
-    ROS_DEBUG_NAMED("triton", "triton plugin missing <xyGridOffset>, defaults to 0s");
-    this->xyGridOffset_ = ignition::math::Vector2d(0, 0);
+    ROS_FATAL_NAMED("triton", "triton plugin missing <GridResolutionY>, cannot proceed");
+    return;
   }
   else
   {
-    this->xyGridOffset_ = _sdf->GetElement("xyGridOffset")->Get<ignition::math::Vector2d>();
+    this->grid_resolution_y_ = _sdf->GetElement("GridResolutionY")->Get<double>();
+  }
+
+  if (!_sdf->HasElement("GridOffsetX"))
+  {
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <GridOffsetX>, defaults to 0");
+    this->grid_offset_x_ = 0.0;
+  }
+  else
+  {
+    this->grid_offset_x_ = _sdf->GetElement("GridOffsetX")->Get<double>();
+  }
+
+  if (!_sdf->HasElement("GridOffsetY"))
+  {
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <GridOffsetY>, defaults to 0");
+    this->grid_offset_y_ = 0.0;
+  }
+  else
+  {
+    this->grid_offset_y_ = _sdf->GetElement("GridOffsetY")->Get<double>();
   }
 
   if (!_sdf->HasElement("xyThreshold"))
   {
     ROS_DEBUG_NAMED("triton", "triton plugin missing <xyThreshold>, defaults to 0.01");
-    this->xyThreshold_ = 0.01;
+    this->threshold_xy_ = 0.01;
   }
   else
-    this->xyThreshold_ = _sdf->GetElement("xyThreshold")->Get<double>();
+    this->threshold_xy_ = _sdf->GetElement("xyThreshold")->Get<double>();
 
   if (!_sdf->HasElement("publishDelay"))
   {
     ROS_DEBUG_NAMED("triton", "triton plugin missing <publishDelay>, defaults to 0.0");
-    this->delay_ = 0.0;
+    this->publish_delay_ = 0.0;
   }
   else
-    this->delay_ = _sdf->GetElement("publishDelay")->Get<double>();
+    this->publish_delay_ = _sdf->GetElement("publishDelay")->Get<double>();
 
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -237,7 +257,7 @@ void AccerionTritonPlugin::UpdateChild()
   // Send msgs with sufficient delay
   while (!this->delay_queue_.empty())
   {
-    if (cur_time.Double() < this->delay_queue_.front().header.stamp.toSec() + this->delay_)
+    if (cur_time.Double() < this->delay_queue_.front().header.stamp.toSec() + this->publish_delay_)
       break;
     this->pub_Queue->push(this->delay_queue_.front(), this->pub_);
     this->delay_queue_.pop();
@@ -410,18 +430,18 @@ void AccerionTritonPlugin::TritonQueueThread()
 // Check if sensor is triggered
 bool AccerionTritonPlugin::CheckPatternDetection(ignition::math::Pose3d pose)
 {
-  bool match_x = (this->xyGridResolution_.X() > 0 &&
-    std::abs(std::fmod(pose.Pos().X() - this->xyGridOffset_.X(), this->xyGridResolution_.X())) <= this->xyThreshold_);
-  bool match_y = (this->xyGridResolution_.Y() > 0 &&
-    std::abs(std::fmod(pose.Pos().Y() - this->xyGridOffset_.Y(), this->xyGridResolution_.Y())) <= this->xyThreshold_);
+  bool match_x = (this->grid_resolution_x_ > 0 &&
+    std::abs(std::fmod(pose.Pos().X() - this->grid_offset_x_, this->grid_resolution_x_)) <= this->threshold_xy_);
+  bool match_y = (this->grid_resolution_y_ > 0 &&
+    std::abs(std::fmod(pose.Pos().Y() - this->grid_offset_y_, this->grid_resolution_y_)) <= this->threshold_xy_);
 
-  if (this->xyGridResolution_.X() == 0 || this->xyGridResolution_.Y() == 0)
+  if (this->grid_resolution_x_ == 0 || this->grid_resolution_y_ == 0)
     return true;
-  if (this->xyGridResolution_.X() < 0 && match_y)
+  if (this->grid_resolution_x_ < 0 && match_y)
     return true;
-  if (this->xyGridResolution_.Y() < 0 && match_x)
+  if (this->grid_resolution_y_ < 0 && match_x)
     return true;
-  if ((this->xyGridResolution_.X() > 0 && this->xyGridResolution_.Y() > 0) && (match_x || match_y))
+  if ((this->grid_resolution_x_ > 0 && this->grid_resolution_y_ > 0) && (match_x || match_y))
     return true;
   return false;
 }

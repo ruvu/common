@@ -85,11 +85,13 @@ class AccerionTritonPlugin : public ModelPlugin
   // rate control
   private: double max_publish_rate_;
   // triton match parameters
-  private: ignition::math::Vector2d xyGridResolution_;
-  private: ignition::math::Vector2d xyGridOffset_;
-  private: double xyThreshold_;
+  private: double grid_resolution_x_;
+  private: double grid_resolution_y_;
+  private: double grid_offset_x_;
+  private: double grid_offset_y_;
+  private: double threshold_xy_;
   // sensor delay
-  private: double delay_;
+  private: double publish_delay_;
   private: std::queue<nav_msgs::Odometry> delay_queue_;
   /// \brief Gaussian noise
   private: double gaussian_noise_;
