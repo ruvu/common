@@ -19,7 +19,7 @@
 #include <tf/tf.h>
 #include <stdlib.h>
 
-#include "accerion_triton_plugin.h"
+#include "./accerion_triton_plugin.h"
 
 namespace gazebo
 {
@@ -61,7 +61,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("sensorFrameId"))
   {
-    ROS_FATAL_NAMED( "triton",  "triton plugin missing <sensorFrameId>, cannot proceed");
+    ROS_FATAL_NAMED("triton", "triton plugin missing <sensorFrameId>, cannot proceed");
     return;
   }
   else
@@ -70,14 +70,14 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   this->link_ = _parent->GetLink(this->link_name_);
   if (!this->link_)
   {
-    ROS_FATAL_NAMED( "triton", "accerion_triton_plugin error: sensor_frame_id: %s does not exist\n",
+    ROS_FATAL_NAMED("triton", "accerion_triton_plugin error: sensor_frame_id: %s does not exist\n",
       this->link_name_.c_str());
     return;
   }
 
   if (!_sdf->HasElement("topicName"))
   {
-    ROS_FATAL_NAMED( "triton",  "triton plugin missing <topicName>, cannot proceed");
+    ROS_FATAL_NAMED("triton", "triton plugin missing <topicName>, cannot proceed");
     return;
   }
   else
@@ -85,7 +85,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("parentFrameId"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <parentFrameId>, defaults to world");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <parentFrameId>, defaults to world");
     this->frame_name_ = "world";
   }
   else
@@ -93,7 +93,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("xyzOffset"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <xyzOffset>, defaults to 0s");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <xyzOffset>, defaults to 0s");
     this->offset_.Pos() = ignition::math::Vector3d(0, 0, 0);
   }
   else
@@ -101,7 +101,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("rpyOffset"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <rpyOffset>, defaults to 0s");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <rpyOffset>, defaults to 0s");
     this->offset_.Rot() = ignition::math::Quaterniond(ignition::math::Vector3d(0, 0, 0));
   }
   else
@@ -109,7 +109,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("gaussianNoise"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <gaussianNoise>, defaults to 0.0");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <gaussianNoise>, defaults to 0.0");
     this->gaussian_noise_ = 0;
   }
   else
@@ -117,7 +117,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("maxPublishRate"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <maxPublishRate>, defaults to 0.0 (as fast as possible)");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <maxPublishRate>, defaults to 0.0 (as fast as possible)");
     this->max_publish_rate_ = 0;
   }
   else
@@ -127,7 +127,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("xyGridResolution"))
   {
-    ROS_FATAL_NAMED( "triton",  "triton plugin missing <xyGridResolution>, cannot proceed");
+    ROS_FATAL_NAMED("triton", "triton plugin missing <xyGridResolution>, cannot proceed");
     return;
   }
   else
@@ -137,7 +137,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("xyGridOffset"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <xyGridOffset>, defaults to 0s");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <xyGridOffset>, defaults to 0s");
     this->xyGridOffset_ = ignition::math::Vector2d(0, 0);
   }
   else
@@ -147,7 +147,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("xyThreshold"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <xyThreshold>, defaults to 0.01");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <xyThreshold>, defaults to 0.01");
     this->xyThreshold_ = 0.01;
   }
   else
@@ -155,7 +155,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 
   if (!_sdf->HasElement("publishDelay"))
   {
-    ROS_DEBUG_NAMED( "triton",  "triton plugin missing <publishDelay>, defaults to 0.0");
+    ROS_DEBUG_NAMED("triton", "triton plugin missing <publishDelay>, defaults to 0.0");
     this->delay_ = 0.0;
   }
   else
@@ -164,7 +164,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
   {
-    ROS_FATAL_STREAM_NAMED( "triton", "A ROS node for Gazebo has not been initialized, unable to load plugin. "
+    ROS_FATAL_STREAM_NAMED("triton", "A ROS node for Gazebo has not been initialized, unable to load plugin. "
       << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
     return;
   }
@@ -204,7 +204,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
     this->reference_link_ = this->model_->GetLink(this->frame_name_);
     if (!this->reference_link_)
     {
-      ROS_ERROR_NAMED( "triton", "accerion_triton_plugin: frameName: %s does not exist, will"
+      ROS_ERROR_NAMED("triton", "accerion_triton_plugin: frameName: %s does not exist, will"
                 " not publish pose\n", this->frame_name_.c_str());
       return;
     }
@@ -245,7 +245,7 @@ void AccerionTritonPlugin::UpdateChild()
 
   if (cur_time <= this->last_loop_time_)
   {
-      ROS_WARN_NAMED( "triton", "Negative or zero update time difference detected.");
+      ROS_WARN_NAMED("triton", "Negative or zero update time difference detected.");
       return;
   }
 
@@ -424,6 +424,5 @@ bool AccerionTritonPlugin::CheckPatternDetection(ignition::math::Pose3d pose)
   if ((this->xyGridResolution_.X() > 0 && this->xyGridResolution_.Y() > 0) && (match_x || match_y))
     return true;
   return false;
-
 }
-}
+}  // namespace gazebo
