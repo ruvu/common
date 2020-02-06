@@ -69,3 +69,39 @@ message (default=`'odom'`)
 - `odometryRate`: Frequency of the odometry that is being published
 (default=`20`)
 - `robotFrame`: Frame id attached to the robot (default=`base_link`)
+
+
+### ruvu_accerion_triton (model plugin)
+The plugin is an adaption of the [gazebo_ros_p3d plugin](https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_plugins/src/gazebo_ros_p3d.cpp).
+It is altered to output the gazebo ground truth position when the sensor link crosses a virtual grid line.
+As the p3d, it publishes [nav_msgs/Odometry](http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html) messages on the selected topic.
+In the drawing below various parameters describing the virtual grid (representing the floor mapping) are explained.
+
+![Accerion_triton](doc/accerion_triton_grid.jpg)
+
+#### Parameters derived from p3d
+- `robotNamespace`: Namespace of the plugin, also used to extract the `tfPrefix`
+(default=`''`)
+- `sensorFrameId`: Sensor frame id (default=`'triton_link'`)
+- `parentFrameId`: Parent frame id (default=`'map'`)
+- `topicName`: Topic on which odom the message is published (default=`'/triton'`)
+- `xyzOffset`: Added xyz offset [m] to retrieved pose (default=`0 0 0`)
+- `rpyOffset`: Added rpy offset [rad] to retrieved pose (default=`0 0 0`)
+- `gaussianNoise`: Added gaussian noise to retrieved pose covariance (default=`0 0 0`)
+
+#### Triton specific parameters
+- `maxPublishRate`: Maximum rate [hz] for the out coming odom messages, to mimic the hardware limitations.
+  - `0` = as fast as possible
+  - default = `1`
+- `GridResolutionX`: Grid cell size [m] in x-direction
+  - `<0` = No grid lines in y-direction
+  - `0` = unlimited grid lines in y-direction (mimics p3d behaviour)
+  - default = `1`
+- `GridResolutionY`: Grid cell size [m] in y-direction
+  - `<0` = No grid lines in x-direction
+  - `0` = unlimited grid lines in x-direction (mimics p3d behaviour)
+  - default = `1`
+- `GridOffsetX`: Grid offset [m] in x-direction (default=`0`)
+- `GridOffsetY`: Grid offset [m] in y-direction (default=`0`)
+- `xyThreshold`: If the current position of `sensorFrameId` is within this threshold distance [m] from a virtual grid line, the plugin is triggered to output an odom message (default=`0.01`)
+- `publishDelay`: Delay [s] for outgoing odom messages to mimic the hardware limitations (default=`0`)
