@@ -55,6 +55,9 @@ target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZ
 add_library(ruvu_pose_teleport src/pose_teleport_plugin.cpp src/pose_teleport_plugin.h src/util.h)
 target_link_libraries(ruvu_pose_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
+add_library(ruvu_accerion_triton src/accerion_triton_plugin.cpp src/accerion_triton_plugin.h)
+target_link_libraries(ruvu_accerion_triton ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+
 ###########
 ## TEST ##
 ###########
@@ -88,6 +91,7 @@ install(TARGETS
   ruvu_twist_move
   ruvu_pose_teleport
   ruvu_single_joint_position_lifter
+  ruvu_accerion_triton
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
