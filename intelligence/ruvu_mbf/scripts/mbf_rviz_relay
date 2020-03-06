@@ -18,9 +18,9 @@ def simple_goal_cb(msg):
 if __name__ == '__main__':
     rospy.init_node(os.path.basename(__file__))
 
-    controller = rospy.get_param('controller', None)
-    planner = rospy.get_param('planner', None)
-    recovery_behaviors = rospy.get_param('recovery_behaviors', None)
+    controller = rospy.get_param('~controller', None)
+    planner = rospy.get_param('~planner', None)
+    recovery_behaviors = rospy.get_param('~recovery_behaviors', None)
 
     mbf_ac = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 
