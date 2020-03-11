@@ -86,7 +86,7 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   this->output_link_ = _parent->GetLink(this->output_link_name_);
   if (!this->output_link_)
   {
-    ROS_FATAL_NAMED("triton", "accerion_triton_plugin error: output_frame_id: %s does not exist\n",
+    ROS_FATAL_NAMED("triton", "accerion_triton_plugin error: outputFrameId: %s does not exist\n",
       this->output_link_name_.c_str());
     return;
   }
