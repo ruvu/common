@@ -82,14 +82,15 @@ In the drawing below various parameters describing the virtual grid (representin
 #### Parameters derived from p3d
 - `robotNamespace`: Namespace of the plugin, also used to extract the `tfPrefix`
 (default=`''`)
-- `sensorFrameId`: Sensor frame id (default=`'triton_link'`)
-- `parentFrameId`: Parent frame id (default=`'map'`)
-- `topicName`: Topic on which odom the message is published (default=`'/triton'`)
+- `sensorFrameId`: Sensor frame id
+- `parentFrameId`: Parent frame id (default=`'world'`)
+- `topicName`: Topic on which odom the message is published
 - `xyzOffset`: Added xyz offset [m] to retrieved pose (default=`0 0 0`)
 - `rpyOffset`: Added rpy offset [rad] to retrieved pose (default=`0 0 0`)
 - `gaussianNoise`: Added gaussian noise to retrieved pose covariance (default=`0 0 0`)
 
 #### Triton specific parameters
+- `outputFrameId`: Frame id which's position is returned by the plugin
 - `maxPublishRate`: Maximum rate [hz] for the out coming odom messages, to mimic the hardware limitations.
   - `0` = as fast as possible
   - default = `1`
