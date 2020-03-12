@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 import os
 
-import actionlib
 import rospy
+from actionlib import SimpleActionClient, GoalStatus
 from geometry_msgs.msg import PoseStamped
-from mbf_msgs.msg import MoveBaseGoal, MoveBaseAction
+from mbf_msgs.msg import GetPathAction, ExePathAction, GetPathGoal, ExePathGoal
 
 
 def simple_goal_cb(msg):
-    rospy.logdebug("Relaying move_base_simple/goal pose to mbf")
-    mbf_ac.send_goal(MoveBaseGoal(target_pose=msg,
-                                  controller=controller,
-                                  planner=planner,
-                                  recovery_behaviors=recovery_behaviors))
+    rospy.logdebug("Calculating path")
+    if not get_path_ac.send_goal_and_wait(GetPathGoal(target_pose=msg, planner=planner)) == GoalStatus.SUCCEEDED:
+        rospy.logerr("Failed to calculate a path")
+        return
+    path = get_path_ac.get_result()
+    rospy.logdebug("Executing path: %s", path)
+    exe_path_ac.send_goal(ExePathGoal(path=path.path, controller=controller))
 
 
 if __name__ == '__main__':
@@ -20,12 +22,14 @@ if __name__ == '__main__':
 
     controller = rospy.get_param('~controller', None)
     planner = rospy.get_param('~planner', None)
-    recovery_behaviors = rospy.get_param('~recovery_behaviors', None)
 
-    mbf_ac = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+    get_path_ac = SimpleActionClient("get_path", GetPathAction)
+    exe_path_ac = SimpleActionClient("exe_path", ExePathAction)
 
-    while not rospy.is_shutdown() and not mbf_ac.wait_for_server(rospy.Duration(5)):
-        rospy.loginfo('waiting for %s', mbf_ac.action_client.ns)
+    while not rospy.is_shutdown() and not get_path_ac.wait_for_server(rospy.Duration(5)):
+        rospy.loginfo('waiting for %s', get_path_ac.action_client.ns)
+    while not rospy.is_shutdown() and not exe_path_ac.wait_for_server(rospy.Duration(5)):
+        rospy.loginfo('waiting for %s', exe_path_ac.action_client.ns)
 
     simple_goal_sub = rospy.Subscriber('simple_goal', PoseStamped, simple_goal_cb)
 
