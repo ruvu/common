@@ -1,25 +1,9 @@
-/*
- * Copyright 2012 Open Source Robotics Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
-*/
+//
+// Copyright (c) 2020 RUVU Robotics
+//
+// @author Paul Verhoeckx
+//
 
-/*
- * Desc: 3D position interface for ground truth.
- * Author: Sachin Chitta and John Hsu
- * Date: 1 June 2008
- */
 #include <gazebo/gazebo.hh>
 
 #include <string>
@@ -59,6 +43,7 @@ class AccerionTritonPlugin : public ModelPlugin
   private: physics::ModelPtr model_;
   /// \brief The parent Model
   private: physics::LinkPtr link_;
+  private: physics::LinkPtr output_link_;
   /// \brief The body of the frame to display pose, twist
   private: physics::LinkPtr reference_link_;
   /// \brief pointer to ros node
@@ -66,9 +51,11 @@ class AccerionTritonPlugin : public ModelPlugin
   private: ros::Publisher pub_;
   private: PubQueue<nav_msgs::Odometry>::Ptr pub_Queue;
   /// \brief ros message
-  private: nav_msgs::Odometry pose_msg_;
+  private: nav_msgs::Odometry sensor_pose_msg_;
+  private: nav_msgs::Odometry output_pose_msg_;
   /// \brief store bodyname
   private: std::string link_name_;
+  private: std::string output_link_name_;
   /// \brief topic name
   private: std::string topic_name_;
   /// \brief frame transform name, should match link name
@@ -98,7 +85,9 @@ class AccerionTritonPlugin : public ModelPlugin
   /// \brief Gaussian noise generator
   private: double GaussianKernel(double mu, double sigma);
   /// \brief Pattern recognition checker
-  private: bool CheckPatternDetection(ignition::math::Pose3d pose);
+  private: bool CheckPatternDetection(nav_msgs::Odometry odom_msg);
+  /// \brief pose msg creator
+  private: nav_msgs::Odometry GetLinkPose(std::string link_name, physics::LinkPtr link, common::Time cur_time);
   /// \brief for setting ROS name space
   private: std::string robot_namespace_;
   private: ros::CallbackQueue triton_queue_;

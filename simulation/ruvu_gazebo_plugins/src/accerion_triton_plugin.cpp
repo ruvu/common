@@ -1,19 +1,8 @@
-/*
- * Copyright 2013 Open Source Robotics Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
-*/
+//
+// Copyright (c) 2020 RUVU Robotics
+//
+// @author Paul Verhoeckx
+//
 
 #include <string>
 #include <tf/tf.h>
@@ -72,6 +61,22 @@ void AccerionTritonPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   {
     ROS_FATAL_NAMED("triton", "accerion_triton_plugin error: sensor_frame_id: %s does not exist\n",
       this->link_name_.c_str());
+    return;
+  }
+
+  if (!_sdf->HasElement("outputFrameId"))
+  {
+    ROS_FATAL_NAMED("triton", "triton plugin missing <outputFrameId>, cannot proceed");
+    return;
+  }
+  else
+    this->output_link_name_ = _sdf->GetElement("outputFrameId")->Get<std::string>();
+
+  this->output_link_ = _parent->GetLink(this->output_link_name_);
+  if (!this->output_link_)
+  {
+    ROS_FATAL_NAMED("triton", "accerion_triton_plugin error: outputFrameId: %s does not exist\n",
+      this->output_link_name_.c_str());
     return;
   }
 
@@ -281,106 +286,28 @@ void AccerionTritonPlugin::UpdateChild()
     this->lock.lock();
     if (this->topic_name_ != "")
     {
-      // copy data into pose message
-      this->pose_msg_.header.frame_id = this->tf_frame_name_;
-      this->pose_msg_.header.stamp.sec = cur_time.sec;
-      this->pose_msg_.header.stamp.nsec = cur_time.nsec;
-
-      this->pose_msg_.child_frame_id = this->link_name_;
-
-      ignition::math::Pose3d pose, frame_pose;
-      ignition::math::Vector3d frame_vpos;
-      ignition::math::Vector3d frame_veul;
-
-      // get inertial Rates
-      // Get Pose/Orientation
-  #if GAZEBO_MAJOR_VERSION >= 8
-      ignition::math::Vector3d vpos = this->link_->WorldLinearVel();
-      ignition::math::Vector3d veul = this->link_->WorldAngularVel();
-      pose = this->link_->WorldPose();
-  #else
-      ignition::math::Vector3d vpos = this->link_->GetWorldLinearVel().Ign();
-      ignition::math::Vector3d veul = this->link_->GetWorldAngularVel().Ign();
-      pose = this->link_->GetWorldPose().Ign();
-  #endif
-      // Apply Reference Frame
-      if (this->reference_link_)
-      {
-        // convert to relative pose, rates
-  #if GAZEBO_MAJOR_VERSION >= 8
-        frame_pose = this->reference_link_->WorldPose();
-        frame_vpos = this->reference_link_->WorldLinearVel();
-        frame_veul = this->reference_link_->WorldAngularVel();
-  #else
-        frame_pose = this->reference_link_->GetWorldPose().Ign();
-        frame_vpos = this->reference_link_->GetWorldLinearVel().Ign();
-        frame_veul = this->reference_link_->GetWorldAngularVel().Ign();
-  #endif
-        pose.Pos() = pose.Pos() - frame_pose.Pos();
-        pose.Pos() = frame_pose.Rot().RotateVectorReverse(pose.Pos());
-        pose.Rot() *= frame_pose.Rot().Inverse();
-        vpos = frame_pose.Rot().RotateVector(vpos - frame_vpos);
-        veul = frame_pose.Rot().RotateVector(veul - frame_veul);
-      }
-
-      // Apply Constant Offsets
-      // apply xyz offsets and get position and rotation components
-      pose.Pos() = pose.Pos() + this->offset_.Pos();
-      // apply rpy offsets
-      pose.Rot() = this->offset_.Rot()*pose.Rot();
-      pose.Rot().Normalize();
+      // Get sensor pose
+      this->sensor_pose_msg_ = this->GetLinkPose(this->link_name_, this->link_, cur_time);
 
       // check if sensor would match image
-
-      if (!this->CheckPatternDetection(pose))
+      if (!this->CheckPatternDetection(this->sensor_pose_msg_))
       {
         this->lock.unlock();
         return;
       }
 
-      // Fill out messages
-      this->pose_msg_.pose.pose.position.x    = pose.Pos().X();
-      this->pose_msg_.pose.pose.position.y    = pose.Pos().Y();
-      this->pose_msg_.pose.pose.position.z    = pose.Pos().Z();
-
-      this->pose_msg_.pose.pose.orientation.x = pose.Rot().X();
-      this->pose_msg_.pose.pose.orientation.y = pose.Rot().Y();
-      this->pose_msg_.pose.pose.orientation.z = pose.Rot().Z();
-      this->pose_msg_.pose.pose.orientation.w = pose.Rot().W();
-
-      this->pose_msg_.twist.twist.linear.x  = vpos.X() +
-        this->GaussianKernel(0, this->gaussian_noise_);
-      this->pose_msg_.twist.twist.linear.y  = vpos.Y() +
-        this->GaussianKernel(0, this->gaussian_noise_);
-      this->pose_msg_.twist.twist.linear.z  = vpos.Z() +
-        this->GaussianKernel(0, this->gaussian_noise_);
-      // pass euler angular rates
-      this->pose_msg_.twist.twist.angular.x = veul.X() +
-        this->GaussianKernel(0, this->gaussian_noise_);
-      this->pose_msg_.twist.twist.angular.y = veul.Y() +
-        this->GaussianKernel(0, this->gaussian_noise_);
-      this->pose_msg_.twist.twist.angular.z = veul.Z() +
-        this->GaussianKernel(0, this->gaussian_noise_);
-
-      // fill in covariance matrix
-      /// @todo: let user set separate linear and angular covariance values.
-      double gn2 = this->gaussian_noise_*this->gaussian_noise_;
-      this->pose_msg_.pose.covariance[0] = gn2;
-      this->pose_msg_.pose.covariance[7] = gn2;
-      this->pose_msg_.pose.covariance[14] = gn2;
-      this->pose_msg_.pose.covariance[21] = gn2;
-      this->pose_msg_.pose.covariance[28] = gn2;
-      this->pose_msg_.pose.covariance[35] = gn2;
-
-      this->pose_msg_.twist.covariance[0] = gn2;
-      this->pose_msg_.twist.covariance[7] = gn2;
-      this->pose_msg_.twist.covariance[14] = gn2;
-      this->pose_msg_.twist.covariance[21] = gn2;
-      this->pose_msg_.twist.covariance[28] = gn2;
-      this->pose_msg_.twist.covariance[35] = gn2;
+      // Get output pose
+      if (this->link_name_ == this->output_link_name_)
+      {
+        this->output_pose_msg_ = this->sensor_pose_msg_;
+      }
+      else
+      {
+        this->output_pose_msg_ = this->GetLinkPose(this->output_link_name_, this->output_link_, cur_time);
+      }
 
       // Add msg to delay queue
-      this->delay_queue_.push(this->pose_msg_);
+      this->delay_queue_.push(this->output_pose_msg_);
     }
 
     this->lock.unlock();
@@ -428,12 +355,14 @@ void AccerionTritonPlugin::TritonQueueThread()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Check if sensor is triggered
-bool AccerionTritonPlugin::CheckPatternDetection(ignition::math::Pose3d pose)
+bool AccerionTritonPlugin::CheckPatternDetection(nav_msgs::Odometry odom_msg)
 {
   bool match_x = (this->grid_resolution_x_ > 0 &&
-    std::abs(std::fmod(pose.Pos().X() - this->grid_offset_x_, this->grid_resolution_x_)) <= this->threshold_xy_);
+    std::abs(std::fmod(odom_msg.pose.pose.position.x - this->grid_offset_x_, this->grid_resolution_x_))
+    <= this->threshold_xy_);
   bool match_y = (this->grid_resolution_y_ > 0 &&
-    std::abs(std::fmod(pose.Pos().Y() - this->grid_offset_y_, this->grid_resolution_y_)) <= this->threshold_xy_);
+    std::abs(std::fmod(odom_msg.pose.pose.position.y - this->grid_offset_y_, this->grid_resolution_y_))
+    <= this->threshold_xy_);
 
   if (this->grid_resolution_x_ == 0 || this->grid_resolution_y_ == 0)
     return true;
@@ -444,5 +373,95 @@ bool AccerionTritonPlugin::CheckPatternDetection(ignition::math::Pose3d pose)
   if ((this->grid_resolution_x_ > 0 && this->grid_resolution_y_ > 0) && (match_x || match_y))
     return true;
   return false;
+}
+
+// Get pose_msg from link
+nav_msgs::Odometry AccerionTritonPlugin::GetLinkPose(std::string link_name, physics::LinkPtr link,
+common::Time cur_time)
+{
+// copy data into pose message
+    nav_msgs::Odometry pose_msg_;
+    pose_msg_.header.frame_id = this->tf_frame_name_;
+    pose_msg_.header.stamp.sec = cur_time.sec;
+    pose_msg_.header.stamp.nsec = cur_time.nsec;
+    pose_msg_.child_frame_id = link_name;
+
+    ignition::math::Pose3d pose, frame_pose;
+    ignition::math::Vector3d frame_vpos;
+    ignition::math::Vector3d frame_veul;
+
+    // get inertial Rates
+    // Get Pose/Orientation
+#if GAZEBO_MAJOR_VERSION >= 8
+    ignition::math::Vector3d vpos = link->WorldLinearVel();
+    ignition::math::Vector3d veul = link->WorldAngularVel();
+    pose = link->WorldPose();
+#else
+    ignition::math::Vector3d vpos = link->GetWorldLinearVel().Ign();
+    ignition::math::Vector3d veul = link->GetWorldAngularVel().Ign();
+    pose = link->GetWorldPose().Ign();
+#endif
+    // Apply Reference Frame
+    if (this->reference_link_)
+    {
+      // convert to relative pose, rates
+#if GAZEBO_MAJOR_VERSION >= 8
+        frame_pose = this->reference_link_->WorldPose();
+        frame_vpos = this->reference_link_->WorldLinearVel();
+        frame_veul = this->reference_link_->WorldAngularVel();
+  #else
+        frame_pose = this->reference_link_->GetWorldPose().Ign();
+        frame_vpos = this->reference_link_->GetWorldLinearVel().Ign();
+        frame_veul = this->reference_link_->GetWorldAngularVel().Ign();
+  #endif
+        pose.Pos() = pose.Pos() - frame_pose.Pos();
+        pose.Pos() = frame_pose.Rot().RotateVectorReverse(pose.Pos());
+        pose.Rot() *= frame_pose.Rot().Inverse();
+        vpos = frame_pose.Rot().RotateVector(vpos - frame_vpos);
+        veul = frame_pose.Rot().RotateVector(veul - frame_veul);
+    }
+
+    // Apply Constant Offsets
+    // apply xyz offsets and get position and rotation components
+    pose.Pos() = pose.Pos() + this->offset_.Pos();
+    // apply rpy offsets
+    pose.Rot() = this->offset_.Rot()*pose.Rot();
+    pose.Rot().Normalize();
+
+    // Fill out messages
+    pose_msg_.pose.pose.position.x    = pose.Pos().X();
+    pose_msg_.pose.pose.position.y    = pose.Pos().Y();
+    pose_msg_.pose.pose.position.z    = pose.Pos().Z();
+
+    pose_msg_.pose.pose.orientation.x = pose.Rot().X();
+    pose_msg_.pose.pose.orientation.y = pose.Rot().Y();
+    pose_msg_.pose.pose.orientation.z = pose.Rot().Z();
+    pose_msg_.pose.pose.orientation.w = pose.Rot().W();
+
+    pose_msg_.twist.twist.linear.x  = vpos.X() + this->GaussianKernel(0, this->gaussian_noise_);
+    pose_msg_.twist.twist.linear.y  = vpos.Y() + this->GaussianKernel(0, this->gaussian_noise_);
+    pose_msg_.twist.twist.linear.z  = vpos.Z() + this->GaussianKernel(0, this->gaussian_noise_);
+    // pass euler angular rates
+    pose_msg_.twist.twist.angular.x = veul.X() + this->GaussianKernel(0, this->gaussian_noise_);
+    pose_msg_.twist.twist.angular.y = veul.Y() + this->GaussianKernel(0, this->gaussian_noise_);
+    pose_msg_.twist.twist.angular.z = veul.Z() + this->GaussianKernel(0, this->gaussian_noise_);
+
+    // fill in covariance matrix
+    /// @todo: let user set separate linear and angular covariance values.
+    double gn2 = this->gaussian_noise_*this->gaussian_noise_;
+    pose_msg_.pose.covariance[0] = gn2;
+    pose_msg_.pose.covariance[7] = gn2;
+    pose_msg_.pose.covariance[14] = gn2;
+    pose_msg_.pose.covariance[21] = gn2;
+    pose_msg_.pose.covariance[28] = gn2;
+    pose_msg_.pose.covariance[35] = gn2;
+
+    pose_msg_.twist.covariance[0] = gn2;
+    pose_msg_.twist.covariance[7] = gn2;
+    pose_msg_.twist.covariance[14] = gn2;
+    pose_msg_.twist.covariance[21] = gn2;
+    pose_msg_.twist.covariance[28] = gn2;
+    pose_msg_.twist.covariance[35] = gn2;
+    return pose_msg_;
 }
 }  // namespace gazebo
