@@ -17,7 +17,7 @@ def callback(msg):
 if __name__ == '__main__':
     rospy.init_node("pose_with_covariance_stamped_to_pose_stamped")
     sub = rospy.Subscriber("input", PoseWithCovarianceStamped, callback)
-    pub = rospy.Publisher("output", PoseStamped)
+    pub = rospy.Publisher("output", PoseStamped, queue_size=1)
 
     try:
         rospy.spin()
