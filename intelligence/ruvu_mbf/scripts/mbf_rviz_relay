@@ -9,7 +9,8 @@ from mbf_msgs.msg import GetPathAction, ExePathAction, GetPathGoal, ExePathGoal
 
 def simple_goal_cb(msg):
     rospy.logdebug("Calculating path")
-    if not get_path_ac.send_goal_and_wait(GetPathGoal(target_pose=msg, planner=planner)) == GoalStatus.SUCCEEDED:
+    if not get_path_ac.send_goal_and_wait(
+        GetPathGoal(target_pose=msg, tolerance=tolerance, planner=planner)) == GoalStatus.SUCCEEDED:
         rospy.logerr("Failed to calculate a path")
         return
     path = get_path_ac.get_result()
@@ -22,6 +23,7 @@ if __name__ == '__main__':
 
     controller = rospy.get_param('~controller', None)
     planner = rospy.get_param('~planner', None)
+    tolerance = rospy.get_param('~tolerance', 1.0)
 
     get_path_ac = SimpleActionClient("get_path", GetPathAction)
     exe_path_ac = SimpleActionClient("exe_path", ExePathAction)
