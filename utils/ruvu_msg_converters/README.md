@@ -92,7 +92,7 @@ Publishes a tf transform as a PoseStamped.
 - `pose` (outgoing `geometry_msgs/PoseStamped`)
 
 ### pose_with_covariance_stamped_to_pose_stamped
-Refactor pose with covariance stamped to pose stamped
+Convert a `geometry_msgs/PoseWithCovarianceStamped` to a `geometry_msgs/PoseStamped` by dropping the covariance.
 
 #### Topics
 - `input` (incoming `geometry_msgs/PoseWithCovarianceStamped`)
