@@ -90,3 +90,10 @@ Publishes a tf transform as a PoseStamped.
 
 #### Topics
 - `pose` (outgoing `geometry_msgs/PoseStamped`)
+
+### pose_with_covariance_stamped_to_pose_stamped
+Convert a `geometry_msgs/PoseWithCovarianceStamped` to a `geometry_msgs/PoseStamped` by dropping the covariance.
+
+#### Topics
+- `input` (incoming `geometry_msgs/PoseWithCovarianceStamped`)
+- `output` (converted `geometry_msgs/PoseStamped`)
