@@ -168,17 +168,24 @@ class RabbitMQBridge(object):
         ros_msg_handler_thread.start()
         try:
             self._rabbitmq_read_channel.start_consuming()
-        except pika.exceptions.ConnectionClosed as e:
+        except (KeyboardInterrupt, pika.exceptions.ConnectionClosed) as e:
             rospy.logfatal(e)
             rospy.signal_shutdown(str(e))
 
+        try:
+            rospy.loginfo('Call stop_consuming on the read_channel')
+            self._rabbitmq_read_channel.stop_consuming()
+        except AssertionError:
+            pass
+
+        rospy.loginfo("Waiting for the msg handler thread to join")
         ros_msg_handler_thread.join()
 
         rospy.loginfo("RabbitMQBridge stopped")
 
 
 if __name__ == '__main__':
-    rospy.init_node('rabbitmq_bridge')
+    rospy.init_node('rabbitmq_bridge', disable_signals=True)
 
     try:
         bridge = RabbitMQBridge(
