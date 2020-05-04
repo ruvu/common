@@ -25,6 +25,7 @@ the rabbitmq server can be reached.
 - `~rabbitmq_heartbeat`: Checks whether the RabbitMQ server can still be reached (defaults to `0`, no checking)
 - `~ros_publishere_queue_size`: Queue size on the ROS end (only holds for the specified `~publishers`).
 - `~ros_queue_empty_timeout`: How long to sleep if there are no incoming ROS msgs in the queue. (default=`0.01`)
+- `~startup_delay`: How long [s] to postpone the bringup of the RabbitMQ bridge to allow the backend to be up and running (default=`0`).
 
 Example parameter file:
 

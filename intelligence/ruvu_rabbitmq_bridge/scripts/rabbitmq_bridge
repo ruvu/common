@@ -15,7 +15,7 @@ from ruvu_rabbitmq_bridge import get_topic_bridges
 class RabbitMQBridge(object):
     def __init__(self, subscribers, publishers, rabbitmq_host, rabbitmq_username, rabbitmq_password,
                  rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat,
-                 ros_publisher_queue_size, ros_queue_empty_timeout):
+                 ros_publisher_queue_size, ros_queue_empty_timeout, startup_delay):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: ROS subscriber topic bridges
@@ -35,6 +35,10 @@ class RabbitMQBridge(object):
         self._rabbitmq_publishers = {}
         self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
         self._queue_empty_timeout = ros_queue_empty_timeout
+        self._startup_delay = startup_delay
+
+        # Sleep to allow backend to be up and running
+        rospy.sleep(self._startup_delay)
 
         if rabbitmq_username:
             parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
@@ -198,7 +202,8 @@ if __name__ == '__main__':
             rospy.get_param('~rabbitmq_reconnect_timeout', 5),
             rospy.get_param('~rabbitmq_heartbeat', 0),  # Node will stay alive even when the server cannot be reached
             rospy.get_param('~ros_publisher_queue_size', 10),
-            rospy.get_param('~queue_empty_timeout', 0.01)
+            rospy.get_param('~queue_empty_timeout', 0.01),
+            rospy.get_param('~startup_delay', 0)
         )
     except Exception as e:
         rospy.logfatal(e)
