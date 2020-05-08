@@ -198,8 +198,8 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance=0):
     for pose1, pose2 in pairs(graph_poses[i] for i in path):
         if interpolation_distance:
             steps = math.ceil(
-                math.hypot(pose2.position.x - pose1.position.x, pose2.position.y - pose1.position.y)
-                / interpolation_distance
+                math.hypot(pose2.position.x - pose1.position.x, pose2.position.y - pose1.position.y) /
+                interpolation_distance
             )
             # Perform interpolation
             msg.poses += [
