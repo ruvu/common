@@ -223,7 +223,7 @@ def _get_empty_path(frame_id):
 
 class PoseGraphNode(object):
     def __init__(self, frame_id, robot_frame_id, file_path, click_timeout, interpolation_distance,
-                 neglect_goal_orientation):
+                 include_goal_pose):
         """
         PoseGraphNode that holds a pose graph that can be created and modified by the user. This pose graph can be used
         to search paths in euclidean space
@@ -232,6 +232,7 @@ class PoseGraphNode(object):
         :param file_path: Where to store the graph
         :param click_timeout: Timeout between clicks when adding an edge or querying a path
         :param interpolation_distance: Pose interpolation between graph poses (when a path is calculated)
+        :param include_goal_pose: Append goal pose to the end of the path or not
         """
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
@@ -247,7 +248,7 @@ class PoseGraphNode(object):
         self._last_get_path_clicked_point = None
         self._click_timeout = click_timeout
         self._interpolation_distance = interpolation_distance
-        self._neglect_goal_orientation = neglect_goal_orientation
+        self._include_goal_pose = include_goal_pose
 
         self._visualization_pub = rospy.Publisher("graph_visualization", MarkerArray, queue_size=1, latch=True)
         self._last_planned_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
@@ -479,11 +480,10 @@ class PoseGraphNode(object):
                 result.path = _nx_path_to_nav_msgs_path(graph, shortest_path, self._frame_id,
                                                         interpolation_distance)
 
-                if goal.planner == "global":
+                if goal.planner == "global" and self._include_goal_pose:
                     end_pose = goal.target_pose
-                    # If orientation not set (zero quaternion is invalid) or set to neglect, use orientation from
-                    # graph node pose
-                    if end_pose.pose.orientation == Quaternion() or self._neglect_goal_orientation:
+                    # If orientation not set (zero quaternion is invalid), use orientation from graph node pose
+                    if end_pose.pose.orientation == Quaternion():
                         end_pose.pose.orientation = result.path.poses[-1].pose.orientation
                     result.path.poses.append(end_pose)
 
@@ -572,7 +572,7 @@ if __name__ == "__main__":
             rospy.get_param("~file_path", "/tmp/pose_graph.yaml"),
             rospy.get_param("~click_timeout", 5.0),
             rospy.get_param("~interpolation_distance", 0.2),
-            rospy.get_param("~neglect_goal_orientation", False)
+            rospy.get_param("~include_goal_pose", True)
         )
     except Exception:
         # if we don't catch this exception, the node hangs because other threads have been started
