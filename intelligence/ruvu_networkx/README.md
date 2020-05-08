@@ -42,6 +42,7 @@ PoseGraphNode that holds a pose graph that can be created and modified by the us
 - ~file_path (`default="/tmp/pose_graph"`) - Where to load / store the graph
 - ~click_timeout (`default=5.0` - When adding and edge or planning a path using the corresponding topic interfaces, this timeout is used for selecting consecutive poses.
 - ~interpolation_distance (`default=0.2`) - Path interpolation
+- ~include_goal_pose (`default=True`) - When true, the goal pose is added to the end of the path, otherwise the final node is the end pose.
 
 ### [generate_grid_graph](scripts/generate_grid_graph)
 This script can be used to generate a grid of nodes. Several arguments can be given to the script to modify the resulting grid. Run the script with `--help` to see how to use it:
