@@ -168,6 +168,19 @@ def _find_shortest_path(graph, start_nodes, end_node):
         raise nx.NetworkXNoPath
 
 
+def pairs(seq):
+    """
+    Iterate in pairs of two over an iterable
+
+    See also https://stackoverflow.com/questions/5764782/iterate-through-pairs-of-items-in-a-python-list
+    """
+    i = iter(seq)
+    prev = next(i)
+    for item in i:
+        yield prev, item
+        prev = item
+
+
 def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance=0):
     """
     Convert a path in the graph to a nav_msgs/Path
@@ -178,31 +191,24 @@ def _nx_path_to_nav_msgs_path(graph, path, frame_id, interpolation_distance=0):
     :return: The nav_msgs/Path
     """
     graph_poses = nx.get_node_attributes(graph, "pose")
-    header = Header(
-        stamp=rospy.Time.now(),
-        frame_id=frame_id
-    )
+    header = Header(stamp=rospy.Time.now(), frame_id=frame_id)
 
     msg = Path(header=header)
 
-    last_idx = None
-    for idx in path:
-        pose = graph_poses[idx]
-        if last_idx is not None and interpolation_distance:
-            last_pose = graph_poses[last_idx]
-
-            step_size = 1. / int(math.hypot(pose.position.x - last_pose.position.x,
-                                            pose.position.y - last_pose.position.y) / interpolation_distance)
-
+    for pose1, pose2 in pairs(graph_poses[i] for i in path):
+        if interpolation_distance:
+            steps = math.ceil(
+                math.hypot(pose2.position.x - pose1.position.x, pose2.position.y - pose1.position.y)
+                / interpolation_distance
+            )
             # Perform interpolation
-            msg.poses += [PoseStamped(header=header, pose=_get_interpolated_pose(last_pose, pose, f))
-                          for f in np.arange(step_size, 1.0, step_size)]
+            msg.poses += [
+                PoseStamped(header=header, pose=_get_interpolated_pose(pose1, pose2, f))
+                for f in np.linspace(0, 1, steps, endpoint=False)
+            ]
         else:
-            msg.poses.append(PoseStamped(
-                header=header,
-                pose=pose
-            ))
-        last_idx = idx
+            msg.poses.append(PoseStamped(header=header, pose=pose1))
+    msg.poses.append(PoseStamped(header=header, pose=pose2))
 
     return msg
 
