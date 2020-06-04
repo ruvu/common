@@ -25,7 +25,6 @@
   <exec_depend>python-pykalman</exec_depend>
   <exec_depend>python-pypozyx-pip</exec_depend>
   <exec_depend>python-scipy</exec_depend>
-  <exec_depend>python_orocos_kdl</exec_depend>
   <exec_depend condition="$ROS_PYTHON_VERSION == 2">python_orocos_kdl</exec_depend>
   <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-pykdl</exec_depend>
   <exec_depend>rospy</exec_depend>
