@@ -6,9 +6,12 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   ruvu_lint
   rviz
+  control_msgs
 )
 
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS control_msgs
+)
 
 ###########
 ## Build ##
