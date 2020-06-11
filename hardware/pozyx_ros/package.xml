@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>pozyx_ros</name>
   <version>0.1.0</version>
   <description>ROS package for the Pozyx positioning system.</description>
@@ -21,11 +21,14 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>pozyx_msgs</exec_depend>
-  <exec_depend>python-numpy</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 2">python-numpy</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-numpy</exec_depend>
   <exec_depend>python-pykalman</exec_depend>
   <exec_depend>python-pypozyx-pip</exec_depend>
-  <exec_depend>python-scipy</exec_depend>
-  <exec_depend>python_orocos_kdl</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 2">python-scipy</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-scipy</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 2">python_orocos_kdl</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-pykdl</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
@@ -33,6 +36,7 @@
 
   <depend>std_msgs</depend>
 
-  <test_depend>python-catkin-lint</test_depend>
+  <test_depend condition="$ROS_PYTHON_VERSION == 2">python-catkin-lint</test_depend>
+  <test_depend condition="$ROS_PYTHON_VERSION == 3">python3-catkin-lint</test_depend>
   <test_depend>roslaunch</test_depend>
 </package>
