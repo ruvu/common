@@ -288,6 +288,8 @@ class RabbitMQBridge(object):
 
         ros_msg_handler_thread = threading.Thread(target=self._ros_msg_handler_thread)
         ros_msg_handler_thread.start()
+        ros_srv_handler_thread = threading.Thread(target=self._ros_srv_handler_thread)
+        ros_srv_handler_thread.start()
         try:
             self._rabbitmq_read_channel.start_consuming()
         except (KeyboardInterrupt, pika.exceptions.ConnectionClosed) as e:
@@ -300,8 +302,9 @@ class RabbitMQBridge(object):
         except AssertionError:
             pass
 
-        rospy.loginfo("Waiting for the msg handler thread to join")
+        rospy.loginfo("Waiting for the msg and srv handler threads to join")
         ros_msg_handler_thread.join()
+        ros_srv_handler_thread.join()
 
         rospy.loginfo("RabbitMQBridge stopped")
 
