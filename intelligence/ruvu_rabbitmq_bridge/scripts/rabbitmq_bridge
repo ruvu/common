@@ -115,7 +115,7 @@ class RabbitMQBridge(object):
             # Create RabbitMQ RPC client
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             result = self._rabbitmq_write_channel.queue_declare(
-                queue=rabbitmq_queue_name, durable=server.durable, exclusive=True
+                queue=rabbitmq_queue_name, durable=server.durable
             )
             self._rabbitmq_rpc_client_callback_queue = result.method.queue
             self._rabbitmq_write_channel.basic_consume(
