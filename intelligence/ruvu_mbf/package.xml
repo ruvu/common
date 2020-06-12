@@ -12,12 +12,10 @@
 
   <build_depend>ruvu_lint</build_depend>
 
-  <depend>mbf_costmap_core</depend>
-  <depend>mbf_costmap_nav</depend>
-  <depend>rospy</depend>
-  <depend>mbf_msgs</depend>
-  <depend>geometry_msgs</depend>
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>mbf_msgs</exec_depend>
+  <exec_depend>rospy</exec_depend>
 
   <test_depend>ruvu_lint</test_depend>
-  <test_depend>roslaunch</test_depend>
 </package>
