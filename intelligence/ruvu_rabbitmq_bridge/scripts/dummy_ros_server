@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+import rospy
+from std_srvs.srv import SetBool, SetBoolResponse
+
+
+class Server(object):
+    def __init__(self):
+        rospy.Service('rpc_test_client', SetBool, self.callback)
+
+    def callback(self, msg):
+        return SetBoolResponse(success=msg.data, message="WHOEP")
+
+
+if __name__ == '__main__':
+    rospy.init_node('dummy_server')
+    Server()
+    rospy.spin()
