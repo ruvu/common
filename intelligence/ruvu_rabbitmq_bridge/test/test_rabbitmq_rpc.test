@@ -13,6 +13,6 @@
   </node>
 
   <test test-name="rpc_test_client_node" pkg="ruvu_rabbitmq_bridge" type="rpc_test_client_node">
-    <remap from="output" to="rpc_test_client"/>
+    <remap from="output" to="rpc_test"/>
   </test>
 </launch>
