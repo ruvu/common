@@ -122,7 +122,7 @@ class RabbitMQBridge(object):
 
         for client in service_clients:
             # Create ROS service client
-            self._ros_service_clients[client.topic] = rospy.ServiceProxy(client.topic + '_client', client.message_type)
+            self._ros_service_clients[client.topic] = rospy.ServiceProxy(client.topic, client.message_type)
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
