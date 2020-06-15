@@ -334,8 +334,6 @@ class RabbitMQBridge(object):
             rospy.signal_shutdown(str(e))
         except pika.exceptions.ChannelClosed as e:
             rospy.loginfo("Channel was closed: %s", e)
-        except pika.exceptions.ReentrancyError as e:
-            rospy.loginfo("Channel ReentrancyError: %s", e)
 
         try:
             rospy.loginfo('Call stop_consuming on the read_channel')
