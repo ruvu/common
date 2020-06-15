@@ -16,6 +16,11 @@ publishers:
     message_type: geometry_msgs/Twist
     exchange: Example.Exchange2
     durable: false
+service_servers:
+  - topic: rpc_test
+    message_type: std_srvs/SetBool
+    exchange: Example.Exchange
+    durable: true
 rabbitmq_host: localhost
 rabbitmq_username: ''
 rabbitmq_password: ''

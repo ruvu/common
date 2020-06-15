@@ -5,10 +5,10 @@ from std_srvs.srv import SetBool, SetBoolResponse
 
 class Server(object):
     def __init__(self):
-        rospy.Service('rpc_test_client', SetBool, self.callback)
+        rospy.Service('input', SetBool, self.callback)
 
     def callback(self, msg):
-        return SetBoolResponse(success=msg.data, message="WHOEP")
+        return SetBoolResponse(success=msg.data, message="ok")
 
 
 if __name__ == '__main__':
