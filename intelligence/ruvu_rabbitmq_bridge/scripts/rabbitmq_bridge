@@ -9,7 +9,8 @@ import pika
 import rospy
 import sys
 import uuid
-from rospy_message_converter import json_message_converter
+import json
+from rospy_message_converter import json_message_converter, message_converter
 from ruvu_rabbitmq_bridge import get_topic_bridges, get_service_bridges
 
 
@@ -232,7 +233,9 @@ class RabbitMQBridge(object):
             client = self._ros_service_clients[topic]
             rospy.loginfo("MQ RPC request topic: %s", client.topic)
             try:
-                msg = json_message_converter.convert_json_to_ros_message(client.type, body)
+                # Note: convert_json_to_ros_message does not allow srv conversion
+                dictionary = json.loads(body)
+                msg = message_converter.convert_dictionary_to_ros_message(msg_type, dictionary, kind='request')
             except ValueError as e:
                 rospy.logerr("Conversion to ROS msg failed: {}".format(e))
             else:
@@ -241,9 +244,12 @@ class RabbitMQBridge(object):
                 response = client(msg)
                 rospy.loginfo("ROS received srv response from dummy")
                 channel.basic_publish(exchange=client.exchange,
+                # Note: convert_ros_message_to_json does not allow srv conversion
+                dictionary = message_converter.convert_ros_message_to_dictionary(response)
+                json_msg = json.dumps(dictionary)
                                       routing_key=properties.reply_to,
                                       properties=pika.BasicProperties(correlation_id=properties.correlation_id),
-                                      body=response
+                                      body=json_msg
                                       )
                 channel.basick_ack(delivery_tag=method.delivery_tag)
                 rospy.loginfo("MQ send RPC response")
@@ -261,7 +267,21 @@ class RabbitMQBridge(object):
         rospy.loginfo("MQ RPC response received")
         if properties.correlation_id in self._correlation_ids.values():
             rospy.loginfo("MQ RPC response has correct id")
-            self._rabbitmq_rpc_repsonses[properties.correlation_id] = body
+            if method.routing_key.startswith(self._rabbitmq_queue_prefix):
+                topic = method.routing_key[len(self._rabbitmq_queue_prefix):-len('_response')]
+                server = self._ros_service_servers[topic]
+                msg_type = server.service_class._type
+
+                try:
+                    # Note: convert_json_to_ros_message does not allow srv conversion
+                    dictionary = json.loads(body)
+                    ros_msg = message_converter.convert_dictionary_to_ros_message(msg_type, dictionary, kind='response')
+                except ValueError as e:
+                    rospy.logerr("Conversion to ROS msg failed: {}".format(e))
+                else:
+                    self._rabbitmq_rpc_repsonses[properties.correlation_id] = ros_msg
+            else:
+                rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
     def _ros_msg_handler_thread(self):
         while not rospy.is_shutdown():
