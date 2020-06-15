@@ -116,9 +116,9 @@ class RabbitMQBridge(object):
                 self._rabbitmq_write_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
 
             # Create RabbitMQ RPC client
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
+            rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic + '_response'
             result = self._rabbitmq_write_channel.queue_declare(
-                queue=rabbitmq_queue_name, durable=server.durable
+                queue=rabbitmq_queue_name, exclusive=True, durable=True
             )
             self._rabbitmq_rpc_client_callback_queue = result.method.queue
             self._rabbitmq_write_channel.basic_consume(
@@ -132,13 +132,14 @@ class RabbitMQBridge(object):
             # Create ROS service client
             self._ros_service_clients[client.topic] = rospy.ServiceProxy(client.topic + '_client', client.message_type)
             rospy.loginfo("ROS service client initialized")
-            if client.exchange:
-                self._rabbitmq_read_channel.exchange_declare(exchange=client.exchange, durable=client.durable)
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
             self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable)
             self._rabbitmq_read_channel.basic_qos(prefetch_count=1)
+
+            if client.exchange:
+                self._rabbitmq_read_channel.queue_bind(exchange=client.exchange, queue=rabbitmq_queue_name)
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_rpc_server_callback, queue=rabbitmq_queue_name)
             rospy.loginfo("RabbitMQ RPC server initialized")
 
@@ -187,7 +188,7 @@ class RabbitMQBridge(object):
         rospy.logdebug(
             "Publishing RabbitMQ message with body {} to queue {}".format(body, rabbitmq_queue_name))
         self._rabbitmq_write_channel.basic_publish(
-            exchange=server.exchange,
+            exchange='',
             routing_key=rabbitmq_queue_name,
             properties=pika.BasicProperties(
                 reply_to=self._rabbitmq_rpc_client_callback_queue,
@@ -231,6 +232,7 @@ class RabbitMQBridge(object):
             topic = method.routing_key[len(self._rabbitmq_queue_prefix):]
 
             client = self._ros_service_clients[topic]
+            msg_type = client.service_class._type
             rospy.loginfo("MQ RPC request topic: %s", client.topic)
             try:
                 # Note: convert_json_to_ros_message does not allow srv conversion
@@ -243,16 +245,16 @@ class RabbitMQBridge(object):
                 rospy.loginfo("ROS send srv request to dummy")
                 response = client(msg)
                 rospy.loginfo("ROS received srv response from dummy")
-                channel.basic_publish(exchange=client.exchange,
+
                 # Note: convert_ros_message_to_json does not allow srv conversion
                 dictionary = message_converter.convert_ros_message_to_dictionary(response)
                 json_msg = json.dumps(dictionary)
+                channel.basic_publish(exchange='',
                                       routing_key=properties.reply_to,
                                       properties=pika.BasicProperties(correlation_id=properties.correlation_id),
                                       body=json_msg
                                       )
-                channel.basick_ack(delivery_tag=method.delivery_tag)
-                rospy.loginfo("MQ send RPC response")
+                channel.basic_ack(delivery_tag=method.delivery_tag)
         else:
             rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
