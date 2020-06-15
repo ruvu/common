@@ -4,7 +4,7 @@
   </node>
 
   <node name="rabbitmq_bridge2" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" required="true">
-    <rosparam file="$(find movigo_intelligence_bringup)/config/rabbitmq_bridge2.yaml" command="load" />
+    <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge_inverse.yaml" command="load" />
     <remap from="rpc_test" to="rpc_test_client"/>
   </node>
 
