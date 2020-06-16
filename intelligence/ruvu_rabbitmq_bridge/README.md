@@ -67,3 +67,9 @@ rabbitmq_heartbeat: 0
 #rabbitmq_queue_prefix: custom_prefix # defaults to current hostname
 ros_publisher_queue_size: 10 # defaults to 10
 ```
+
+### Tests
+##### test_rabbitmq_rpc
+This tests the communication with ROS services over Rabbitmq using RPCs. It verifies the working of both a server and a client implementation of the rabbitmq_bridge, with an architecture as depicted below.
+
+![rabbitmq_rpc_test](doc/rabbitmq_rpc_test.jpg)
