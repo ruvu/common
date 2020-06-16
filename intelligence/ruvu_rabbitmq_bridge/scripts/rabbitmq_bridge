@@ -227,12 +227,14 @@ class RabbitMQBridge(object):
                 # Note: convert_json_to_ros_message does not allow srv conversion
                 dictionary = json.loads(body)
                 msg = message_converter.convert_dictionary_to_ros_message(msg_type, dictionary, kind='request')
-            except ValueError as e:
-                rospy.logerr("Conversion to ROS msg failed: {}".format(e))
-            else:
+
                 rospy.logdebug("Publishing ROS message {} to service {}".format(msg, topic))
                 response = client(msg)
-
+            except ValueError as e:
+                rospy.logerr("Conversion to ROS msg failed: {}".format(e))
+            except rospy.ServiceException as e:
+                rospy.logerr("Service did not process request: " + str(e))
+            else:
                 # Note: convert_ros_message_to_json does not allow srv conversion
                 dictionary = message_converter.convert_ros_message_to_dictionary(response)
                 json_msg = json.dumps(dictionary)
