@@ -3,7 +3,7 @@
     <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge.yaml" command="load" />
   </node>
 
-  <node name="rabbitmq_bridge2" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" required="true">
+  <node name="rabbitmq_bridge_inverse" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" required="true">
     <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge_inverse.yaml" command="load" />
     <remap from="rpc_test" to="rpc_test_client"/>
   </node>
