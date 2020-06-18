@@ -15,15 +15,15 @@ from ruvu_rabbitmq_bridge import get_topic_bridges, get_service_bridges
 
 
 class RabbitMQBridge(object):
-    def __init__(self, subscribers, publishers, service_servers, service_clients, rabbitmq_host, rabbitmq_username,
+    def __init__(self, subscribers, publishers, servers, clients, rabbitmq_host, rabbitmq_username,
                  rabbitmq_password, rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat,
                  ros_publisher_queue_size, ros_queue_empty_timeout):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: ROS subscriber topic bridges
         :param publishers: ROS publishers topic bridges
-        :param service_servers: ROS service server bridges
-        :param service_clients: ROS service client bridges
+        :param servers: ROS service server bridges
+        :param clients: ROS service client bridges
         :param rabbitmq_host: Specifies where the RabbitMQ server is running
         :param rabbitmq_username: The RabbitMQ username
         :param rabbitmq_password: The RabbitMQ password
@@ -35,8 +35,8 @@ class RabbitMQBridge(object):
         """
         self._ros_subscribers = {}
         self._ros_publishers = {}
-        self._ros_service_servers = {}
-        self._ros_service_clients = {}
+        self._ros_servers = {}
+        self._ros_clients = {}
         self._correlation_ids = {}
         self._rabbitmq_rpc_repsonses = {}
         self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
@@ -101,9 +101,9 @@ class RabbitMQBridge(object):
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
                                                       no_ack=True)
 
-        for server in service_servers:
+        for server in servers:
             # Create ROS service server
-            self._ros_service_servers[server.topic] = rospy.Service(
+            self._ros_servers[server.topic] = rospy.Service(
                 server.topic, server.message_type, partial(self._ros_srv_callback, server)
             )
 
@@ -120,9 +120,9 @@ class RabbitMQBridge(object):
                 self._rabbitmq_rpc_client_callback, queue=self._rabbitmq_rpc_client_callback_queue, no_ack=True
             )
 
-        for client in service_clients:
+        for client in clients:
             # Create ROS service client
-            self._ros_service_clients[client.topic] = rospy.ServiceProxy(client.topic, client.message_type)
+            self._ros_clients[client.topic] = rospy.ServiceProxy(client.topic, client.message_type)
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
@@ -221,7 +221,7 @@ class RabbitMQBridge(object):
         if method.routing_key.startswith(self._rabbitmq_queue_prefix):
             topic = method.routing_key[len(self._rabbitmq_queue_prefix):]
 
-            client = self._ros_service_clients[topic]
+            client = self._ros_clients[topic]
             msg_type = client.service_class._type
             try:
                 # Note: convert_json_to_ros_message does not allow srv conversion
@@ -259,7 +259,7 @@ class RabbitMQBridge(object):
         if properties.correlation_id in self._correlation_ids.values():
             if method.routing_key.startswith(self._rabbitmq_queue_prefix):
                 topic = method.routing_key[len(self._rabbitmq_queue_prefix):-len('_response')]
-                server = self._ros_service_servers[topic]
+                server = self._ros_servers[topic]
                 msg_type = server.service_class._type
 
                 try:
@@ -339,8 +339,8 @@ if __name__ == '__main__':
         bridge = RabbitMQBridge(
             get_topic_bridges(rospy.get_param('~subscribers', [])),
             get_topic_bridges(rospy.get_param('~publishers', [])),
-            get_service_bridges(rospy.get_param('~service_servers', [])),
-            get_service_bridges(rospy.get_param('~service_clients', [])),
+            get_service_bridges(rospy.get_param('~servers', [])),
+            get_service_bridges(rospy.get_param('~clients', [])),
             rospy.get_param('~rabbitmq_host', 'localhost'),
             rospy.get_param('~rabbitmq_username', ''),
             rospy.get_param('~rabbitmq_password', ''),

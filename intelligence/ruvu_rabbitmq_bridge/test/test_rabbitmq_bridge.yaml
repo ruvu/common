@@ -16,7 +16,7 @@ publishers:
     message_type: geometry_msgs/Twist
     exchange: Example.Exchange2
     durable: false
-service_servers:
+servers:
   - topic: rpc_test
     message_type: std_srvs/SetBool
     exchange: Example.Exchange

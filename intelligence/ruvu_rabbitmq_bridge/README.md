@@ -17,8 +17,8 @@ the rabbitmq server can be reached.
 
 - `~subscribers`: List with topic and message type entries. A ROS subscriber will be created and every message will be published to RabbitMQ.
 - `~publishers`: List with topic and message type entries. A RabbitMQ subscriber will be created and every message will be published to the ROS network on the specified topic.
-- `~service_servers`: List with service and message type entries. A ROS service server will be created and every request message will be published using a Remote Procedure Call (RPC) to RabbitMQ. The returned RPC response is thereafter published on the ROS network as service response. 
-- `~service_clients`: List with service and message type entries. A RabbitMQ RPC server will be created and every RPC request message will be published to the ROS network as a service request. The returned ROS service response is thereafter published on the RabbitMQ network as a RPC response. 
+- `~servers`: List with service and message type entries. A ROS service server will be created and every request message will be published using a Remote Procedure Call (RPC) to RabbitMQ. The returned RPC response is thereafter published on the ROS network as service response. 
+- `~clients`: List with service and message type entries. A RabbitMQ RPC server will be created and every RPC request message will be published to the ROS network as a service request. The returned ROS service response is thereafter published on the RabbitMQ network as a RPC response. 
 - `~rabbitmq_queue_prefix`: This prefix will be prepended to the specified topic names in the `~subscribers` and `~publishers` parameters for the RabbitMQ queue name.
 - `~rabbitmq_host`: The RabbitMQ host
 - `~rabbitmq_username`: The RabbitMQ username (defaults to `''`)
@@ -49,12 +49,12 @@ publishers:
     message_type: geometry_msgs/Twist
     exchange: Example.Exchange2
     durable: false
-service_servers:
+servers:
   - topic: trigger_to_rabbitmq
     message_type: std_srvs/Trigger
     exchange: Example.Exchange
     durable: true
-service_clients:
+clients:
   - topic: bool_from_rabbitmq
     message_type: std_srvs/SetBool
     exchange: Example.Exchange
