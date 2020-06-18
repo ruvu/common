@@ -111,11 +111,23 @@ class RabbitMQBridge(object):
                 self._rabbitmq_write_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
 
             # Create RabbitMQ RPC client
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic + '_response'
-            result = self._rabbitmq_write_channel.queue_declare(
-                queue=rabbitmq_queue_name, exclusive=True, durable=True
+            rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
+            rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
+            queue = self._rabbitmq_write_channel.queue_declare(
+                queue=rabbitmq_queue_name, durable=True
             )
-            self._rabbitmq_rpc_client_callback_queue = result.method.queue
+            response_queue = self._rabbitmq_write_channel.queue_declare(
+                queue=rabbitmq_response_queue_name, exclusive=True, durable=True
+            )
+            while queue.method.consumer_count == 0:
+                rospy.loginfo_once("Waiting for RPC server for: %s", server.topic)
+                rospy.sleep(0.1)
+                queue = self._rabbitmq_write_channel.queue_declare(
+                    queue=rabbitmq_queue_name, durable=True
+                )
+            rospy.loginfo("RPC server found for %s", server.topic)
+
+            self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
             self._rabbitmq_write_channel.basic_consume(
                 self._rabbitmq_rpc_client_callback, queue=self._rabbitmq_rpc_client_callback_queue, no_ack=True
             )
@@ -123,6 +135,9 @@ class RabbitMQBridge(object):
         for client in clients:
             # Create ROS service client
             self._ros_clients[client.topic] = rospy.ServiceProxy(client.topic, client.message_type)
+            rospy.loginfo("Waiting for ROS server for: %s", client.topic)
+            self._ros_clients[client.topic].wait_for_service()
+            rospy.loginfo("ROS server found for %s", client.topic)
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
