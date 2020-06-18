@@ -14,6 +14,14 @@ from rospy_message_converter import json_message_converter, message_converter
 from ruvu_rabbitmq_bridge import get_topic_bridges, get_service_bridges
 
 
+def reply_empty_json_message(channel, properties):
+    channel.basic_publish(exchange='',
+                          routing_key=properties.reply_to,
+                          properties=pika.BasicProperties(correlation_id=properties.correlation_id),
+                          body=json.dumps({})
+                          )
+
+
 class RabbitMQBridge(object):
     def __init__(self, subscribers, publishers, servers, clients, rabbitmq_host, rabbitmq_username,
                  rabbitmq_password, rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat,
@@ -250,8 +258,10 @@ class RabbitMQBridge(object):
                 response = client(msg)
             except ValueError as e:
                 rospy.logerr("Conversion to ROS msg failed: {}".format(e))
+                reply_empty_json_message(channel, properties)
             except rospy.ServiceException as e:
                 rospy.logerr("Service did not process request: " + str(e))
+                reply_empty_json_message(channel, properties)
             else:
                 # Note: convert_ros_message_to_json does not allow srv conversion
                 dictionary = message_converter.convert_ros_message_to_dictionary(response)
@@ -262,7 +272,6 @@ class RabbitMQBridge(object):
                                       properties=pika.BasicProperties(correlation_id=properties.correlation_id),
                                       body=json_msg
                                       )
-                channel.basic_ack(delivery_tag=method.delivery_tag)
         else:
             rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
