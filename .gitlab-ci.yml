@@ -28,7 +28,6 @@ variables:
         ruvu_teleop
         ruvu_web
     IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH
-    RABBITMQ_HOST: rabbitmq
 
 before_script:
     - mkdir ~/.ssh
@@ -67,6 +66,8 @@ stages:
     stage: test
     script:
         - docker pull $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
+        - export RABBITMQ_HOST=$(getent hosts rabbitmq | awk '{ print $1 }')
+        - echo "Rabbimq host = $RABBITMQ_HOST"
         - docker run --rm --entrypoint /.ruvu/docker/entrypoint_run_tests.sh --env RABBITMQ_HOST $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} catkin_test_results
 
 .release:
