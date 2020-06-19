@@ -9,9 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
 )
 
-catkin_package(
-  CATKIN_DEPENDS control_msgs
-)
+catkin_package()
 
 ###########
 ## Build ##
