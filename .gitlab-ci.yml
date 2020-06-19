@@ -1,5 +1,8 @@
 image: docker:git
 
+services:
+  - rabbitmq:latest
+
 variables:
     PACKAGES: >
         opc_msgs
