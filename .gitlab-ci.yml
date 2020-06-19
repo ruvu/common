@@ -28,6 +28,7 @@ variables:
         ruvu_teleop
         ruvu_web
     IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH
+    RABBITMQ_HOST: rabbitmq
 
 before_script:
     - mkdir ~/.ssh
