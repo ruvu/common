@@ -1,12 +1,12 @@
 <launch>
   <node name="rabbitmq_bridge" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" required="true">
     <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge.yaml" command="load" />
-    <param name="rabbitmq_host" value="$(optenv RABBITMQ_HOST 127.0.0.1)" />
+    <param name="rabbitmq_host" value="$(optenv RABBITMQ_HOST localhost)" />
   </node>
 
   <node name="rabbitmq_bridge_inverse" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" required="true">
     <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge_inverse.yaml" command="load" />
-    <param name="rabbitmq_host" value="$(optenv RABBITMQ_HOST 127.0.0.1)" />
+    <param name="rabbitmq_host" value="$(optenv RABBITMQ_HOST localhost)" />
     <remap from="rpc_test" to="rpc_test_client"/>
   </node>
 
