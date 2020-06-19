@@ -40,7 +40,7 @@ class RabbitMQBridge(object):
         :param rabbitmq_heartbeat: Rabbitmq connection heartbeat
         :param ros_publisher_queue_size: ROS publisher queue size
         :param ros_queue_empty_timeout: When there is no incoming ROS message, wait for x seconds
-        :param ros_service_response_timeout: When there is no ROS service response [seconds], pass an error to the client
+        :param ros_service_response_timeout: When there's no ROS service response [seconds], pass an error to the client
         """
         self._ros_subscribers = {}
         self._ros_publishers = {}
