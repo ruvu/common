@@ -21,6 +21,7 @@ the rabbitmq server can be reached.
 - `~clients`: List with service and message type entries. A RabbitMQ RPC server will be created and every RPC request message will be published to the ROS network as a service request. The returned ROS service response is thereafter published on the RabbitMQ network as a RPC response. 
 - `~rabbitmq_queue_prefix`: This prefix will be prepended to the specified topic names in the `~subscribers` and `~publishers` parameters for the RabbitMQ queue name.
 - `~rabbitmq_host`: The RabbitMQ host
+- `~rabbitmq_virtual_host`: The RabbitMQ virtual host name (defaults to `'/'`)
 - `~rabbitmq_username`: The RabbitMQ username (defaults to `''`)
 - `~rabbitmq_password`: The RabbitMQ password (defaults to `''`)
 - `~rabbitmq_reconnect_timeout`: How long to wait before reconnecting if the initial connection fails (defaults to `5`)

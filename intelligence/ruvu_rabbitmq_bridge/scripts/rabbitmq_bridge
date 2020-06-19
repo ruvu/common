@@ -23,9 +23,9 @@ def reply_empty_json_message(channel, properties):
 
 
 class RabbitMQBridge(object):
-    def __init__(self, subscribers, publishers, servers, clients, rabbitmq_host, rabbitmq_username,
-                 rabbitmq_password, rabbitmq_queue_prefix, rabbitmq_reconnect_timeout, rabbitmq_heartbeat,
-                 ros_publisher_queue_size, ros_queue_empty_timeout, ros_service_response_timeout):
+    def __init__(self, subscribers, publishers, servers, clients, rabbitmq_host, rabbitmq_virtual_host,
+                 rabbitmq_username, rabbitmq_password, rabbitmq_queue_prefix, rabbitmq_reconnect_timeout,
+                 rabbitmq_heartbeat, ros_publisher_queue_size, ros_queue_empty_timeout, ros_service_response_timeout):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: ROS subscriber topic bridges
@@ -33,6 +33,7 @@ class RabbitMQBridge(object):
         :param servers: ROS service server bridges
         :param clients: ROS service client bridges
         :param rabbitmq_host: Specifies where the RabbitMQ server is running
+        :param rabbitmq_virtual_host: Specifies the virtual host name
         :param rabbitmq_username: The RabbitMQ username
         :param rabbitmq_password: The RabbitMQ password
         :param rabbitmq_queue_prefix: The ROS topic names equal the RabbitMQ queue names but prepended with this prefix
@@ -54,10 +55,12 @@ class RabbitMQBridge(object):
 
         if rabbitmq_username:
             parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
+                                                   virtual_host=rabbitmq_virtual_host,
                                                    credentials=pika.PlainCredentials(rabbitmq_username,
                                                                                      rabbitmq_password))
         else:
-            parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat)
+            parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
+                                                   virtual_host=rabbitmq_virtual_host)
 
         while not rospy.is_shutdown():
             try:
@@ -369,6 +372,7 @@ if __name__ == '__main__':
             get_service_bridges(rospy.get_param('~servers', [])),
             get_service_bridges(rospy.get_param('~clients', [])),
             rospy.get_param('~rabbitmq_host', 'localhost'),
+            rospy.get_param('~rabbitmq_virtual_host', '/'),
             rospy.get_param('~rabbitmq_username', ''),
             rospy.get_param('~rabbitmq_password', ''),
             rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
