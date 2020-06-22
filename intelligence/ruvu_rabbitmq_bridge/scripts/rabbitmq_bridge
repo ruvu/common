@@ -14,16 +14,24 @@ from rospy_message_converter import json_message_converter, message_converter
 from ruvu_rabbitmq_bridge import get_topic_bridges, get_service_bridges
 
 
-def reply_empty_json_message(channel, properties):
+def reply_failed_json_message(channel, properties, exception):
     """
     Function for replying empty json message
     :param channel: Channel to publish on
     :param properties: Message properties
+    :param exception: Thrown exception
     """
+    # Add header to JSON response to communicate thrown exceptions
+    data_dict = {}
+    header_dict = {'success': False, 'message': exception}
+    nested_dict = {'data': data_dict}
+    nested_dict.update(header_dict)
+    json_msg = json.dumps(nested_dict)
+    rospy.logdebug("Publishing JSON message {}".format(json_msg))
     channel.basic_publish(exchange='',
                           routing_key=properties.reply_to,
                           properties=pika.BasicProperties(correlation_id=properties.correlation_id),
-                          body=json.dumps({})
+                          body=json_msg
                           )
 
 
@@ -280,18 +288,22 @@ class RabbitMQBridge(object):
                 # Note: convert_json_to_ros_message does not allow srv conversion
                 dictionary = json.loads(body)
                 msg = message_converter.convert_dictionary_to_ros_message(msg_type, dictionary, kind='request')
-                rospy.logdebug("Publishing ROS message {} to service {}".format(msg, topic))
                 response = client(msg)
             except ValueError as e:
                 rospy.logerr("Conversion to ROS msg failed: {}".format(e))
-                reply_empty_json_message(channel, properties)
+                reply_failed_json_message(channel, properties, e)
             except rospy.ServiceException as e:
                 rospy.logerr("Service did not process request: " + str(e))
-                reply_empty_json_message(channel, properties)
+                reply_failed_json_message(channel, properties, e)
             else:
                 # Note: convert_ros_message_to_json does not allow srv conversion
-                dictionary = message_converter.convert_ros_message_to_dictionary(response)
-                json_msg = json.dumps(dictionary)
+                data_dict = message_converter.convert_ros_message_to_dictionary(response)
+                # Add header to JSON response to communicate thrown exceptions
+                header_dict = {'success': True, 'message': ''}
+                nested_dict = {'data': data_dict}
+                nested_dict.update(header_dict)
+                json_msg = json.dumps(nested_dict)
+                rospy.logdebug("Publishing JSON message {} to service {}".format(json_msg, topic))
 
                 channel.basic_publish(exchange='',
                                       routing_key=properties.reply_to,
@@ -316,14 +328,19 @@ class RabbitMQBridge(object):
                 server = self._ros_servers[topic]
                 msg_type = server.service_class._type
 
-                try:
-                    # Note: convert_json_to_ros_message does not allow srv conversion
-                    dictionary = json.loads(body)
-                    ros_msg = message_converter.convert_dictionary_to_ros_message(msg_type, dictionary, kind='response')
-                except ValueError as e:
-                    rospy.logerr("Conversion to ROS msg failed: {}".format(e))
+                response_dict = json.loads(body)
+                if response_dict['success']:
+                    msg_dict = response_dict['data']
+                    try:
+                        # Note: convert_json_to_ros_message does not allow srv conversion
+                        ros_msg = message_converter.convert_dictionary_to_ros_message(msg_type, msg_dict,
+                                                                                      kind='response')
+                    except ValueError as e:
+                        rospy.logerr("Conversion to ROS msg failed: {}".format(e))
+                    else:
+                        self._rabbitmq_rpc_repsonses[properties.correlation_id] = ros_msg
                 else:
-                    self._rabbitmq_rpc_repsonses[properties.correlation_id] = ros_msg
+                    rospy.logwarn("RPC response failed with message: %s", response_dict['message'])
             else:
                 rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
