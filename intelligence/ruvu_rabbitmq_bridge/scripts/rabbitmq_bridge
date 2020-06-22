@@ -59,13 +59,23 @@ class RabbitMQBridge(object):
         self._ros_service_response_timeout = rospy.Duration(ros_service_response_timeout)
 
         if rabbitmq_username:
-            parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
-                                                   virtual_host=rabbitmq_virtual_host,
-                                                   credentials=pika.PlainCredentials(rabbitmq_username,
-                                                                                     rabbitmq_password))
+            if hasattr(pika.ConnectionParameters, 'heartbeat'):  # pika version >= 0.11.0
+                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
+                                                       virtual_host=rabbitmq_virtual_host,
+                                                       credentials=pika.PlainCredentials(rabbitmq_username,
+                                                                                         rabbitmq_password))
+            else:
+                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat_interval=rabbitmq_heartbeat,
+                                                       virtual_host=rabbitmq_virtual_host,
+                                                       credentials=pika.PlainCredentials(rabbitmq_username,
+                                                                                         rabbitmq_password))
         else:
-            parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
-                                                   virtual_host=rabbitmq_virtual_host)
+            if hasattr(pika.ConnectionParameters, 'heartbeat'):  # pika version >= 0.11.0
+                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
+                                                       virtual_host=rabbitmq_virtual_host)
+            else:
+                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat_interval=rabbitmq_heartbeat,
+                                                       virtual_host=rabbitmq_virtual_host)
 
         while not rospy.is_shutdown():
             try:
