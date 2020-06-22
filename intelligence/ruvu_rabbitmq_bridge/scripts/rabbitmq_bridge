@@ -15,6 +15,11 @@ from ruvu_rabbitmq_bridge import get_topic_bridges, get_service_bridges
 
 
 def reply_empty_json_message(channel, properties):
+    """
+    Function for replying empty json message
+    :param channel: Channel to publish on
+    :param properties: Message properties
+    """
     channel.basic_publish(exchange='',
                           routing_key=properties.reply_to,
                           properties=pika.BasicProperties(correlation_id=properties.correlation_id),
@@ -117,6 +122,7 @@ class RabbitMQBridge(object):
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
                                                       no_ack=True)
 
+        # RPC implementation based on: https://www.rabbitmq.com/tutorials/tutorial-six-python.html
         for server in servers:
             # Create ROS service server
             self._ros_servers[server.topic] = rospy.Service(
@@ -206,6 +212,11 @@ class RabbitMQBridge(object):
         )
 
     def _publish_ros_srv_rabbitmq(self, server, msg):
+        """
+        Publish RPC requests message
+        :param server: Server bridge information
+        :param msg: Incoming message
+        """
         rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
         body = json_message_converter.convert_ros_message_to_json(msg)
         rospy.logdebug(
@@ -259,7 +270,6 @@ class RabbitMQBridge(object):
                 # Note: convert_json_to_ros_message does not allow srv conversion
                 dictionary = json.loads(body)
                 msg = message_converter.convert_dictionary_to_ros_message(msg_type, dictionary, kind='request')
-
                 rospy.logdebug("Publishing ROS message {} to service {}".format(msg, topic))
                 response = client(msg)
             except ValueError as e:
