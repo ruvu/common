@@ -210,8 +210,8 @@ class RabbitMQBridge(object):
         body = json_message_converter.convert_ros_message_to_json(msg)
         rospy.logdebug(
             "Publishing RabbitMQ message with body {} to queue {}".format(body, rabbitmq_queue_name))
-        self._rabbitmq_write_channel.basic_publish(
-            exchange='',
+        self._rabbitmq_rpc_channel.basic_publish(
+            exchange=server.exchange,
             routing_key=rabbitmq_queue_name,
             properties=pika.BasicProperties(
                 reply_to=self._rabbitmq_rpc_client_callback_queue,
