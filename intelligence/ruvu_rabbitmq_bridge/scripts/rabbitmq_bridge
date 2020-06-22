@@ -74,6 +74,9 @@ class RabbitMQBridge(object):
                 self._rabbitmq_read_connection = pika.BlockingConnection(parameters)
                 self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
 
+                self._rabbitmq_rpc_connection = pika.BlockingConnection(parameters)
+                self._rabbitmq_rpc_channel = self._rabbitmq_rpc_connection.channel()
+
             except pika.exceptions.ConnectionClosed as e:
                 if rabbitmq_reconnect_timeout > 0:
                     rospy.logerr("%s - Reconnecting in %.2f seconds", e, rabbitmq_reconnect_timeout)
@@ -121,27 +124,27 @@ class RabbitMQBridge(object):
             )
 
             if server.exchange:
-                self._rabbitmq_write_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
+                self._rabbitmq_rpc_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
 
             # Create RabbitMQ RPC client
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
-            queue = self._rabbitmq_write_channel.queue_declare(
+            queue = self._rabbitmq_rpc_channel.queue_declare(
                 queue=rabbitmq_queue_name, durable=True
             )
-            response_queue = self._rabbitmq_write_channel.queue_declare(
+            response_queue = self._rabbitmq_rpc_channel.queue_declare(
                 queue=rabbitmq_response_queue_name, exclusive=True, durable=True
             )
             while queue.method.consumer_count == 0:
                 rospy.loginfo_once("Waiting for RPC server for: %s", server.topic)
                 rospy.sleep(0.1)
-                queue = self._rabbitmq_write_channel.queue_declare(
+                queue = self._rabbitmq_rpc_channel.queue_declare(
                     queue=rabbitmq_queue_name, durable=True
                 )
             rospy.loginfo("RPC server found for %s", server.topic)
 
             self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
-            self._rabbitmq_write_channel.basic_consume(
+            self._rabbitmq_rpc_channel.basic_consume(
                 self._rabbitmq_rpc_client_callback, queue=self._rabbitmq_rpc_client_callback_queue, no_ack=True
             )
 
@@ -187,7 +190,7 @@ class RabbitMQBridge(object):
         # Wait for RPC reply
         while self._rabbitmq_rpc_repsonses[self._correlation_ids[server.topic]] is None and rospy.Time.now() - start < \
                 self._ros_service_response_timeout:
-            self._rabbitmq_write_connection.process_data_events()
+            self._rabbitmq_rpc_connection.process_data_events()
 
         return self._rabbitmq_rpc_repsonses[self._correlation_ids[server.topic]]
 
@@ -320,7 +323,7 @@ class RabbitMQBridge(object):
             except Queue.Empty:
                 pass
 
-            if self._rabbitmq_write_connection.is_open:
+            if self._rabbitmq_rpc_connection.is_open:
                 self._diagnostic_updater.update()
 
     def spin(self):
