@@ -160,7 +160,7 @@ class RabbitMQBridge(object):
                 queue=rabbitmq_response_queue_name, exclusive=True, durable=True
             )
             while queue.method.consumer_count == 0:
-                rospy.loginfo_throttle(60, "Waiting for RPC server for: %s", server.topic)
+                rospy.loginfo_throttle(60, "Waiting for RPC server for: " + server.topic)
                 rospy.sleep(0.1)
                 queue = self._rabbitmq_rpc_channel.queue_declare(
                     queue=rabbitmq_queue_name, durable=True
