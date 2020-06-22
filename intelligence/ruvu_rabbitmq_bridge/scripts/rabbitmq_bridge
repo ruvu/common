@@ -278,6 +278,7 @@ class RabbitMQBridge(object):
                                       properties=pika.BasicProperties(correlation_id=properties.correlation_id),
                                       body=json_msg
                                       )
+                channel.basic_ack(delivery_tag=method.delivery_tag)
         else:
             rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
