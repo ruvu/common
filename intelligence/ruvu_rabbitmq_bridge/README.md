@@ -75,3 +75,12 @@ ros_publisher_queue_size: 10 # defaults to 10
 This tests the communication with ROS services over Rabbitmq using RPCs. It verifies the working of both a server and a client implementation of the rabbitmq_bridge, with an architecture as depicted below.
 
 ![rabbitmq_rpc_test](doc/rabbitmq_rpc_test.jpg)
+
+### Misc
+#### How to enable the rabbitmq admin page
+```shell script
+sudo rabbitmq-plugins enable rabbitmq_management
+sudo rabbitmqctl add_user username password
+sudo rabbitmqctl set_user_tags username administrator
+```
+After enabling the management plugin, the interface shouls be hosted at http://localhost:15672/
