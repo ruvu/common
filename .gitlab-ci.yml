@@ -1,5 +1,8 @@
 image: docker:git
 
+services:
+  - rabbitmq:latest
+
 variables:
     PACKAGES: >
         opc_msgs
@@ -63,7 +66,9 @@ stages:
     stage: test
     script:
         - docker pull $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
-        - docker run --rm --entrypoint /.ruvu/docker/entrypoint_run_tests.sh $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} catkin_test_results
+        - export RABBITMQ_HOST=$(getent hosts rabbitmq | awk '{ print $1 }')
+        - echo "Rabbimq host = $RABBITMQ_HOST"
+        - docker run --rm --entrypoint /.ruvu/docker/entrypoint_run_tests.sh --env RABBITMQ_HOST $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} catkin_test_results
 
 .release:
     stage: release

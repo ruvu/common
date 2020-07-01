@@ -1,5 +1,6 @@
 <launch>
   <node name="rabbitmq_bridge" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge" output="screen">
     <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_rabbitmq_bridge.yaml" command="load" />
+    <param name="rabbitmq_host" value="$(optenv RABBITMQ_HOST localhost)" />
   </node>
 </launch>
