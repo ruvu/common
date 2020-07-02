@@ -1,7 +1,7 @@
 clients:
   - topic: rpc_test
     message_type: std_srvs/SetBool
-    exchange: Example.Exchange
+    exchange: Test.RPC
     durable: true
 rabbitmq_username: ''
 rabbitmq_password: ''
