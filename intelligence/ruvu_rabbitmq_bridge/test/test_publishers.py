@@ -39,7 +39,7 @@ class TestClient(unittest.TestCase):
         connection = BlockingConnection(ConnectionParameters(host))
         channel = connection.channel()
         channel.queue_declare(queue=queue)
-        channel.basic_publish(exchange='Example.Exchange', routing_key=queue, body=dumps({'data': 'somestring'}))
+        channel.basic_publish(exchange='Test.Publishers', routing_key=queue, body=dumps({'data': 'somestring'}))
         connection.close()
 
         # check if the string is received in a ROS message
