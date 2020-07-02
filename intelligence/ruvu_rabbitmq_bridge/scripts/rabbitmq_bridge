@@ -67,24 +67,15 @@ class RabbitMQBridge(object):
         self._queue_empty_timeout = ros_queue_empty_timeout
         self._ros_service_response_timeout = rospy.Duration(ros_service_response_timeout)
 
+        parameters = {
+            'host': rabbitmq_host,
+            'virtual_host': rabbitmq_virtual_host,
+        }
         if rabbitmq_username:
-            if hasattr(pika.ConnectionParameters, 'heartbeat'):  # pika version >= 0.11.0
-                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
-                                                       virtual_host=rabbitmq_virtual_host,
-                                                       credentials=pika.PlainCredentials(rabbitmq_username,
-                                                                                         rabbitmq_password))
-            else:
-                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat_interval=rabbitmq_heartbeat,
-                                                       virtual_host=rabbitmq_virtual_host,
-                                                       credentials=pika.PlainCredentials(rabbitmq_username,
-                                                                                         rabbitmq_password))
-        else:
-            if hasattr(pika.ConnectionParameters, 'heartbeat'):  # pika version >= 0.11.0
-                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat=rabbitmq_heartbeat,
-                                                       virtual_host=rabbitmq_virtual_host)
-            else:
-                parameters = pika.ConnectionParameters(host=rabbitmq_host, heartbeat_interval=rabbitmq_heartbeat,
-                                                       virtual_host=rabbitmq_virtual_host)
+            parameters['credentials'] = pika.PlainCredentials(rabbitmq_username, rabbitmq_password)
+        if hasattr(pika.ConnectionParameters, 'heartbeat'):  # pika version >= 0.11.0
+            parameters['heartbeat'] = rabbitmq_heartbeat
+        parameters = pika.ConnectionParameters(**parameters)
 
         while not rospy.is_shutdown():
             try:
