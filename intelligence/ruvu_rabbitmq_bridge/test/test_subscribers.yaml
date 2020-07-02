@@ -1,0 +1,5 @@
+subscribers:
+  - topic: string_to_rabbitmq
+    message_type: std_msgs/String
+    exchange: Example.Exchange
+    durable: false

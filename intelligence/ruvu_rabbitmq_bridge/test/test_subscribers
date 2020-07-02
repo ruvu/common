@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+import os
+import platform
+import sys
+import unittest
+from Queue import Queue
+from json import dumps
+from pika import BlockingConnection, ConnectionParameters
+from threading import Thread
+
+import rospy
+import rostest
+from std_msgs.msg import String
+
+PKG = 'ruvu_rabbitmq_bridge'
+NAME = 'test_publishers'
+
+
+class TestClient(unittest.TestCase):
+	def __init__(self, *args):
+		super(TestClient, self).__init__(*args)
+
+	@classmethod
+	def setUpClass(cls):
+		rospy.init_node(NAME, disable_signals=True)
+
+	def setUp(self):
+		self.message_queue = Queue()
+
+	def test_client(self):
+		# create a pike consumer
+		host = os.environ.get('RABBITMQ_HOST', 'localhost')
+		queue = platform.node() + '/string_to_rabbitmq'
+		connection = BlockingConnection(ConnectionParameters(host))
+		channel = connection.channel()
+		channel.basic_consume(self.consumer_callback, queue=queue)
+
+		# create a subscriber and wait till the bridge is online
+		pub = rospy.Publisher('string_to_rabbitmq', String, queue_size=1)
+		rospy.loginfo('waiting for %s', pub.name)
+		while not rospy.is_shutdown() and pub.get_num_connections() >= 1:
+			rospy.sleep(0.1)
+		rospy.loginfo('blablabal')
+
+		def target():
+			rospy.loginfo('in a thread')
+			# while channel._consumer_infos:
+			channel.connection.process_data_events(time_limit=3)  # 1 second
+			rospy.loginfo('done in a thread')
+
+		rospy.loginfo('starting a thread')
+		t = Thread(target=target)
+		t.start()
+
+		rospy.sleep(1)
+
+		# publish a message from the ROS side
+		pub.publish('someotherstring')
+
+		# for method_frame, properties, body in channel.consume(queue=queue):
+		# 	rospy.loginfo('what is this? %s', method_frame, properties, body)
+
+		# check if the string is received on the rabbitmq side
+		msg = self.message_queue.get(timeout=5)
+		self.assertIsNotNone(msg)
+
+		rospy.sleep(1)
+		rospy.loginfo('stop consuming')
+		channel.stop_consuming()
+
+		rospy.loginfo('joining')
+		t.join()
+		rospy.loginfo('joined')
+		rospy.signal_shutdown('bla')
+
+	def consumer_callback(self, msg):
+		rospy.loginfo('consumer_callback')
+		self.message_queue.put(msg)
+
+
+if __name__ == '__main__':
+	rostest.rosrun(PKG, NAME, TestClient, sys.argv)
