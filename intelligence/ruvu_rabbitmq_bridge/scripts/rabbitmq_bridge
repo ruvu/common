@@ -131,6 +131,9 @@ class RabbitMQBridge(object):
                 publisher.topic, publisher.message_type, queue_size=ros_publisher_queue_size
             )
 
+            if publisher.exchange:
+                self._rabbitmq_write_channel.exchange_declare(exchange=publisher.exchange, durable=publisher.durable)
+
             # Create RabbitMQ subscriber
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
             self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable)
