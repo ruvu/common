@@ -113,3 +113,48 @@ melodic-release:
   extends: .release
   variables:
     ROS_DISTRO: melodic
+
+noetic-build-on-schedule:
+  extends: .build-on-schedule
+  variables:
+    ROS_DISTRO: noetic
+    PACKAGES: >
+        opc_msgs
+        pozyx_msgs
+        pozyx_ros
+        ruvu_bag_tools
+        ruvu_bringup
+        ruvu_frame_2d_publisher
+        ruvu_lint
+        ruvu_mbf
+        ruvu_msg_converters
+        ruvu_rostest
+        ruvu_rqt
+        ruvu_sensor_descriptions
+        ruvu_teleop
+noetic-build:
+  extends: .build
+  variables:
+    ROS_DISTRO: noetic
+    PACKAGES: >
+        opc_msgs
+        pozyx_msgs
+        pozyx_ros
+        ruvu_bag_tools
+        ruvu_bringup
+        ruvu_frame_2d_publisher
+        ruvu_lint
+        ruvu_mbf
+        ruvu_msg_converters
+        ruvu_rostest
+        ruvu_rqt
+        ruvu_sensor_descriptions
+        ruvu_teleop
+noetic-test:
+  extends: .test
+  variables:
+    ROS_DISTRO: noetic
+noetic-release:
+  extends: .release
+  variables:
+    ROS_DISTRO: noetic
