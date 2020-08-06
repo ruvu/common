@@ -37,25 +37,25 @@ catkin_package(
 ###########
 
 # show headers in qtcreator
-FILE(GLOB_RECURSE HEADERS "src/*.h")
+FILE(GLOB_RECURSE HEADERS "src/*.hpp")
 add_custom_target(headers SOURCES ${HEADERS})
 
 add_library(ruvu_disable_physics src/disable_physics_plugin.cpp)
 target_link_libraries(ruvu_disable_physics ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(ruvu_twist_teleport src/twist_teleport_plugin.cpp src/twist_plugin.cpp src/twist_plugin.h src/util.h)
+add_library(ruvu_twist_teleport src/twist_teleport_plugin.cpp src/twist_plugin.cpp)
 target_link_libraries(ruvu_twist_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(ruvu_twist_move src/twist_move_plugin.cpp src/twist_plugin.cpp src/twist_plugin.h src/util.h)
+add_library(ruvu_twist_move src/twist_move_plugin.cpp src/twist_plugin.cpp)
 target_link_libraries(ruvu_twist_move ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(ruvu_single_joint_position_lifter src/single_joint_position_lifter_plugin.cpp src/single_joint_position_lifter_plugin.h src/util.h)
+add_library(ruvu_single_joint_position_lifter src/single_joint_position_lifter_plugin.cpp)
 target_link_libraries(ruvu_single_joint_position_lifter ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(ruvu_pose_teleport src/pose_teleport_plugin.cpp src/pose_teleport_plugin.h src/util.h)
+add_library(ruvu_pose_teleport src/pose_teleport_plugin.cpp)
 target_link_libraries(ruvu_pose_teleport ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
-add_library(ruvu_accerion_triton src/accerion_triton_plugin.cpp src/accerion_triton_plugin.h)
+add_library(ruvu_accerion_triton src/accerion_triton_plugin.cpp)
 target_link_libraries(ruvu_accerion_triton ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
 
 ###########
