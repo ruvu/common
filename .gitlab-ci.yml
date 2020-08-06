@@ -125,6 +125,7 @@ noetic-build-on-schedule:
         ruvu_bag_tools
         ruvu_bringup
         ruvu_frame_2d_publisher
+        ruvu_gazebo_plugins
         ruvu_lint
         ruvu_mbf
         ruvu_msg_converters
@@ -143,6 +144,7 @@ noetic-build:
         ruvu_bag_tools
         ruvu_bringup
         ruvu_frame_2d_publisher
+        ruvu_gazebo_plugins
         ruvu_lint
         ruvu_mbf
         ruvu_msg_converters
