@@ -5,8 +5,8 @@
 //
 
 #include <string>
-#include "./single_joint_position_lifter_plugin.h"
-#include "./util.h"
+#include "./single_joint_position_lifter_plugin.hpp"
+#include "./util.hpp"
 
 namespace gazebo
 {

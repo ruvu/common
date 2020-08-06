@@ -4,7 +4,7 @@
 // @author Rein Appeldoorn
 //
 
-#include "./twist_plugin.h"
+#include "./twist_plugin.hpp"
 
 namespace gazebo
 {

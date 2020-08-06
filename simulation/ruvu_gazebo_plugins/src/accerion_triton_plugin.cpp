@@ -8,7 +8,7 @@
 #include <tf/tf.h>
 #include <stdlib.h>
 
-#include "./accerion_triton_plugin.h"
+#include "./accerion_triton_plugin.hpp"
 
 namespace gazebo
 {

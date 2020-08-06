@@ -6,8 +6,8 @@
 
 #include <string>
 
-#include "./twist_plugin.h"
-#include "./util.h"
+#include "./twist_plugin.hpp"
+#include "./util.hpp"
 
 namespace gazebo
 {
