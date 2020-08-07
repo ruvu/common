@@ -8,7 +8,7 @@ catkin_package()
 
 ruvu_lint_add_test()
 
-install(PROGRAMS
+catkin_install_python(PROGRAMS
   scripts/odom_to_pose_with_covariance_stamped
   scripts/odom_to_tf
   scripts/pose_stamped_to_tf
