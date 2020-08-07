@@ -5,8 +5,8 @@
 //
 
 #include <string>
-#include "./single_joint_position_lifter_plugin.h"
-#include "./util.h"
+#include "./single_joint_position_lifter_plugin.hpp"
+#include "./util.hpp"
 
 namespace gazebo
 {
@@ -145,11 +145,11 @@ physics::ModelPtr SingleJointPositionLifterPlugin::getModelAboveUs()
       boost::dynamic_pointer_cast<physics::RayShape>(physics->CreateShape("ray", physics::CollisionPtr()));
 
 #if GAZEBO_MAJOR_VERSION >= 8
-  ignition::math::Box box = model_->BoundingBox();
-  ignition::math::Vector3d start = model_->WorldPose().Pos();
+  auto box = model_->BoundingBox();
+  auto start = model_->WorldPose().Pos();
 #else
-  ignition::math::Box box = model_->GetBoundingBox().Ign();
-  ignition::math::Vector3d start = model_->GetWorldPose().pos.Ign();
+  auto box = model_->GetBoundingBox().Ign();
+  auto start = model_->GetWorldPose().pos.Ign();
 #endif
 
   ignition::math::Vector3d end = start;

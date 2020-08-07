@@ -6,8 +6,8 @@
 
 #include <string>
 
-#include "./pose_teleport_plugin.h"
-#include "./util.h"
+#include "./pose_teleport_plugin.hpp"
+#include "./util.hpp"
 
 #include <tf/transform_datatypes.h>
 #include <gazebo/physics/physics.hh>

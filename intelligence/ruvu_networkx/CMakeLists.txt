@@ -8,7 +8,7 @@ catkin_package()
 
 ruvu_lint_add_test()
 
-install(PROGRAMS
+catkin_install_python(PROGRAMS
   scripts/generate_grid_graph
   scripts/pose_graph_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

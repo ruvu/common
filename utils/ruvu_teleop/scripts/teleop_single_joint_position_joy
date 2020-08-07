@@ -7,7 +7,7 @@ import actionlib
 
 
 def callback(msg):
-    for button, position in button_mapping.iteritems():
+    for button, position in button_mapping.items():
         if button < len(msg.buttons) and msg.buttons[button] == 1:
             if button_mapping_first_pressed[button] is None:
                 rospy.loginfo("Initial press button %d", button)
