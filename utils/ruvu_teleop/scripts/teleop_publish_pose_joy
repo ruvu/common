@@ -15,7 +15,7 @@ last_buttons = []
 
 def joy_callback(msg):
     global last_buttons
-    for button, button_action in button_mapping.iteritems():
+    for button, button_action in button_mapping.items():
         # Check if button is rising
         if button < len(msg.buttons) and msg.buttons[button] == 1 and msg.buttons[button] != last_buttons[button]:
             tf_buffer = tf2_ros.Buffer()
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         for e in button_index_pose_publishers
     }
 
-    for button_idx, button_action in button_mapping.iteritems():
+    for button_idx, button_action in button_mapping.items():
         rospy.loginfo(
             "Mapping button index {} to pose {} -> {} publisher on topic {}".format(button_idx, button_action.frame_id,
                                                                                     button_action.child_frame_id,

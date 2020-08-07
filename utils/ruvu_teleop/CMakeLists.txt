@@ -6,7 +6,7 @@ catkin_package()
 
 ruvu_lint_add_test()
 
-install(PROGRAMS
+catkin_install_python(PROGRAMS
   scripts/teleop_cancel_actionlib_goal_joy
   scripts/teleop_publish_pose_joy
   scripts/teleop_single_joint_position_joy
