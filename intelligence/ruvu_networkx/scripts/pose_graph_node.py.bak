@@ -552,7 +552,7 @@ class PoseGraphNode(object):
             _get_edges_with_projected_interpolated_pose_within_tolerance(self._graph, point, 1.0)
 
         sorted_edges_with_poses = sorted(edges_with_projected_interpolated_pose,
-                                         key=lambda n1_n2_pose: _get_squared_distance(point, n1_n2_pose[2].position))
+                                         key=lambda (n1, n2, pose): _get_squared_distance(point, pose.position))
 
         if sorted_edges_with_poses:
             node1, node2, _ = sorted_edges_with_poses[0]
