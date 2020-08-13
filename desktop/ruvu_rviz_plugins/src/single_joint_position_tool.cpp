@@ -4,7 +4,7 @@
 // @author Rein Appeldoorn
 //
 
-#include "./single_joint_position_tool.h"
+#include "./single_joint_position_tool.hpp"
 
 #include <control_msgs/SingleJointPositionActionGoal.h>
 #include <rviz/properties/string_property.h>

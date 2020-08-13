@@ -4,7 +4,7 @@
 // @author Ramon Wijnands
 //
 
-#include "./pose_tool.h"
+#include "./pose_tool.hpp"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
