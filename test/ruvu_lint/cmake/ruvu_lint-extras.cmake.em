@@ -29,13 +29,22 @@ ${find_python_files_err}")
     _roslint_create_targets()
 
     # python
-    roslint_python(${find_python_files_deps_result})
+    if (find_python_files_deps_result STREQUAL "")
+      message(STATUS "roslint_python: no files provided for command")
+    else()
+      roslint_python(${find_python_files_deps_result})
+    endif()
 
     # c++
     if(NOT ROSLINT_CPP_OPTS)
       set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     endif()
-    roslint_cpp()
+    file(GLOB_RECURSE ROSLINT_CPP_ARGN *.cpp *.h *.hpp)
+    if(ROSLINT_CPP_ARGN STREQUAL "")
+      message(STATUS "roslint_cpp: no files provided for command")
+    else()
+      roslint_cpp(${ROSLINT_CPP_ARGN})
+    endif()
 
     # linter fails are able to break the build
     roslint_add_test()
