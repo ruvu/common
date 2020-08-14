@@ -4,7 +4,7 @@
 // @author Ramon Wijnands
 //
 
-#include "./point_tool.h"
+#include "./point_tool.hpp"
 
 #include <geometry_msgs/PointStamped.h>
 #include <OgreVector3.h>

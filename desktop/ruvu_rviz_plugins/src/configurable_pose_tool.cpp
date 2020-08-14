@@ -4,7 +4,7 @@
 // @author Rein Appeldoorn
 //
 
-#include "./configurable_pose_tool.h"
+#include "./configurable_pose_tool.hpp"
 
 #include <ros/console.h>
 #include <tf/transform_datatypes.h>
@@ -20,7 +20,7 @@
 
 namespace ruvu_rviz_plugins
 {
-const std::string TYPE = "geometry_msgs/PoseStamped";
+const char* TYPE = "geometry_msgs/PoseStamped";
 
 //!
 //! \brief getTopics Get the topics of a specific type within a namespace
@@ -110,9 +110,10 @@ private:
 
 ConfigurablePoseTool::ConfigurablePoseTool() : selected_index_(0)
 {
-  std::string msg = "This namespace will be scanned for topics with type " + TYPE + ". The user can select the desired "
-                                                                                    "topic when a pose has been set.";
-  namespace_ = new rviz::StringProperty("Pose Stamped namespace", "/", QString(msg.c_str()), getPropertyContainer(),
+  auto msg = QString("This namespace will be scanned for topics with type ") + TYPE +
+             ". The user can select the desired "
+             "topic when a pose has been set.";
+  namespace_ = new rviz::StringProperty("Pose Stamped namespace", "/", msg, getPropertyContainer(),
                                         SLOT(updatePublishers()), this);
 }
 
@@ -123,8 +124,8 @@ void ConfigurablePoseTool::updatePublishers()
   std::vector<std::string> topics = getTopics(namespace_->getStdString(), TYPE);
   if (topics.empty())
   {
-    std::string msg = "No topics of type " + TYPE + " found within namespace " + namespace_->getStdString() + "!";
-    QMessageBox::warning(0, QString("No topics found!"), QString(msg.c_str()));
+    auto msg = QString("No topics of type ") + TYPE + " found within namespace " + namespace_->getString() + "!";
+    QMessageBox::warning(0, QString("No topics found!"), msg);
   }
   else
   {

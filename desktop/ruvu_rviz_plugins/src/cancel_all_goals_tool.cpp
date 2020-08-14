@@ -4,7 +4,7 @@
 // @author Rein Appeldoorn
 //
 
-#include "./cancel_all_goals_tool.h"
+#include "./cancel_all_goals_tool.hpp"
 
 #include <actionlib_msgs/GoalID.h>
 #include <rviz/properties/string_property.h>
