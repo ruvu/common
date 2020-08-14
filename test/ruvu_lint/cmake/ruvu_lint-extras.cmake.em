@@ -29,13 +29,22 @@ ${find_python_files_err}")
     _roslint_create_targets()
 
     # python
-    roslint_python(${find_python_files_deps_result})
+    if (find_python_files_deps_result STREQUAL "")
+      message(STATUS "roslint_python: no files provided for command")
+    else()
+      roslint_python(${find_python_files_deps_result})
+    endif()
 
     # c++
     if(NOT ROSLINT_CPP_OPTS)
       set(ROSLINT_CPP_OPTS "--filter=-build/header_guard")
     endif()
-    roslint_cpp()
+    file(GLOB_RECURSE ROSLINT_CPP_ARGN *.cpp *.h *.hpp)
+    if(ROSLINT_CPP_ARGN STREQUAL "")
+      message(STATUS "roslint_cpp: no files provided for command")
+    else()
+      roslint_cpp(${ROSLINT_CPP_ARGN})
+    endif()
 
     # linter fails are able to break the build
     roslint_add_test()
@@ -44,13 +53,21 @@ ${find_python_files_err}")
     find_program(CATKIN_LINT catkin_lint REQUIRED)
 
     if(NOT CATKIN_LINT_OPTS)
-      set(CATKIN_LINT_OPTS "-W2")
+      set(CATKIN_LINT_OPTS -W1 --quiet)
     endif()
     separate_arguments(CATKIN_LINT_OPTS)
 
-    execute_process(COMMAND "${CATKIN_LINT}" ${CATKIN_LINT_OPTS} "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-    if(NOT ${lint_result} EQUAL 0)
-      message(FATAL_ERROR "catkin_lint failed")
+    execute_process(COMMAND "${CATKIN_LINT}" ${CATKIN_LINT_OPTS} "${CMAKE_SOURCE_DIR}"
+      RESULT_VARIABLE lint_result
+      OUTPUT_VARIABLE lint_output
+      ERROR_VARIABLE lint_output
+    )
+    if(lint_result EQUAL 0)
+      if(NOT lint_output STREQUAL "")
+        message(WARNING ${lint_output})
+      endif()
+    else()
+      message(SEND_ERROR "catkin_lint failed:\n${lint_output}")
     endif()
   endif()
 endfunction()
