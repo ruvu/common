@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 2.8.3)
 project(ruvu_rviz_plugins)
 
 add_compile_options(-std=c++11)
+set(EXTRA_FLAGS -Wno-deprecated-copy)
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  set(EXTRA_FLAGS ${EXTRA_FLAGS} -Wno-deprecated-register ) # required for OGRE
+else()
+  set(EXTRA_FLAGS ${EXTRA_FLAGS} -Wno-unused -Wno-switch-default -Wno-noexcept) # required for OGRE
+endif()
 
 find_package(catkin REQUIRED COMPONENTS
   ruvu_lint
@@ -50,6 +56,7 @@ add_library(${PROJECT_NAME}
   src/single_joint_position_tool.cpp
   src/cancel_all_goals_tool.cpp
 )
+target_compile_warnings(${PROJECT_NAME} ${EXTRA_FLAGS})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 #############

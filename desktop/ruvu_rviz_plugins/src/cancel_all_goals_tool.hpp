@@ -31,8 +31,6 @@ public:
   virtual void activate();
   virtual void deactivate();
 
-  virtual int processMouseEvent();
-
 private Q_SLOTS:
   void updateTopic();
 
