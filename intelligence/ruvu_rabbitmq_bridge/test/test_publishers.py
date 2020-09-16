@@ -3,7 +3,7 @@ import os
 import platform
 import sys
 import unittest
-from Queue import Queue
+from queue import Queue
 from json import dumps
 from pika import BlockingConnection, ConnectionParameters
 
