@@ -4,9 +4,10 @@
 // @author Rein Appeldoorn
 //
 
-#include <string>
-
 #include "./twist_plugin.hpp"
+
+#include <gazebo/physics/physics.hh>
+
 #include "./util.hpp"
 
 namespace gazebo

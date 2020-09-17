@@ -4,7 +4,9 @@
 // @author Rein Appeldoorn
 //
 
-#include <gazebo/gazebo.hh>
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/common/UpdateInfo.hh>
+#include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 
 namespace gazebo

@@ -4,8 +4,10 @@
 // @author Rein Appeldoorn
 //
 
-#include <string>
 #include "./single_joint_position_lifter_plugin.hpp"
+
+#include <gazebo/physics/physics.hh>
+
 #include "./util.hpp"
 
 namespace gazebo

@@ -4,13 +4,12 @@
 // @author Paul Verhoeckx
 //
 
-#include <string>
-
 #include "./pose_teleport_plugin.hpp"
-#include "./util.hpp"
 
 #include <tf/transform_datatypes.h>
 #include <gazebo/physics/physics.hh>
+
+#include "./util.hpp"
 
 namespace gazebo
 {

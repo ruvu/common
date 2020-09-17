@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <gazebo/gazebo.hh>
+#include <gazebo/common/Plugin.hh>
 
 #include <ros/callback_queue.h>
 #include <ros/subscriber.h>
