@@ -101,7 +101,7 @@ def _get_edges_with_projected_interpolated_pose_within_tolerance(graph, position
         line_ab = b - a
 
         # Calculate how far we are on the line, should be 0 <= factor <= 1
-        projection_on_line_factor = np.dot(line_ap, line_ab) / np.dot(line_ab, line_ab)
+        projection_on_line_factor = float(np.dot(line_ap, line_ab)) / np.dot(line_ab, line_ab)
 
         if 0 <= projection_on_line_factor <= 1:
             projected_point = Point(*(a + projection_on_line_factor * line_ab))
