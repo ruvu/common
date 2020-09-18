@@ -9,4 +9,4 @@ rabbitmq_reconnect_timeout: 5
 rabbitmq_heartbeat: 0
 #rabbitmq_queue_prefix: custom_prefix # defaults to current hostname
 ros_publisher_queue_size: 10 # defaults to 10
-ros_service_response_timeout: 1
+ros_service_response_timeout: 5
