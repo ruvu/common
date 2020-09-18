@@ -74,6 +74,7 @@ target_link_libraries(ruvu_accerion_triton ${Boost_LIBRARIES} ${catkin_LIBRARIES
 ## TEST ##
 ###########
 
+set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use")
 ruvu_lint_add_test()
 
  if (CATKIN_ENABLE_TESTING)
