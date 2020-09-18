@@ -16,7 +16,7 @@ class TestClient(unittest.TestCase):
     def test_client(self):
         rospy.init_node(NAME)
         client = rospy.ServiceProxy('output', SetBool)
-        client.wait_for_service(5)
+        client.wait_for_service(30)
 
         ros_msg = SetBoolRequest(data=True)
         response = client(ros_msg)
