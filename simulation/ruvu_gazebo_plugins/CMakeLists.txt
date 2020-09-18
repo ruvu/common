@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   control_msgs
   gazebo_dev
+  gazebo_plugins
   geometry_msgs
   nav_msgs
   roscpp
@@ -27,13 +28,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 catkin_package(
   CATKIN_DEPENDS
-    roscpp
-    geometry_msgs
-    control_msgs
     actionlib
+    control_msgs
+    gazebo_plugins
+    geometry_msgs
+    nav_msgs
+    roscpp
     sensor_msgs
     tf2_ros
-    nav_msgs
 )
 
 ###########
