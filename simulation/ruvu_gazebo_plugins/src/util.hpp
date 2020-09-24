@@ -7,7 +7,6 @@
 #pragma once
 
 #include <boost/algorithm/string/trim.hpp>
-#include <gazebo/gazebo.hh>
 #include <ros/console.h>
 #include <string>
 

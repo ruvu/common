@@ -4,13 +4,12 @@
 // @author Paul Verhoeckx
 //
 
-#include <string>
-
 #include "./pose_teleport_plugin.hpp"
-#include "./util.hpp"
 
 #include <tf/transform_datatypes.h>
 #include <gazebo/physics/physics.hh>
+
+#include "./util.hpp"
 
 namespace gazebo
 {
@@ -77,10 +76,9 @@ void PoseTeleportPlugin::UpdateChild()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  ignition::math::Pose3d pose = pose;
-  pose.Pos() = ignition::math::Vector3d(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z);
-  pose.Rot() = ignition::math::Quaterniond(pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
-                                           pose_msg_->orientation.w);
+  ignition::math::Pose3d pose(pose_msg_->position.x, pose_msg_->position.y, pose_msg_->position.z,
+                              pose_msg_->orientation.x, pose_msg_->orientation.y, pose_msg_->orientation.z,
+                              pose_msg_->orientation.w);
 
   // Convert to from camera axis (x up, y front, z left) to model axis (x front, y, left, z up)
   tf::Quaternion q(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W());

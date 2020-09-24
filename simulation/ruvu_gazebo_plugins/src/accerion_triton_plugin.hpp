@@ -4,7 +4,9 @@
 // @author Paul Verhoeckx
 //
 
-#include <gazebo/gazebo.hh>
+#pragma once
+
+#include <gazebo/common/Plugin.hh>
 
 #include <string>
 #include <queue>

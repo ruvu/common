@@ -4,9 +4,10 @@
 // @author Rein Appeldoorn
 //
 
-#include <string>
-
 #include "./twist_plugin.hpp"
+
+#include <gazebo/physics/physics.hh>
+
 #include "./util.hpp"
 
 namespace gazebo
@@ -159,16 +160,10 @@ void TwistPlugin::publishOdometry(const geometry_msgs::Twist& velocity, const co
   odom_msg_.pose.pose.orientation.z = odom_pose_.Rot().Z();
   odom_msg_.pose.pose.orientation.w = odom_pose_.Rot().W();
 
-  for (int i = 0; i < odom_msg_.pose.covariance.size(); i++)
-  {
-    odom_msg_.pose.covariance[i] = pose_covariance_[i];
-  }
+  odom_msg_.pose.covariance = pose_covariance_;
 
   odom_msg_.twist.twist = velocity;
-  for (int i = 0; i < odom_msg_.twist.covariance.size(); i++)
-  {
-    odom_msg_.twist.covariance[i] = velocity_covariance_[i];
-  }
+  odom_msg_.twist.covariance = velocity_covariance_;
 
   odom_msg_.header.stamp = ros::Time(now.Double());
   odometry_publisher_.publish(odom_msg_);

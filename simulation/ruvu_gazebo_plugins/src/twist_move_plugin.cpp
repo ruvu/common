@@ -6,6 +6,8 @@
 
 #include "./twist_plugin.hpp"
 
+#include <gazebo/physics/physics.hh>
+
 namespace gazebo
 {
 //!

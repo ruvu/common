@@ -7,7 +7,11 @@ find_package(catkin REQUIRED)
 ## catkin specific configuration ##
 ###################################
 
-catkin_package(CFG_EXTRAS ${PROJECT_NAME}-extras.cmake)
+catkin_package(
+  CFG_EXTRAS
+    ${PROJECT_NAME}_add_test.cmake
+    ${PROJECT_NAME}_target_compile_warnings.cmake
+)
 
 #############
 ## Install ##

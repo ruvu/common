@@ -37,10 +37,6 @@ void CancelAllGoalsTool::activate()
 void CancelAllGoalsTool::deactivate()
 {
 }
-
-int CancelAllGoalsTool::processMouseEvent()
-{
-}
 }  // namespace ruvu_rviz_plugins
 
 #include <pluginlib/class_list_macros.h>
