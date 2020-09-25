@@ -1,34 +1,9 @@
-import itertools
 import networkx as nx
 
-import PyKDL
 import rospy
-from geometry_msgs.msg import Vector3, Pose, Point, Quaternion
+from geometry_msgs.msg import Vector3, Pose, Quaternion
 from std_msgs.msg import Header, ColorRGBA
 from visualization_msgs.msg import MarkerArray, Marker
-
-
-def _pose_to_kdl(msg):
-    return PyKDL.Frame(PyKDL.Rotation.Quaternion(msg.orientation.x, msg.orientation.y,
-                                                 msg.orientation.z, msg.orientation.w),
-                       PyKDL.Vector(msg.position.x, msg.position.y, msg.position.z))
-
-
-def _point_line_list_from_poses(poses, length):
-    points = []
-    for pose in poses:
-        points.append(pose.position)
-        points.append(Point(*(_pose_to_kdl(pose) * PyKDL.Vector(length, 0, 0))))
-
-    return points
-
-
-def _point_line_list_from_pose_pairs(pose_pairs):
-    points = []
-    for pose1, pose2 in pose_pairs:
-        points.append(pose1.position)
-        points.append(pose2.position)
-    return points
 
 
 def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, attribute_name="pose"):
