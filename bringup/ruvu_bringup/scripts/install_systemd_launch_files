@@ -31,9 +31,8 @@ args = parser.parse_args()
 def get_template(pkg, launch_file):
     environment_bash = os.path.abspath(args.environment_bash)
     user = args.user
-    description = "Launch file %s of package %s for user %s" % (
-        os.path.basename(launch_file), pkg, user)
-    return template(description, user, environment_bash, launch_file)
+    description = "Launch file %s of package %s for user %s" % (launch_file, pkg, user)
+    return template(description, user, environment_bash, pkg, launch_file)
 
 
 rp = RosPack()
@@ -45,12 +44,12 @@ except ResourceNotFound as e:
 matches = []
 for root, dirnames, filenames in os.walk(path):
     for filename in fnmatch.filter(filenames, '*.launch'):
-        matches.append(os.path.join(root, filename))
+        matches.append(filename)
 
 if len(matches):
     for f in matches:
         unit = get_template(args.pkg, f)
-        unit_name = args.prefix + '-' + os.path.basename(f).replace('_', '-')
+        unit_name = args.prefix + '-' + f.replace('_', '-')
         output_file = os.path.join(systemd_path, unit_name)
         output_file = os.path.splitext(output_file)[0] + '.service'
 
