@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+import os
+
+import rospy
+from actionlib import SimpleActionClient, GoalStatus
+from geometry_msgs.msg import PoseStamped
+from mbf_msgs.msg import GetPathAction, ExePathAction, GetPathGoal, ExePathGoal
+
+
+def simple_goal_cb(msg):
+    rospy.logdebug("Calculating path")
+    goal = GetPathGoal(target_pose=msg, tolerance=tolerance, planner=planner)
+    if not get_path_ac.send_goal_and_wait(goal) == GoalStatus.SUCCEEDED:
+        rospy.logerr("Failed to calculate a path")
+        return
+    path = get_path_ac.get_result()
+    rospy.logdebug("Executing path: %s", path)
+    exe_path_ac.send_goal(ExePathGoal(path=path.path, controller=controller))
+
+
+if __name__ == '__main__':
+    rospy.init_node(os.path.basename(__file__))
+
+    controller = rospy.get_param('~controller', None)
+    planner = rospy.get_param('~planner', None)
+    tolerance = rospy.get_param('~tolerance', 1.0)
+
+    get_path_ac = SimpleActionClient("get_path", GetPathAction)
+    exe_path_ac = SimpleActionClient("exe_path", ExePathAction)
+
+    while not rospy.is_shutdown() and not get_path_ac.wait_for_server(rospy.Duration(5)):
+        rospy.loginfo('waiting for %s', get_path_ac.action_client.ns)
+    while not rospy.is_shutdown() and not exe_path_ac.wait_for_server(rospy.Duration(5)):
+        rospy.loginfo('waiting for %s', exe_path_ac.action_client.ns)
+
+    simple_goal_sub = rospy.Subscriber('simple_goal', PoseStamped, simple_goal_cb)
+
+    rospy.loginfo('%s started', rospy.get_name())
+    rospy.spin()

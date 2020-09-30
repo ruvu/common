@@ -59,3 +59,12 @@ Exposes `geometry_msgs/PoseStamped` interfaces (can be send by RVIZ) for every p
 
 - controllers
 - planners
+
+
+## mbf_rviz_relay:
+A relay node which subscribes to a rviz `PoseStamped` plugin topic, requests a path to the pose from a specified planner and sends the path to a specified action server.
+
+### Parameters
+- controller
+- planner
+- Tolerance
