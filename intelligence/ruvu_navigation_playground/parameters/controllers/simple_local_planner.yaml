@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 max_trans_acc: 1.0 # The translational acceleration limit of the robot
 max_rot_acc: 1.0 # The rotational acceleration limit of the robot
 max_trans_vel: 0.6 # The maximum translation velocity for the robot in m/s

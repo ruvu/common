@@ -1,2 +1,5 @@
 #!/usr/bin/env sh
+
+# Copyright 2020 RUVU Robotics B.V.
+
 find -type f -o -path '*/node_modules' -prune | file --mime-type -0 -f - | grep --text text/x-python | cut -d '' -f1 | xargs echo

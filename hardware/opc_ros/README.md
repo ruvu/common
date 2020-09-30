@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # OPC ROS
 
 [Open Pixel Client](http://openpixelcontrol.org/) for ROS.

@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
 
 <launch>
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ruvu_rviz_plugins)/test/rviz_config.rviz" />

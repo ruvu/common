@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 servers:
   - topic: rpc_test
     message_type: std_srvs/SetBool

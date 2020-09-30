@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Copyright 2020 RUVU Robotics B.V.
+
 """Python Client library for Open Pixel Control
 http://github.com/zestyping/openpixelcontrol
 

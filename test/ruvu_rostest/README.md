@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # RUVU rostest
 
 Generic test using [rostest](http://wiki.ros.org/rostest).

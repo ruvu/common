@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:property name="M_PI" value="3.1415926535897931" />
@@ -86,14 +89,14 @@
         </sensor>
       </gazebo>
     </xacro:macro>
-  
+
     <xacro:macro name="omron_os32c_bp_gpu" params="name parent *origin ros_topic update_rate ray_count min_angle max_angle">
       <xacro:omron_os32c_bp_model name="${name}" parent="${parent}">
         <xacro:insert_block name="origin" />
       </xacro:omron_os32c_bp_model>
 
       <gazebo reference="${name}_frame">
-        <sensor type="gpu_ray" name="${name}">          
+        <sensor type="gpu_ray" name="${name}">
           <update_rate>${update_rate}</update_rate>
           <pose>0 0 0 0 0 0</pose>
           <visualize>false</visualize>

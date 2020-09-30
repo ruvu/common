@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 # Inspired by https://github.com/lefticus/cpp_starter_project/blob/master/cmake/CompilerWarnings.cmake
 
 function(target_compile_warnings target)

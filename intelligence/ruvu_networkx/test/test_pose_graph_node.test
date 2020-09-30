@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
 
 <launch>
   <node name="pose_graph" pkg="ruvu_networkx" type="pose_graph_node.py" output="screen">

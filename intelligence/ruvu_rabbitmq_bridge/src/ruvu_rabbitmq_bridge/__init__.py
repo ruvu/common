@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 from roslib.message import get_message_class, get_service_class
 from collections import namedtuple
 

@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 from python_qt_binding.QtWidgets import QInputDialog, QLineEdit
 
 

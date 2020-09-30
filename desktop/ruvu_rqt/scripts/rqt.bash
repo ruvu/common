@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copyright 2020 RUVU Robotics B.V.
+
 if [ -z "$1" ]
 then
     echo "Usage: ./rqt.bash [rqt_perspective] [rviz_config] (optional)"

@@ -1,2 +1,4 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 *.pyc
 *CMakeLists.txt.user

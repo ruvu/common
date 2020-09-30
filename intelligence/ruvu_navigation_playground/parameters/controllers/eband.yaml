@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 xy_goal_tolerance: 0.1 # Distance tolerance for reaching the goal pose
 yaw_goal_tolerance: 0.05 # Orientation tolerance for reaching the desired goal pose
 rot_stopped_vel: 0.01 # Angular velocity lower bound that determines if the robot should stop to avoid limit-cycles or locks

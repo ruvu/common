@@ -1,4 +1,6 @@
 #!/bin/bash
 
+# Copyright 2020 RUVU Robotics B.V.
+
 rqt -s ruvu_rqt.publish_pose.PublishPose
 

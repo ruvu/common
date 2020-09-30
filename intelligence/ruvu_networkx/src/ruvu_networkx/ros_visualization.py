@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 import networkx as nx
 
 import rospy

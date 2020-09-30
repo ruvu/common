@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # RUVU Message Converters package
 This package contains nodes for conversions of message types for RUVU.
 

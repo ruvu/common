@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 subscribers:
   - topic: prefix/string_to_rabbitmq
     message_type: std_msgs/String

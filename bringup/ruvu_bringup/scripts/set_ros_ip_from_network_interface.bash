@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copyright 2020 RUVU Robotics B.V.
+
 _error() {
     echo -e "\033[31m$1\033[0m"
 }

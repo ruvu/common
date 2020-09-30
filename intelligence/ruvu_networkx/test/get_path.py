@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Copyright 2020 RUVU Robotics B.V.
+
 import argparse
 
 import rospy

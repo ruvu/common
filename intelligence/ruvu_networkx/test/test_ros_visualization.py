@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 import networkx
 from mock import patch
 from ruvu_networkx.ros_visualization import get_visualization_marker_array_msg_from_pose_graph

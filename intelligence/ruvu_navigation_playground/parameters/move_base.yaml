@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 planners:
   - name: global_planner
     type: global_planner/GlobalPlanner

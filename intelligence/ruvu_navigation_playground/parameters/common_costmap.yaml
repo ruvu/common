@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 robot_base_frame: base_link
 update_frequency: 20.0
 publish_frequency: 5.0
