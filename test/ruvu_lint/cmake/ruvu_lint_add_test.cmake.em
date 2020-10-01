@@ -43,6 +43,16 @@ ${find_python_files_err}")
   endif()
 endfunction()
 
+function(_ruvu_lint_xmllint)
+  file(GLOB_RECURSE ARGN *.config *.gazebo *.launch *.sdf *.test *.urdf *.world *.xacro *.xml)
+
+  if(NOT RUVU_LINT_XMLLINT_OPTS)
+    set(RUVU_LINT_XMLLINT_OPTS --noout)
+  endif()
+
+  roslint_custom("xmllint" "${RUVU_LINT_XMLLINT_OPTS}" ${ARGN})
+endfunction()
+
 function(_ruvu_lint_catkin_lint)
   find_program(CATKIN_LINT catkin_lint REQUIRED)
 
@@ -75,6 +85,7 @@ function(ruvu_lint_add_test)
     _ruvu_lint_roslint_cpp()
     _ruvu_lint_roslint_python()
     _ruvu_lint_catkin_lint()
+    _ruvu_lint_xmllint()
 
     # linter fails are able to break the build
     roslint_add_test()
