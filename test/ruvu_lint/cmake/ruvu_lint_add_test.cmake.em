@@ -53,6 +53,20 @@ function(_ruvu_lint_xmllint)
   roslint_custom("xmllint" "${RUVU_LINT_XMLLINT_OPTS}" ${ARGN})
 endfunction()
 
+function(_ruvu_lint_yamllint)
+  file(GLOB_RECURSE ARGN *.yml *.yaml)
+
+  if(NOT RUVU_LINT_YAMLLINT_OPTS)
+    set(RUVU_LINT_YAMLLINT_OPTS -d "{extends: default, rules: {line-length: {max: 120}}}")
+  endif()
+
+  if(ARGN STREQUAL "")
+    message(STATUS "yamllint: no files provided for command")
+  else()
+  roslint_custom("yamllint" "${RUVU_LINT_YAMLLINT_OPTS}" ${ARGN})
+  endif()
+endfunction()
+
 function(_ruvu_lint_catkin_lint)
   find_program(CATKIN_LINT catkin_lint REQUIRED)
 
@@ -86,6 +100,7 @@ function(ruvu_lint_add_test)
     _ruvu_lint_roslint_python()
     _ruvu_lint_catkin_lint()
     _ruvu_lint_xmllint()
+    _ruvu_lint_yamllint()
 
     # linter fails are able to break the build
     roslint_add_test()
