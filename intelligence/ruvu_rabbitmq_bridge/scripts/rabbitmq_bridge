@@ -143,11 +143,6 @@ class RabbitMQBridge(object):
 
         # RPC implementation based on: https://www.rabbitmq.com/tutorials/tutorial-six-python.html
         for server in servers:
-            # Create ROS service server
-            self._ros_servers[server.topic] = rospy.Service(
-                server.topic, server.message_type, partial(self._ros_srv_callback, server)
-            )
-
             if server.exchange:
                 self._rabbitmq_rpc_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
 
@@ -171,6 +166,11 @@ class RabbitMQBridge(object):
             self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
             self._rabbitmq_rpc_response_channel.basic_consume(
                 self._rabbitmq_rpc_client_callback, queue=self._rabbitmq_rpc_client_callback_queue, no_ack=True
+            )
+
+            # Create ROS service server
+            self._ros_servers[server.topic] = rospy.Service(
+                server.topic, server.message_type, partial(self._ros_srv_callback, server)
             )
 
         for client in clients:
