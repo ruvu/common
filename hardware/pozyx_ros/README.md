@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # Pozyx ROS
 
 ROS Wrapper for the pozyx localization system

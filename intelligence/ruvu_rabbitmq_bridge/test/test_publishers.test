@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 <launch>
   <node name="rabbitmq_bridge" pkg="ruvu_rabbitmq_bridge" type="rabbitmq_bridge">
     <rosparam file="$(find ruvu_rabbitmq_bridge)/test/test_publishers.yaml" command="load" />

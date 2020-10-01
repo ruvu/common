@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Copyright 2020 RUVU Robotics B.V.
+
 import rospy
 from mbf_msgs.msg import ExePathActionGoal, ExePathGoal
 from geometry_msgs.msg import PoseStamped

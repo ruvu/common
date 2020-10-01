@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 anchors:
   - network_id: 23602
     position:

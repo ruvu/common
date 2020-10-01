@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 <launch>
   <arg name="debug" default="false" />
 

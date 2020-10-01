@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # RUVU Gazebo Plugins
 
 This package holds several Gazebo plugins that make modification to the world

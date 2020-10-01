@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 import struct
 import binascii
 import time

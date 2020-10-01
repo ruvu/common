@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 import rospy
 import tf2_ros
 

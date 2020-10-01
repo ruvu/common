@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # RUVU Teleop
 
 Teleop tools for robots

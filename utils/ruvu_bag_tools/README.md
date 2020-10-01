@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # Tools for processing rosbags
 ## bag_to_json
 This tool can be used to convert rosbag files into json. It will skip bag files that are already processed.

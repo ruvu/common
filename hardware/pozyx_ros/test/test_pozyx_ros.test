@@ -1,4 +1,7 @@
 <?xml version="1.0" ?>
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
 
 <launch>
   <node name="pozyx_ros" pkg="pozyx_ros" type="pozyx_positioning_node.py" required="true">

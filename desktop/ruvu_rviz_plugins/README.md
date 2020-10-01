@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # RUVU RVIZ Plugins
 
 Additional rviz plugins.

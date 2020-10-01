@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 @[if INSTALLSPACE]@
 # bin and template dir variables in installspace
 set(RUVU_LINT_SCRIPTS_DIR "${ruvu_lint_DIR}/../../../@(CATKIN_PACKAGE_BIN_DESTINATION)")

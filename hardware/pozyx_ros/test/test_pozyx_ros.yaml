@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 world_frame_id: world # ID of the frame attached to the world
 sensor_frame_id: sensor # ID of the sensor frame
 port: /dev/ttyACM0 # Serial port where the pozyx device is connected to

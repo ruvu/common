@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 Header header
 int32 network_id
 int32 remote_network_id

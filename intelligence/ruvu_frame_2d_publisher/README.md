@@ -1,3 +1,7 @@
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 # ruvu frame 2d publiser
 
 Publishes a 2d version of a transform by setting everying to 0 except for the z translation.

@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 import rospy
 from actionlib_msgs.msg import GoalStatus
 from flexbe_core import EventState, Logger

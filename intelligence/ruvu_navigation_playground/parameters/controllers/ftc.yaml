@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 rotation_accuracy: 0.1 # Accuracy of the orientation to the goal orientation.
 position_accuracy: 0.1 # Maximal distance to the goal position.
 max_rotation_vel: 0.8 # The absolute value of the maximum rotational velocity for the robot in rad/s.

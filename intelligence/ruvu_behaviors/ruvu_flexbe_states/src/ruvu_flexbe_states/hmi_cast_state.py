@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Copyright 2020 RUVU Robotics B.V.
+
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyActionClient
 

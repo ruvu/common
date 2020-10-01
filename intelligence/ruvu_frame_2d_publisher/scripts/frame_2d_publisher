@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# Copyright 2020 RUVU Robotics B.V.
+
 import rospy
 from geometry_msgs.msg import Quaternion, Vector3, Transform, TransformStamped
 from tf2_ros import (Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException,

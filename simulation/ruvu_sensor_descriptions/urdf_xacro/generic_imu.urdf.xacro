@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
@@ -6,7 +9,7 @@
 
   <xacro:macro name="generic_imu_model" params="name parent *origin">
     <!-- use a zero limit revolute joint rather than fixed to prevent lumping -->
-    <joint name="${name}_joint" type="revolute"> 
+    <joint name="${name}_joint" type="revolute">
       <limit effort="0" lower="0" upper="0" velocity="0"/>
       <xacro:insert_block name="origin" />
       <parent link="${parent}"/>

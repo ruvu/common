@@ -1,3 +1,5 @@
+# Copyright 2020 RUVU Robotics B.V.
+
 import os
 import rospy
 from collections import namedtuple

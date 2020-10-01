@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Copyright 2020 RUVU Robotics B.V.
+
 from __future__ import division
 import networkx as nx
 import os

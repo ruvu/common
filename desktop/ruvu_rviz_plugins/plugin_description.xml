@@ -1,3 +1,8 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2020 RUVU Robotics B.V.
+-->
+
 <library path="lib/libruvu_rviz_plugins">
   <class name="ruvu_rviz_plugins/DockGoal"
          type="ruvu_rviz_plugins::PoseTool"
@@ -31,7 +36,7 @@
          type="ruvu_rviz_plugins::PointTool"
          base_class_type="rviz::Tool">
     <description>
-      Tool for sending a PointStamped for adding edges to graphs. 
+      Tool for sending a PointStamped for adding edges to graphs.
     </description>
   </class>
   <class name="ruvu_rviz_plugins/RemoveNode"

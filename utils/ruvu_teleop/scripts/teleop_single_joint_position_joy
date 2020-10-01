@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Copyright 2020 RUVU Robotics B.V.
+
 import rospy
 
 from control_msgs.msg import SingleJointPositionAction, SingleJointPositionGoal

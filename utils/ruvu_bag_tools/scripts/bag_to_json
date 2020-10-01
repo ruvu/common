@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Copyright 2020 RUVU Robotics B.V.
+
 import json
 import logging
 from argparse import ArgumentParser, FileType
