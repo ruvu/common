@@ -16,5 +16,6 @@ Copyright 2020 RUVU Robotics B.V.
 
   <exec_depend condition="$ROS_PYTHON_VERSION == 2">python-catkin-lint</exec_depend>
   <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-catkin-lint</exec_depend>
+  <exec_depend>libxml2-utils</exec_depend>
   <exec_depend>roslint</exec_depend>
 </package>
