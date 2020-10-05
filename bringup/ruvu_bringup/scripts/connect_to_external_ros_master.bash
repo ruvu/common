@@ -14,8 +14,8 @@ else
     then
         _error "Please provide a [network_interface, e.g. eno1, eth0] as argument"
     else
-       source `rospack find ruvu_bringup`/scripts/set_ros_master_uri.bash $1
-       source `rospack find ruvu_bringup`/scripts/set_ros_ip_from_network_interface.bash $2
+       rosrun ruvu_bringup set_ros_master_uri.bash $1
+       rosrun ruvu_bringup set_ros_ip_from_network_interface.bash $2
     fi
 fi
 
