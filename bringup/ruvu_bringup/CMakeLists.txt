@@ -5,6 +5,11 @@ project(ruvu_bringup)
 
 find_package(catkin REQUIRED COMPONENTS ruvu_lint)
 catkin_python_setup()
+
+catkin_add_env_hooks(99.ruvu_bringup_connect_to_external_ros_master SHELLS bash DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
+catkin_add_env_hooks(99.ruvu_bringup_set_ros_ip_from_network_interface SHELLS bash DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
+catkin_add_env_hooks(99.ruvu_bringup_set_ros_master_uri SHELLS bash DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
+
 catkin_package()
 
 ruvu_lint_add_test()
