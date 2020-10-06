@@ -7,6 +7,6 @@ _warn() {
 }
 
 _warn "Sourcing this bash file is depricated, use bash function ruvu-bringup-set-ros-master-uri instead"
-ruvu-bringup-set-ros-master-uri
+ruvu_bringup_set_ros_master_uri
 
 unset _warn

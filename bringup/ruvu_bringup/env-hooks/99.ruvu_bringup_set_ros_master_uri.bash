@@ -1,4 +1,4 @@
-function ruvu-bringup-set-ros-master-uri {
+function ruvu_bringup_set_ros_master_uri {
   _error() {
       echo -e "\033[31m$1\033[0m"
   }

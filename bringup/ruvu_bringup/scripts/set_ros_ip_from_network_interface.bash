@@ -7,6 +7,6 @@ _warn() {
 }
 
 _warn "Sourcing this bash file is depricated, use bash function ruvu-bringup-set-ros-ip-from-network-interface instead"
-ruvu-bringup-set-ros-ip-from-network-interface
+ruvu_bringup_set_ros_ip_from_network_interface
 
 unset _warn

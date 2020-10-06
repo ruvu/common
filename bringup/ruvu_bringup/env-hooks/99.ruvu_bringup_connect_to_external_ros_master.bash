@@ -1,4 +1,4 @@
-function ruvu-bringup-connect-to-external-ros-master {
+function ruvu_bringup_connect_to_external_ros_master {
   _error() {
     echo -e "\033[31m$1\033[0m"
   }
@@ -11,8 +11,8 @@ function ruvu-bringup-connect-to-external-ros-master {
     then
         _error "Please provide a [network_interface, e.g. eno1, eth0] as argument"
     else
-       ruvu-bringup-set-ros-master-uri $1
-       ruvu-bringup-set-ros-ip-from-network-interface $2
+       ruvu_bringup_set_ros_master_uri $1
+       ruvu_bringup_set_ros_ip_from_network_interface $2
     fi
   fi
 

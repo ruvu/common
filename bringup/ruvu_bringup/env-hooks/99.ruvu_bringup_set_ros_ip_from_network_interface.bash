@@ -1,4 +1,4 @@
-function ruvu-bringup-set-ros-ip-from-network-interface {
+function ruvu_bringup_set_ros_ip_from_network_interface {
   _error() {
       echo -e "\033[31m$1\033[0m"
   }
