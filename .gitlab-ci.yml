@@ -1,86 +1,44 @@
 # Copyright 2020 RUVU Robotics B.V.
 
-image: docker:git
+---
+include:
+  - project: ruvu/environment
+    file: ROS.gitlab-ci.yml
+
+variables:
+  PACKAGES: >
+    opc_msgs
+    opc_ros
+    pozyx_msgs
+    pozyx_ros
+    pozyx_rviz_plugins
+    ruvu_bag_tools
+    ruvu_bringup
+    ruvu_flexbe_states
+    ruvu_frame_2d_publisher
+    ruvu_gazebo_plugins
+    ruvu_lint
+    ruvu_mbf
+    ruvu_msg_converters
+    ruvu_navigation_playground
+    ruvu_networkx
+    ruvu_rabbitmq_bridge
+    ruvu_rostest
+    ruvu_rqt
+    ruvu_rviz_plugins
+    ruvu_sensor_descriptions
+    ruvu_teleop
+    ruvu_web
 
 services:
   - rabbitmq:latest
 
-variables:
-    PACKAGES: >
-        opc_msgs
-        opc_ros
-        pozyx_msgs
-        pozyx_ros
-        pozyx_rviz_plugins
-        ruvu_bag_tools
-        ruvu_bringup
-        ruvu_flexbe_states
-        ruvu_frame_2d_publisher
-        ruvu_gazebo_plugins
-        ruvu_lint
-        ruvu_mbf
-        ruvu_msg_converters
-        ruvu_navigation_playground
-        ruvu_networkx
-        ruvu_rabbitmq_bridge
-        ruvu_rostest
-        ruvu_rqt
-        ruvu_rviz_plugins
-        ruvu_sensor_descriptions
-        ruvu_teleop
-        ruvu_web
-    IMAGE_PATH: registry.gitlab.com/$CI_PROJECT_PATH
-
-before_script:
-    - mkdir ~/.ssh
-    - ssh-keyscan -t rsa gitlab.com > ~/.ssh/known_hosts
-    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
-    - chmod 400 ~/.ssh/id_rsa
-
-    # Clone the ruvu-env for the docker images
-    - git clone git@gitlab.com:ruvu/environment.git ~/.ruvu
-    - cd ~/.ruvu
-
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-
-stages:
-    - build
-    - test
-    - release
-
-.build-on-schedule:
-    stage: build
-    only:
-        - schedules
-    script:
-        - docker build --pull --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="ros:$ROS_DISTRO-ros-base" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" --build-arg VERSION="$CI_COMMIT_REF_NAME" -t $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} -f docker/Dockerfile .
-        - docker push $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
-
-.build:
-    stage: build
-    except:
-        - schedules
-    script:
-        - docker build --pull --build-arg SSH_PRIVATE_KEY="$SSH_PRIVATE_KEY" --build-arg BASE_IMAGE="${IMAGE_PATH}/$ROS_DISTRO:latest" --build-arg WORKSPACE="$CI_PROJECT_NAME" --build-arg PACKAGES="$PACKAGES" --build-arg VERSION="$CI_COMMIT_REF_NAME" -t $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} -f docker/Dockerfile .
-        - docker push $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
-
 .test:
-    stage: test
-    script:
-        - docker pull $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
-        - export RABBITMQ_HOST=$(getent hosts rabbitmq | awk '{ print $1 }')
-        - echo "Rabbimq host = $RABBITMQ_HOST"
-        - docker run --rm --entrypoint /.ruvu/docker/entrypoint_run_tests.sh --env RABBITMQ_HOST $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} catkin_test_results
-
-.release:
-    stage: release
-    only:
-        refs:
-          - master
-    script:
-        - docker pull $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
-        - docker tag $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} $IMAGE_PATH/$ROS_DISTRO:latest
-        - docker push $IMAGE_PATH/$ROS_DISTRO:latest
+  script:
+    - docker pull $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-}
+    - export RABBITMQ_HOST=$(getent hosts rabbitmq | awk '{ print $1 }')
+    - echo "Rabbimq host = $RABBITMQ_HOST"
+    - docker run --rm --entrypoint /.ruvu/docker/entrypoint_run_tests.sh --env RABBITMQ_HOST $IMAGE_PATH/$ROS_DISTRO:${CI_COMMIT_REF_NAME//\//-} catkin_test_results
 
 kinetic-build-on-schedule:
   extends: .build-on-schedule
@@ -121,43 +79,43 @@ noetic-build-on-schedule:
   variables:
     ROS_DISTRO: noetic
     PACKAGES: >
-        opc_msgs
-        pozyx_msgs
-        pozyx_ros
-        ruvu_bag_tools
-        ruvu_bringup
-        ruvu_frame_2d_publisher
-        ruvu_gazebo_plugins
-        ruvu_lint
-        ruvu_mbf
-        ruvu_msg_converters
-        ruvu_rabbitmq_bridge
-        ruvu_rostest
-        ruvu_rqt
-        ruvu_rviz_plugins
-        ruvu_sensor_descriptions
-        ruvu_teleop
+      opc_msgs
+      pozyx_msgs
+      pozyx_ros
+      ruvu_bag_tools
+      ruvu_bringup
+      ruvu_frame_2d_publisher
+      ruvu_gazebo_plugins
+      ruvu_lint
+      ruvu_mbf
+      ruvu_msg_converters
+      ruvu_rabbitmq_bridge
+      ruvu_rostest
+      ruvu_rqt
+      ruvu_rviz_plugins
+      ruvu_sensor_descriptions
+      ruvu_teleop
 noetic-build:
   extends: .build
   variables:
     ROS_DISTRO: noetic
     PACKAGES: >
-        opc_msgs
-        pozyx_msgs
-        pozyx_ros
-        ruvu_bag_tools
-        ruvu_bringup
-        ruvu_frame_2d_publisher
-        ruvu_gazebo_plugins
-        ruvu_lint
-        ruvu_mbf
-        ruvu_msg_converters
-        ruvu_rabbitmq_bridge
-        ruvu_rostest
-        ruvu_rqt
-        ruvu_rviz_plugins
-        ruvu_sensor_descriptions
-        ruvu_teleop
+      opc_msgs
+      pozyx_msgs
+      pozyx_ros
+      ruvu_bag_tools
+      ruvu_bringup
+      ruvu_frame_2d_publisher
+      ruvu_gazebo_plugins
+      ruvu_lint
+      ruvu_mbf
+      ruvu_msg_converters
+      ruvu_rabbitmq_bridge
+      ruvu_rostest
+      ruvu_rqt
+      ruvu_rviz_plugins
+      ruvu_sensor_descriptions
+      ruvu_teleop
 noetic-test:
   extends: .test
   variables:
