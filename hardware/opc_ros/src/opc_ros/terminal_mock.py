@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright 2020 RUVU Robotics B.V.
 
 import math
@@ -107,4 +108,4 @@ class TerminalMockClient():
         result = 'PIXEL STATE: '
         for pixel in pixels:
             result += get_terminal_led(*pixel)
-        print result
+        print(result)
