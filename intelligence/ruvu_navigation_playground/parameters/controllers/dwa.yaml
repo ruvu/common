@@ -1,5 +1,4 @@
 # Copyright 2020 RUVU Robotics B.V.
-
 # debugging
 publish_cost_grid_pc: true
 publish_traj_pc: true

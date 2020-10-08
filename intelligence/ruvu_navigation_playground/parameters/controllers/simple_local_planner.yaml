@@ -1,16 +1,17 @@
 # Copyright 2020 RUVU Robotics B.V.
 
-max_trans_acc: 1.0 # The translational acceleration limit of the robot
-max_rot_acc: 1.0 # The rotational acceleration limit of the robot
-max_trans_vel: 0.6 # The maximum translation velocity for the robot in m/s
-min_trans_vel: 0.1 # The minimum translation velocity for the robot in m/s
-max_rot_vel:  0.8 # The absolute value of the maximum rotational velocity for the robot in rad/s
-min_rot_vel:  0.3 # The absolute value of the minimum rotational velocity for the robot in rad/s
-min_in_place_rot_vel: 0.5 # The absolute value of the minimum in-place rotational velocity the controller will explore
-yaw_goal_tolerance: 0.12 # Tolerance in angle (rad/s) to reach the goal
-xy_goal_tolerance: 0.20 # Tolerance in distance (m) to reach the goal
-wp_tolerance: 0.5 # Distance from the robot to the point of the global path to take
+max_trans_acc: 1.0  # The translational acceleration limit of the robot
+max_rot_acc: 1.0  # The rotational acceleration limit of the robot
+max_trans_vel: 0.6  # The maximum translation velocity for the robot in m/s
+min_trans_vel: 0.1  # The minimum translation velocity for the robot in m/s
+max_rot_vel: 0.8  # The absolute value of the maximum rotational velocity for the robot in rad/s
+min_rot_vel: 0.3  # The absolute value of the minimum rotational velocity for the robot in rad/s
+min_in_place_rot_vel: 0.5  # The absolute value of the minimum in-place rotational velocity the controller will explore
+yaw_goal_tolerance: 0.12  # Tolerance in angle (rad/s) to reach the goal
+xy_goal_tolerance: 0.20  # Tolerance in distance (m) to reach the goal
+wp_tolerance: 0.5  # Distance from the robot to the point of the global path to take
 sim_time: 0.5  # The amount of time to expand the robot movement in seconds
-sim_granularity: 0.025 # The granularity with which to check for collisions along each trajectory in meters
-angular_sim_granularity: 0.025 # The distance between simulation points for angular velocity should be small enough that the robot doesn't hit things
-sample_angular_vels: true # Whether or not to look for a valid command by sampling angular velocities
+sim_granularity: 0.025  # The granularity with which to check for collisions along each trajectory in meters
+# The distance between simulation points for angular velocity should be small enough that the robot doesn't hit things
+angular_sim_granularity: 0.025
+sample_angular_vels: true  # Whether or not to look for a valid command by sampling angular velocities
