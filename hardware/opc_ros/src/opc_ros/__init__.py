@@ -34,11 +34,13 @@ Recommended use:
         time.sleep(1/30.0)
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import socket
 import struct
 import sys
-from terminal_mock import TerminalMockClient
+from .terminal_mock import TerminalMockClient
 
 
 class Client(object):

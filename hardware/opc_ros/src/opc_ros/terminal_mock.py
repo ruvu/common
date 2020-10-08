@@ -1,4 +1,5 @@
 # Copyright 2020 RUVU Robotics B.V.
+from __future__ import print_function
 
 import math
 
@@ -87,6 +88,7 @@ def best_match(r, g, b):
             bestdist = dist
     return int(best)
 
+
 cache = {}
 
 
@@ -107,4 +109,4 @@ class TerminalMockClient():
         result = 'PIXEL STATE: '
         for pixel in pixels:
             result += get_terminal_led(*pixel)
-        print result
+        print(result)

@@ -10,7 +10,7 @@
 #include <rviz/ogre_helpers/movable_text.h>
 #include <vector>
 
-#include "./ranges_visual.h"
+#include "./ranges_visual.hpp"
 
 namespace pozyx_rviz_plugins
 {

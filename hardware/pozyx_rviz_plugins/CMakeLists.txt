@@ -50,6 +50,7 @@ add_library(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
+set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use")
 ruvu_lint_add_test()
 
 install(FILES
