@@ -105,8 +105,10 @@ noetic-build:
     ROS_DISTRO: noetic
     PACKAGES: >
       opc_msgs
+      opc_ros
       pozyx_msgs
       pozyx_ros
+      pozyx_rviz_plugins
       ruvu_bag_tools
       ruvu_bringup
       ruvu_frame_2d_publisher
@@ -114,6 +116,8 @@ noetic-build:
       ruvu_lint
       ruvu_mbf
       ruvu_msg_converters
+      ruvu_navigation_playground
+      ruvu_networkx
       ruvu_rabbitmq_bridge
       ruvu_rostest
       ruvu_rqt
