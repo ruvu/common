@@ -2,6 +2,7 @@
 
 # Copyright 2020 RUVU Robotics B.V.
 
+from __future__ import print_function
 import os.path
 import pwd
 from argparse import ArgumentParser
@@ -46,4 +47,4 @@ user = args.user
 description = "Launch file %s of package %s for user %s" % \
               (os.path.basename(launch_file), get_package_name(launch_file), user)
 
-print template(description, user, environment_bash, launch_file)
+print(template(description, user, environment_bash, launch_file))
