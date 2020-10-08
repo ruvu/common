@@ -16,8 +16,8 @@
 #include <rviz/properties/int_property.h>
 #include <rviz/frame_manager.h>
 
-#include "./ranges_display.h"
-#include "./ranges_visual.h"
+#include "./ranges_display.hpp"
+#include "./ranges_visual.hpp"
 
 namespace pozyx_rviz_plugins
 {
