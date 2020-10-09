@@ -267,9 +267,10 @@ class RabbitMQBridge(object):
             topic = method.routing_key[len(self._rabbitmq_queue_prefix):]
 
             publisher = self._ros_publishers[topic]
+
             try:
                 msg = json_message_converter.convert_json_to_ros_message(publisher.type, body)
-            except ValueError as e:
+            except Exception as e:
                 rospy.logerr("Conversion to ROS msg failed: {}".format(e))
             else:
                 rospy.logdebug("Publishing ROS message {} to topic {}".format(msg, topic))
