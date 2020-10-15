@@ -28,7 +28,6 @@ variables:
     ruvu_rviz_plugins
     ruvu_sensor_descriptions
     ruvu_teleop
-    ruvu_web
 
 services:
   - rabbitmq:latest
