@@ -19,7 +19,9 @@ if __name__ == "__main__":
                                                                      rospy.get_param('initial_pose_pitch', 0),
                                                                      rospy.get_param('initial_pose_yaw', 0)))
 
-    success = gazebo_interface.spawn_urdf_model_client(rospy.get_param('~robot_name', 'robot'),
+    robot_name = rospy.get_param('~robot_name') if rospy.get_param('~robot_name', "") else 'robot'  # Sets "" to default
+
+    success = gazebo_interface.spawn_urdf_model_client(robot_name,
                                                        rospy.get_param('robot_description'),
                                                        rospy.get_param('robot_namespace', ''),
                                                        initial_pose,
