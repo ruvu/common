@@ -3,7 +3,7 @@
 from roslib.message import get_message_class, get_service_class
 from collections import namedtuple
 
-TopicBridge = namedtuple("TopicBridge", "topic message_type durable exchange")
+TopicBridge = namedtuple("TopicBridge", "topic message_type durable exchange use_global_namespace")
 
 
 def get_topic_bridges(param_value):
@@ -18,6 +18,7 @@ def get_topic_bridges(param_value):
     for item in param_value:
         if not isinstance(item, dict):
             raise ValueError("Bridge item should be a dictionary")
+        item.setdefault('use_global_namespace', False)
         try:
             item['message_type'] = get_message_class(item['message_type'])
             bridges.append(TopicBridge(**item))
@@ -39,6 +40,7 @@ def get_service_bridges(param_value):
     for item in param_value:
         if not isinstance(item, dict):
             raise ValueError("Bridge item should be a dictionary")
+        item.setdefault('use_global_namespace', False)
         try:
             item['message_type'] = get_service_class(item['message_type'])
             bridges.append(TopicBridge(**item))

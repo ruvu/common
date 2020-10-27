@@ -119,7 +119,10 @@ class RabbitMQBridge(object):
                 self._rabbitmq_write_channel.exchange_declare(exchange=subscriber.exchange, durable=subscriber.durable)
 
             # Create RabbitMQ Publisher
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + subscriber.topic
+            if subscriber.use_global_namespace:
+                rabbitmq_queue_name = subscriber.topic
+            else:
+                rabbitmq_queue_name = self._rabbitmq_queue_prefix + subscriber.topic
             self._rabbitmq_write_channel.queue_declare(queue=rabbitmq_queue_name, durable=subscriber.durable)
 
         for publisher in publishers:
@@ -132,7 +135,10 @@ class RabbitMQBridge(object):
                 self._rabbitmq_write_channel.exchange_declare(exchange=publisher.exchange, durable=publisher.durable)
 
             # Create RabbitMQ subscriber
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
+            if publisher.use_global_namespace:
+                rabbitmq_queue_name = publisher.topic
+            else:
+                rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
             self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable)
 
             if publisher.exchange:
@@ -148,7 +154,10 @@ class RabbitMQBridge(object):
                 self._rabbitmq_rpc_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
 
             # Create RabbitMQ RPC client
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
+            if server.use_global_namespace:
+                rabbitmq_queue_name = server.topic
+            else:
+                rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
             queue = self._rabbitmq_rpc_channel.queue_declare(
                 queue=rabbitmq_queue_name, durable=True
@@ -186,7 +195,10 @@ class RabbitMQBridge(object):
             rospy.loginfo("ROS server found for %s", client.topic)
 
             # Create RabbitMQ RPC server
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
+            if client.use_global_namespace:
+                rabbitmq_queue_name = client.topic
+            else:
+                rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
             self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable)
             self._rabbitmq_read_channel.basic_qos(prefetch_count=1)
 
