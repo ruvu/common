@@ -5,7 +5,7 @@ Copyright 2020 RUVU Robotics B.V.
 
 <package format="2">
   <name>ruvu_msg_converters</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The ruvu_msg_converters package</description>
 
   <maintainer email="rokus@ruvu.nl">Rokus Ottervanger</maintainer>

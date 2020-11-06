@@ -5,7 +5,7 @@ Copyright 2020 RUVU Robotics B.V.
 
 <package format="2">
   <name>ruvu_frame_2d_publisher</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The ruvu_frame_2d_publisher package</description>
 
   <maintainer email="ramon@ruvu.nl">Ramon Wijnands</maintainer>
