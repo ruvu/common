@@ -9,7 +9,7 @@ catkin_package()
 
 ruvu_lint_add_test()
 
-install(PROGRAMS
+catkin_install_python(PROGRAMS
 	scripts/pose_stamped_move_base_goal
 	scripts/get_path_exe_path_relay
 	scripts/mbf_rviz_relay
