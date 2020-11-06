@@ -5,7 +5,7 @@ Copyright 2020 RUVU Robotics B.V.
 
 <package format="2">
   <name>ruvu_bag_tools</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The ruvu_bag_tools package</description>
 
   <maintainer email="ramon@ruvu.nl">ramon</maintainer>

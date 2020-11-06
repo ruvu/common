@@ -2,6 +2,6 @@
 Changelog for package ruvu_frame_2d_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2020-11-06)
+------------------
 * First release
