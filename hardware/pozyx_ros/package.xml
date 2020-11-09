@@ -5,7 +5,7 @@ Copyright 2020 RUVU Robotics B.V.
 
 <package format="3">
   <name>pozyx_ros</name>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <description>ROS package for the Pozyx positioning system.</description>
 
   <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>

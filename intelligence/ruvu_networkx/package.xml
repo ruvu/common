@@ -5,7 +5,7 @@ Copyright 2020 RUVU Robotics B.V.
 
 <package format="3">
   <name>ruvu_networkx</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The ruvu_networkx package</description>
 
   <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>

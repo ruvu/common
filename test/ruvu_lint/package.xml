@@ -5,7 +5,7 @@ Copyright 2020 RUVU Robotics B.V.
 
 <package format="3">
   <name>ruvu_lint</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The ruvu_lint package</description>
 
   <maintainer email="ramon@ruvu.nl">Ramon Wijnands</maintainer>
