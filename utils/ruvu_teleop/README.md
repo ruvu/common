@@ -57,3 +57,38 @@ Cancels an actionlib goal when a joystick button has been pressed.
 
 - joy ([sensor_msgs/Joy](http://docs.ros.org/api/sensor_msgs/html/msg/Joy.html))
 - cancel ([actionlib_msgs/GoalID](http://docs.ros.org/api/actionlib_msgs/html/msg/GoalID.html))
+
+
+### teleop_publish_float_joy
+
+Map `sensor_msgs/Joy` axes to `std_msgs/Float64` topic.
+
+#### Parameters
+
+- `button_mapping`: Required parameter that maps button indices to joint positions
+- `button_mapping[i]/button_index`: enable button for this mapping
+- `button_mapping[i]/axis_index`: axis to map to output topic
+- `button_mapping[i]/factor`: the axis value is multiplied by this factor before being published on the output topic
+- `button_mapping[i]/topic`: output topic (`std_msgs/Float64`)
+
+Example config:
+
+```
+button_mapping:
+    - button_index: 2
+      axis_index: 7
+      factor: 1
+      topic: front_lift_controller/command
+    - button_index: 3
+      axis_index: 7
+      factor: 1
+      topic: rear_lift_controller/command
+```
+
+#### Subscribed topics
+
+- `joy` ([`sensor_msgs/Joy`](http://docs.ros.org/api/sensor_msgs/html/msg/Joy.html))
+
+#### Published topics
+
+- depends on parameters ([`std_msgs/Float64`](http://docs.ros.org/api/std_msgs/html/msg/Float64.html))
