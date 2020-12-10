@@ -92,3 +92,35 @@ button_mapping:
 #### Published topics
 
 - depends on parameters ([`std_msgs/Float64`](http://docs.ros.org/api/std_msgs/html/msg/Float64.html))
+
+### teleop_toggle_float_joy
+
+Use `sensor_msgs/Joy` button to toggle a `std_msgs/Float64` topic between a high and a low value.
+
+#### Parameters
+
+- `press_time`: (Optional, default = 1.0) Duration for the button to be pressed before output is toggled
+- `button_mapping`: Required parameter that maps button indices to joint positions
+- `button_mapping[i]/button_index`: button used for toggling the output
+- `button_mapping[i]/high`: high value
+- `button_mapping[i]/low`: low value
+- `button_mapping[i]/topic`: output topic (`std_msgs/Float64`)
+
+Example config:
+
+```
+press_time: 0.0
+button_mapping:
+    - button_index: 7
+      high: 1.0
+      low: 0.0
+      topic: pto_controller/command
+```
+
+#### Subscribed topics
+
+- `joy` ([`sensor_msgs/Joy`](http://docs.ros.org/api/sensor_msgs/html/msg/Joy.html))
+
+#### Published topics
+
+- depends on parameters ([`std_msgs/Float64`](http://docs.ros.org/api/std_msgs/html/msg/Float64.html))

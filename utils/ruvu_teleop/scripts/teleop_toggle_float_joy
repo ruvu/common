@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+# Copyright 2020 RUVU Robotics B.V.
+
+from collections import namedtuple
+
+import rospy
+
+from std_msgs.msg import Float64
+from sensor_msgs.msg import Joy
+
+
+ButtonAction = namedtuple('ButtonAction', ['high', 'low', 'publisher'])
+
+
+def callback(msg):
+    for button, action in enable_buttons.items():
+        # If pressed and timer not set, set timer. If not pressed, stop timer
+        if msg.buttons[button] == 1:
+            if button_mapping_first_pressed[button] is None:
+                rospy.loginfo("Initial press button %d", button)
+                button_mapping_first_pressed[button] = rospy.Time.now()
+            elif (rospy.Time.now() - button_mapping_first_pressed[button]).to_sec() > press_time:
+                if not button_toggled[button]:
+                    button_states[button] ^= True
+                    button_toggled[button] = True
+        else:
+            button_mapping_first_pressed[button] = None
+            button_toggled[button] = False
+
+        out_msg = Float64(data=action.high) if button_states[button] else Float64(data=action.low)
+        action.publisher.publish(out_msg)
+
+
+if __name__ == "__main__":
+    rospy.init_node('teleop_publish_float_joy')
+
+    button_mapping = rospy.get_param("~button_mapping")
+    press_time = rospy.get_param("~press_time", 1.0)
+    button_mapping_first_pressed = {int(e['button_index']): None for e in button_mapping}
+    button_states = {int(e['button_index']): False for e in button_mapping}
+    button_toggled = {int(e['button_index']): False for e in button_mapping}
+
+    enable_buttons = {
+        int(e["button_index"]):
+        ButtonAction(high=int(e["high"]),
+                     low=float(e["low"]),
+                     publisher=rospy.Publisher(e["topic"], Float64, queue_size=1))
+        for e in button_mapping
+    }
+
+    sub = rospy.Subscriber('joy', Joy, callback, queue_size=1)
+
+    rospy.spin()
