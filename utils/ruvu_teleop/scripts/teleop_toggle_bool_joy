@@ -6,15 +6,12 @@ from collections import namedtuple
 
 import rospy
 
-from std_msgs.msg import Float64
+from std_msgs.msg import Bool
 from sensor_msgs.msg import Joy
 
 
-ButtonAction = namedtuple('ButtonAction', ['high', 'low', 'publisher'])
-
-
 def callback(msg):
-    for button, action in enable_buttons.items():
+    for button, publisher in enable_buttons.items():
         # If pressed and timer not set, set timer. If not pressed, stop timer
         if msg.buttons[button] == 1:
             if button_mapping_first_pressed[button] is None:
@@ -28,12 +25,12 @@ def callback(msg):
             button_mapping_first_pressed[button] = None
             button_toggled[button] = False
 
-        out_msg = Float64(data=action.high) if button_states[button] else Float64(data=action.low)
-        action.publisher.publish(out_msg)
+        out_msg = Bool(data=button_states[button])
+        publisher.publish(out_msg)
 
 
 if __name__ == "__main__":
-    rospy.init_node('teleop_joint_jog_joy')
+    rospy.init_node('teleop_toggle_bool_joy')
 
     button_mapping = rospy.get_param("~button_mapping")
     press_time = rospy.get_param("~press_time", 1.0)
@@ -42,10 +39,7 @@ if __name__ == "__main__":
     button_toggled = {int(e['button_index']): False for e in button_mapping}
 
     enable_buttons = {
-        int(e["button_index"]):
-        ButtonAction(high=int(e["high"]),
-                     low=float(e["low"]),
-                     publisher=rospy.Publisher(e["topic"], Float64, queue_size=1))
+        int(e["button_index"]): rospy.Publisher(e["topic"], Bool, queue_size=1)
         for e in button_mapping
     }
 

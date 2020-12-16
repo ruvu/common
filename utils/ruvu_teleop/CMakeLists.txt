@@ -13,6 +13,6 @@ catkin_install_python(PROGRAMS
   scripts/teleop_joint_jog_joy
   scripts/teleop_publish_pose_joy
   scripts/teleop_single_joint_position_joy
-  scripts/teleop_toggle_float_joy
+  scripts/teleop_toggle_bool_joy
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
