@@ -33,7 +33,7 @@ def callback(msg):
 
 
 if __name__ == "__main__":
-    rospy.init_node('teleop_publish_float_joy')
+    rospy.init_node('teleop_joint_jog_joy')
 
     button_mapping = rospy.get_param("~button_mapping")
     press_time = rospy.get_param("~press_time", 1.0)

@@ -10,7 +10,7 @@ ruvu_lint_add_test()
 
 catkin_install_python(PROGRAMS
   scripts/teleop_cancel_actionlib_goal_joy
-  scripts/teleop_publish_float_joy
+  scripts/teleop_joint_jog_joy
   scripts/teleop_publish_pose_joy
   scripts/teleop_single_joint_position_joy
   scripts/teleop_toggle_float_joy
