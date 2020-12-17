@@ -6,9 +6,9 @@ Copyright 2020 RUVU Robotics B.V.
 <package format="2">
   <name>ruvu_teleop</name>
   <version>1.0.0</version>
-  <description>The ruvu_teleop package contains teleop joy and keyboard tools for robot operation.</description>
+  <description>Teleop joy and keyboard button mapping tools for robot operation.</description>
 
-  <maintainer email="rein@ruvu.nl">Rein Appeldoorn</maintainer>
+  <maintainer email="rokus@ruvu.nl">Rokus Ottervanger</maintainer>
 
   <license>TODO</license>
 

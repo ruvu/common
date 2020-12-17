@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+# Copyright 2020 RUVU Robotics B.V.
+
+from collections import namedtuple
+
+import rospy
+
+from control_msgs.msg import JointJog
+from sensor_msgs.msg import Joy
+
+
+ButtonAction = namedtuple('ButtonAction', ['axis_index', 'factor', 'joint_name'])
+
+
+def callback(msg):
+    joint_jog_msg = JointJog()
+    joint_jog_msg.header = msg.header
+
+    for enable_button, action in button_actions.items():
+        joint_jog_msg.joint_names.append(action.joint_name)
+
+        if msg.buttons[enable_button] == 1:
+            axis_magnitude = msg.axes[action.axis_index]
+            joint_cmd_vel = axis_magnitude * action.factor
+        else:
+            joint_cmd_vel = 0.0
+        joint_jog_msg.velocities.append(joint_cmd_vel)
+
+    publisher.publish(joint_jog_msg)
+
+
+if __name__ == "__main__":
+    rospy.init_node('teleop_joint_jog_joy')
+
+    button_mapping = rospy.get_param("~button_mapping")
+    publisher = rospy.Publisher('joint_jog_cmd', JointJog, queue_size=1)
+
+    button_actions = {
+        int(e["button_index"]):
+        ButtonAction(axis_index=int(e["axis_index"]),
+                     factor=float(e["factor"]),
+                     joint_name=e["joint_name"])
+        for e in button_mapping
+    }
+
+    sub = rospy.Subscriber('joy', Joy, callback, queue_size=1)
+
+    rospy.spin()
