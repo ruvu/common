@@ -16,9 +16,11 @@ Copyright 2020 RUVU Robotics B.V.
 
   <build_depend>ruvu_lint</build_depend>
 
-  <exec_depend>actionlib</exec_depend>
+  <depend>roscpp</depend>
+  <depend>mbf_msgs</depend>
+  <depend>actionlib</depend>
+
   <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>mbf_msgs</exec_depend>
   <exec_depend>rospy</exec_depend>
 
   <test_depend>ruvu_lint</test_depend>
