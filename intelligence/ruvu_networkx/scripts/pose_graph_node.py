@@ -13,10 +13,12 @@ from std_srvs.srv import Empty
 from copy import deepcopy
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, Quaternion
+from interactive_markers.interactive_marker_server import InteractiveMarkerServer
 from nav_msgs.msg import Path
 from visualization_msgs.msg import MarkerArray
 from mbf_msgs.msg import GetPathAction, GetPathResult
 from tf.transformations import quaternion_slerp
+from future.utils import iteritems
 
 from ruvu_networkx import ros_visualization
 
@@ -232,7 +234,7 @@ def _get_empty_path(frame_id):
 
 class PoseGraphNode(object):
     def __init__(self, frame_id, robot_frame_id, file_path, click_timeout, interpolation_distance,
-                 include_goal_pose):
+                 include_goal_pose, marker_scale):
         """
         PoseGraphNode that holds a pose graph that can be created and modified by the user. This pose graph can be used
         to search paths in euclidean space
@@ -242,6 +244,7 @@ class PoseGraphNode(object):
         :param click_timeout: Timeout between clicks when adding an edge or querying a path
         :param interpolation_distance: Pose interpolation between graph poses (when a path is calculated)
         :param include_goal_pose: Append goal pose to the end of the path or not
+        :param marker_scale: The scale of the visualization markers
         """
         self._graph = nx.DiGraph()
         if os.path.isfile(file_path):
@@ -258,7 +261,9 @@ class PoseGraphNode(object):
         self._click_timeout = click_timeout
         self._interpolation_distance = interpolation_distance
         self._include_goal_pose = include_goal_pose
+        self._marker_scale = marker_scale
 
+        self._interactive_marker_server = InteractiveMarkerServer("graph_node_controls")
         self._visualization_pub = rospy.Publisher("graph_visualization", MarkerArray, queue_size=1, latch=True)
         self._last_planned_path_pub = rospy.Publisher("last_planned_path", Path, queue_size=1, latch=True)
         self._add_node_sub = rospy.Subscriber("add_node", PoseStamped, self._add_node_cb)
@@ -518,7 +523,6 @@ class PoseGraphNode(object):
 
         self._graph.add_node(new_node, pose=pose)
         rospy.loginfo("Adding node {}".format(new_node))
-
         self._publish_graph_visualization()
 
     def _add_edge_to_graph(self, p1, p2):
@@ -568,8 +572,43 @@ class PoseGraphNode(object):
         """
         Publish a visualization of the pose graph
         """
-        msg = ros_visualization.get_visualization_marker_array_msg_from_pose_graph(self._graph, self._frame_id)
+        self._update_interactive_markers()
+        msg = ros_visualization.get_visualization_marker_array_msg_from_pose_graph(self._graph, self._frame_id,
+                                                                                   self._marker_scale)
         self._visualization_pub.publish(msg)
+
+    def _update_interactive_markers(self):
+        """
+        Method to update the interactive marker server based on the graph
+        """
+        graph_poses_dict = {str(node_id): pose for (node_id, pose) in
+                            nx.get_node_attributes(self._graph, "pose").iteritems()}
+        marker_poses_dict = {name: self._interactive_marker_server.marker_contexts[name].int_marker.pose
+                             for name in self._interactive_marker_server.marker_contexts}
+
+        # Find differences between graph and existing interactive markers
+        new_nodes = {node: graph_poses_dict[node] for node in graph_poses_dict if node not in marker_poses_dict}
+        updated_nodes = {node: graph_poses_dict[node] for node in graph_poses_dict if
+                         node in marker_poses_dict and graph_poses_dict[node] != marker_poses_dict[node]}
+        removed_nodes = {node: marker_poses_dict[node] for node in marker_poses_dict if node not in graph_poses_dict}
+
+        # Update interactive markers
+        for (name, pose) in iteritems(new_nodes):
+            new_marker = ros_visualization.create_3dof_marker(name, pose, self._frame_id, self._marker_scale)
+            self._interactive_marker_server.insert(new_marker, self._process_marker_feedback)
+        for (name, pose) in iteritems(updated_nodes):
+            self._interactive_marker_server.setPose(name, pose)
+        for name in removed_nodes:
+            self._interactive_marker_server.erase(name)
+        self._interactive_marker_server.applyChanges()
+
+    def _process_marker_feedback(self, feedback):
+        """
+        Callback method for interactive marker feedback from the GUI
+        :param feedback: InteractiveMarkerFeedback, containing information on the controlled interactive marker
+        """
+        self._graph.add_node(int(feedback.marker_name), pose=feedback.pose)  # Update existing node's pose
+        self._publish_graph_visualization()
 
 
 if __name__ == "__main__":
@@ -581,7 +620,8 @@ if __name__ == "__main__":
             rospy.get_param("~file_path", "/tmp/pose_graph.yaml"),
             rospy.get_param("~click_timeout", 5.0),
             rospy.get_param("~interpolation_distance", 0.2),
-            rospy.get_param("~include_goal_pose", True)
+            rospy.get_param("~include_goal_pose", True),
+            rospy.get_param("~marker_scale", 1)
         )
     except Exception:
         # if we don't catch this exception, the node hangs because other threads have been started
