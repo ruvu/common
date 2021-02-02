@@ -582,7 +582,7 @@ class PoseGraphNode(object):
         Method to update the interactive marker server based on the graph
         """
         graph_poses_dict = {str(node_id): pose for (node_id, pose) in
-                            nx.get_node_attributes(self._graph, "pose").iteritems()}
+                            nx.get_node_attributes(self._graph, "pose").items()}
         marker_poses_dict = {name: self._interactive_marker_server.marker_contexts[name].int_marker.pose
                              for name in self._interactive_marker_server.marker_contexts}
 
