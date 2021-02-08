@@ -129,7 +129,8 @@ class RabbitMQBridge(object):
 
             # Create RabbitMQ subscriber
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable)
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable,
+                                                      auto_delete=publisher.auto_delete)
 
             if publisher.exchange:
                 self._rabbitmq_read_channel.queue_bind(exchange=publisher.exchange, queue=rabbitmq_queue_name)
@@ -146,18 +147,17 @@ class RabbitMQBridge(object):
             # Create RabbitMQ RPC client
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
-            queue = self._rabbitmq_rpc_channel.queue_declare(
-                queue=rabbitmq_queue_name, durable=True
-            )
+            queue = self._rabbitmq_rpc_channel.queue_declare(queue=rabbitmq_queue_name, durable=server.durable,
+                                                             auto_delete=server.auto_delete)
             response_queue = self._rabbitmq_rpc_response_channel.queue_declare(
-                queue=rabbitmq_response_queue_name, exclusive=True, durable=True
+                queue=rabbitmq_response_queue_name, exclusive=True, durable=server.durable,
+                auto_delete=server.auto_delete
             )
             while queue.method.consumer_count == 0:
                 rospy.loginfo_throttle(60, "Waiting for RPC server for: " + server.topic)
                 rospy.sleep(0.1)
-                queue = self._rabbitmq_rpc_channel.queue_declare(
-                    queue=rabbitmq_queue_name, durable=True
-                )
+                queue = self._rabbitmq_rpc_channel.queue_declare(queue=rabbitmq_queue_name, durable=server.durable,
+                                                                 auto_delete=server.auto_delete)
             rospy.loginfo("RPC server found for %s", server.topic)
 
             self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
@@ -183,7 +183,8 @@ class RabbitMQBridge(object):
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable)
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable,
+                                                      auto_delete=client.auto_delete)
             self._rabbitmq_read_channel.basic_qos(prefetch_count=1)
 
             if client.exchange:

@@ -3,7 +3,8 @@
 from roslib.message import get_message_class, get_service_class
 from collections import namedtuple
 
-TopicBridge = namedtuple("TopicBridge", "topic message_type durable exchange")
+TopicBridge = namedtuple("TopicBridge", "topic message_type durable exchange auto_delete")
+TopicBridge.__new__.__defaults__ = (False,) * len(TopicBridge._fields)  # Set defaults to allow partial configuration
 
 
 def get_topic_bridges(param_value):
