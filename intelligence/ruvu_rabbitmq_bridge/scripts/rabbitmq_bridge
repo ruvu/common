@@ -118,10 +118,6 @@ class RabbitMQBridge(object):
             if subscriber.exchange:
                 self._rabbitmq_write_channel.exchange_declare(exchange=subscriber.exchange, durable=subscriber.durable)
 
-            # Create RabbitMQ Publisher
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + subscriber.topic
-            self._rabbitmq_write_channel.queue_declare(queue=rabbitmq_queue_name, durable=subscriber.durable)
-
         for publisher in publishers:
             # Create ROS publisher
             self._ros_publishers[publisher.topic] = rospy.Publisher(
