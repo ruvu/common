@@ -12,6 +12,7 @@ import rospy
 import socket
 import threading
 import uuid
+from future.utils import iteritems
 from queue import Queue, Empty
 from rospy_message_converter import json_message_converter, message_converter
 from ruvu_rabbitmq_bridge import get_topic_bridges, get_service_bridges
@@ -32,11 +33,14 @@ def reply_failed_json_message(channel, properties, exception):
     }
     json_msg = json.dumps(msg)
     rospy.logdebug("Publishing JSON message {}".format(json_msg))
-    channel.basic_publish(exchange='',
-                          routing_key=properties.reply_to,
-                          properties=pika.BasicProperties(correlation_id=properties.correlation_id),
-                          body=json_msg
-                          )
+    try:
+        channel.basic_publish(exchange='',
+                              routing_key=properties.reply_to,
+                              properties=pika.BasicProperties(correlation_id=properties.correlation_id),
+                              body=json_msg
+                              )
+    except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
+        rospy.loginfo("Failed to produce message, connection or channel closed")
 
 
 class RabbitMQBridge(object):
@@ -60,56 +64,72 @@ class RabbitMQBridge(object):
         :param ros_queue_empty_timeout: When there is no incoming ROS message, wait for x seconds
         :param ros_service_response_timeout: When there's no ROS service response [seconds], pass an error to the client
         """
+        self._subscribers = subscribers
+        self._publishers = publishers
+        self._servers = servers
+        self._clients = clients
+
+        self._rabbitmq_host = rabbitmq_host
+        self._rabbitmq_virtual_host = rabbitmq_virtual_host
+        self._rabbitmq_username = rabbitmq_username
+        self._rabbitmq_password = rabbitmq_password
+        self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
+        self._rabbitmq_heartbeat = rabbitmq_heartbeat
+        self._ros_publisher_queue_size = ros_publisher_queue_size
+        self._queue_empty_timeout = ros_queue_empty_timeout
+        self._ros_service_response_timeout = rospy.Duration(ros_service_response_timeout)
+
         self._ros_subscribers = {}
         self._ros_publishers = {}
         self._ros_servers = {}
         self._ros_clients = {}
         self._correlation_ids = {}
         self._rabbitmq_rpc_repsonses = {}
-        self._rabbitmq_queue_prefix = rabbitmq_queue_prefix + "/" if rabbitmq_queue_prefix else ""
-        self._queue_empty_timeout = ros_queue_empty_timeout
-        self._ros_service_response_timeout = rospy.Duration(ros_service_response_timeout)
+        self._close_connection = False
+        self._ros_msg_handler_thread = None
+        self._ros_srv_handler_thread = None
+        self._ros_msg_queue = None
+        self._ros_srv_queue = None
+        self._rabbitmq_write_connection = None
+        self._rabbitmq_write_channel = None
+        self._rabbitmq_read_connection = None
+        self._rabbitmq_read_channel = None
+        self._rabbitmq_rpc_connection = None
+        self._rabbitmq_rpc_channel = None
+        self._rabbitmq_rpc_response_connection = None
+        self._rabbitmq_rpc_response_channel = None
+        self._rabbitmq_rpc_client_callback_queue = None
+        self._diagnostic_updater = None
 
+    def initialize_connection(self):
         parameters = {
-            'host': rabbitmq_host,
-            'virtual_host': rabbitmq_virtual_host,
+            'host': self._rabbitmq_host,
+            'virtual_host': self._rabbitmq_virtual_host,
         }
-        if rabbitmq_username:
-            parameters['credentials'] = pika.PlainCredentials(rabbitmq_username, rabbitmq_password)
+        if self._rabbitmq_username:
+            parameters['credentials'] = pika.PlainCredentials(self._rabbitmq_username, self._rabbitmq_password)
         if hasattr(pika.ConnectionParameters, 'heartbeat'):  # pika version >= 0.11.0
-            parameters['heartbeat'] = rabbitmq_heartbeat
+            parameters['heartbeat'] = self._rabbitmq_heartbeat
         parameters = pika.ConnectionParameters(**parameters)
+        if self._rabbitmq_username:
+            rospy.loginfo("Connecting to {} (with credentials)".format(self._rabbitmq_host))
+        else:
+            rospy.loginfo("Connecting to {}".format(self._rabbitmq_host))
+        self._rabbitmq_write_connection = pika.BlockingConnection(parameters)
+        self._rabbitmq_write_channel = self._rabbitmq_write_connection.channel()
 
-        while not rospy.is_shutdown():
-            try:
-                if rabbitmq_username:
-                    rospy.loginfo("Connecting to {} (with credentials)".format(rabbitmq_host))
-                else:
-                    rospy.loginfo("Connecting to {}".format(rabbitmq_host))
-                self._rabbitmq_write_connection = pika.BlockingConnection(parameters)
-                self._rabbitmq_write_channel = self._rabbitmq_write_connection.channel()
+        self._rabbitmq_read_connection = pika.BlockingConnection(parameters)
+        self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
 
-                self._rabbitmq_read_connection = pika.BlockingConnection(parameters)
-                self._rabbitmq_read_channel = self._rabbitmq_read_connection.channel()
+        self._rabbitmq_rpc_connection = pika.BlockingConnection(parameters)
+        self._rabbitmq_rpc_channel = self._rabbitmq_rpc_connection.channel()
 
-                self._rabbitmq_rpc_connection = pika.BlockingConnection(parameters)
-                self._rabbitmq_rpc_channel = self._rabbitmq_rpc_connection.channel()
-
-                self._rabbitmq_rpc_response_connection = pika.BlockingConnection(parameters)
-                self._rabbitmq_rpc_response_channel = self._rabbitmq_rpc_response_connection.channel()
-
-            except pika.exceptions.ConnectionClosed as e:
-                if rabbitmq_reconnect_timeout > 0:
-                    rospy.logerr("%s - Reconnecting in %.2f seconds", e, rabbitmq_reconnect_timeout)
-                    rospy.sleep(rabbitmq_reconnect_timeout)
-                else:
-                    raise
-            else:
-                break
+        self._rabbitmq_rpc_response_connection = pika.BlockingConnection(parameters)
+        self._rabbitmq_rpc_response_channel = self._rabbitmq_rpc_response_connection.channel()
 
         self._ros_msg_queue = Queue()  # input queue for ROS msgs
         self._ros_srv_queue = Queue()  # input queue for ROS srvs
-        for subscriber in subscribers:
+        for subscriber in self._subscribers:
             # Create ROS subscriber
             self._ros_subscribers[subscriber.topic] = rospy.Subscriber(
                 subscriber.topic, subscriber.message_type, partial(self._ros_msg_callback, subscriber)
@@ -118,31 +138,26 @@ class RabbitMQBridge(object):
             if subscriber.exchange:
                 self._rabbitmq_write_channel.exchange_declare(exchange=subscriber.exchange, durable=subscriber.durable)
 
-            # Create RabbitMQ Publisher
-            rabbitmq_queue_name = self._rabbitmq_queue_prefix + subscriber.topic
-            self._rabbitmq_write_channel.queue_declare(queue=rabbitmq_queue_name, durable=subscriber.durable)
-
-        for publisher in publishers:
+        for publisher in self._publishers:
             # Create ROS publisher
             self._ros_publishers[publisher.topic] = rospy.Publisher(
-                publisher.topic, publisher.message_type, queue_size=ros_publisher_queue_size
+                publisher.topic, publisher.message_type, queue_size=self._ros_publisher_queue_size
             )
-
-            if publisher.exchange:
-                self._rabbitmq_write_channel.exchange_declare(exchange=publisher.exchange, durable=publisher.durable)
 
             # Create RabbitMQ subscriber
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable)
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable,
+                                                      auto_delete=publisher.auto_delete)
 
             if publisher.exchange:
+                self._rabbitmq_read_channel.exchange_declare(exchange=publisher.exchange, durable=publisher.durable)
                 self._rabbitmq_read_channel.queue_bind(exchange=publisher.exchange, queue=rabbitmq_queue_name)
 
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
                                                       no_ack=True)
 
         # RPC implementation based on: https://www.rabbitmq.com/tutorials/tutorial-six-python.html
-        for server in servers:
+        for server in self._servers:
             # Declare exchange
             if server.exchange:
                 self._rabbitmq_rpc_channel.exchange_declare(exchange=server.exchange, durable=server.durable)
@@ -150,19 +165,11 @@ class RabbitMQBridge(object):
             # Create RabbitMQ RPC client
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
-            queue = self._rabbitmq_rpc_channel.queue_declare(
-                queue=rabbitmq_queue_name, durable=True
-            )
+
             response_queue = self._rabbitmq_rpc_response_channel.queue_declare(
-                queue=rabbitmq_response_queue_name, exclusive=True, durable=True
+                queue=rabbitmq_response_queue_name, exclusive=True, durable=server.durable,
+                auto_delete=server.auto_delete
             )
-            while queue.method.consumer_count == 0:
-                rospy.loginfo_throttle(60, "Waiting for RPC server for: " + server.topic)
-                rospy.sleep(0.1)
-                queue = self._rabbitmq_rpc_channel.queue_declare(
-                    queue=rabbitmq_queue_name, durable=True
-                )
-            rospy.loginfo("RPC server found for %s", server.topic)
 
             self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
             self._rabbitmq_rpc_response_channel.basic_consume(
@@ -174,11 +181,7 @@ class RabbitMQBridge(object):
                 server.topic, server.message_type, partial(self._ros_srv_callback, server)
             )
 
-        for client in clients:
-            # Declare exchange
-            if client.exchange:
-                self._rabbitmq_read_channel.exchange_declare(exchange=client.exchange, durable=client.durable)
-
+        for client in self._clients:
             # Create ROS service client
             self._ros_clients[client.topic] = rospy.ServiceProxy(client.topic, client.message_type)
             rospy.loginfo("Waiting for ROS server for: %s", client.topic)
@@ -187,17 +190,41 @@ class RabbitMQBridge(object):
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable)
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable,
+                                                      auto_delete=client.auto_delete)
+
             self._rabbitmq_read_channel.basic_qos(prefetch_count=1)
 
             if client.exchange:
+                self._rabbitmq_read_channel.exchange_declare(exchange=client.exchange, durable=client.durable)
                 self._rabbitmq_read_channel.queue_bind(exchange=client.exchange, queue=rabbitmq_queue_name)
 
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_rpc_server_callback, queue=rabbitmq_queue_name)
 
         self._diagnostic_updater = diagnostic_updater.Updater()
-        self._diagnostic_updater.setHardwareID(rabbitmq_host)
+        self._diagnostic_updater.setHardwareID(self._rabbitmq_host)
         self._diagnostic_updater.add(diagnostic_updater.Heartbeat())
+
+    def shutdown_connection(self):
+        # Stop sending and receiving
+        rospy.loginfo("Shutting down RabbitMQ read channel ...")
+        try:
+            self._rabbitmq_read_channel.stop_consuming()
+        except AssertionError:
+            pass
+
+        # Stop threads
+        self._close_connection = True
+
+        # Shutdown ros servers
+        for (topic, server) in iteritems(self._ros_servers):
+            server.shutdown()
+
+        rospy.loginfo("Waiting for the msg and srv handler threads to join")
+        self._ros_msg_handler_thread.join()
+        self._ros_srv_handler_thread.join()
+        self._close_connection = False
+        rospy.loginfo("RabbitMQBridge stopped")
 
     def _ros_msg_callback(self, subscriber, msg):
         """
@@ -229,11 +256,13 @@ class RabbitMQBridge(object):
         body = json_message_converter.convert_ros_message_to_json(msg)
         rospy.logdebug(
             "Publishing RabbitMQ message with body {} to queue {}".format(body, rabbitmq_queue_name))
-        self._rabbitmq_write_channel.basic_publish(
-            exchange=subscriber.exchange,
-            routing_key=rabbitmq_queue_name,
-            body=body
-        )
+        try:
+            self._rabbitmq_write_channel.basic_publish(
+                exchange=subscriber.exchange,
+                routing_key=rabbitmq_queue_name,
+                body=body)
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
+            rospy.loginfo("Failed to produce message, connection or channel closed")
 
     def _publish_ros_srv_rabbitmq(self, server, msg):
         """
@@ -245,15 +274,18 @@ class RabbitMQBridge(object):
         body = json_message_converter.convert_ros_message_to_json(msg)
         rospy.logdebug(
             "Publishing RabbitMQ message with body {} to queue {}".format(body, rabbitmq_queue_name))
-        self._rabbitmq_rpc_channel.basic_publish(
-            exchange=server.exchange,
-            routing_key=rabbitmq_queue_name,
-            properties=pika.BasicProperties(
-                reply_to=self._rabbitmq_rpc_client_callback_queue,
-                correlation_id=self._correlation_ids[server.topic],
-            ),
-            body=body
-        )
+        try:
+            self._rabbitmq_rpc_channel.basic_publish(
+                exchange=server.exchange,
+                routing_key=rabbitmq_queue_name,
+                properties=pika.BasicProperties(
+                    reply_to=self._rabbitmq_rpc_client_callback_queue,
+                    correlation_id=self._correlation_ids[server.topic],
+                ),
+                body=body
+            )
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
+            rospy.loginfo("Failed to produce message, connection or channel closed")
 
     def _rabbitmq_msg_callback(self, channel, method, properties, body):
         """
@@ -313,13 +345,15 @@ class RabbitMQBridge(object):
                 }
                 json_msg = json.dumps(msg)
                 rospy.logdebug("Publishing JSON message {} to service {}".format(json_msg, topic))
-
-                channel.basic_publish(exchange='',
-                                      routing_key=properties.reply_to,
-                                      properties=pika.BasicProperties(correlation_id=properties.correlation_id),
-                                      body=json_msg
-                                      )
-                channel.basic_ack(delivery_tag=method.delivery_tag)
+                try:
+                    channel.basic_publish(exchange='',
+                                          routing_key=properties.reply_to,
+                                          properties=pika.BasicProperties(correlation_id=properties.correlation_id),
+                                          body=json_msg
+                                          )
+                    channel.basic_ack(delivery_tag=method.delivery_tag)
+                except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
+                    rospy.loginfo("Failed to produce message, connection or channel closed")
         else:
             rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
@@ -353,90 +387,87 @@ class RabbitMQBridge(object):
             else:
                 rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
-    def _ros_msg_handler_thread(self):
-        while not rospy.is_shutdown():
+    def _ros_msg_handler_thread_function(self):
+        while not (rospy.is_shutdown() or self._close_connection):
             try:
                 self._publish_ros_msg_rabbitmq(*self._ros_msg_queue.get(timeout=self._queue_empty_timeout))
             except Empty:
                 pass
 
-            if self._rabbitmq_write_connection.is_open:
+            if self._check_connection_open(self._rabbitmq_write_connection):
                 self._diagnostic_updater.update()
 
-    def _ros_srv_handler_thread(self):
-        while not rospy.is_shutdown():
+    def _ros_srv_handler_thread_function(self):
+        while not (rospy.is_shutdown() or self._close_connection):
             try:
                 self._publish_ros_srv_rabbitmq(*self._ros_srv_queue.get(timeout=self._queue_empty_timeout))
             except Empty:
                 pass
 
-            if self._rabbitmq_rpc_connection.is_open:
+            if self._check_connection_open(self._rabbitmq_rpc_connection):
                 self._diagnostic_updater.update()
+
+    def _check_connection_open(self, connection):
+        try:
+            connection.process_data_events()
+            return True
+        except pika.exceptions.ConnectionClosed as e:
+            return False
 
     def spin(self):
         """
         Spins the bridge, starts the read channel and makes sure that a shutdown is handled properly.
         """
-
-        def shutdown_hook():
-            rospy.loginfo("Shutting down RabbitMQ read channel ...")
-            try:
-                self._rabbitmq_read_channel.stop_consuming()
-            except AssertionError:
-                pass
-
-        rospy.on_shutdown(shutdown_hook)
-
         rospy.loginfo("RabbitMQBridge initialized. Start consuming RabbitMQ read channel & ROS msg handler thread")
 
-        ros_msg_handler_thread = threading.Thread(target=self._ros_msg_handler_thread)
-        ros_msg_handler_thread.start()
-        ros_srv_handler_thread = threading.Thread(target=self._ros_srv_handler_thread)
-        ros_srv_handler_thread.start()
+        self._ros_msg_handler_thread = threading.Thread(target=self._ros_msg_handler_thread_function)
+        self._ros_msg_handler_thread.start()
+        self._ros_srv_handler_thread = threading.Thread(target=self._ros_srv_handler_thread_function)
+        self._ros_srv_handler_thread.start()
         try:
-            self._rabbitmq_read_channel.start_consuming()
+            self._rabbitmq_read_channel.start_consuming()  # blocking call
         except KeyboardInterrupt as e:
             rospy.loginfo('signal shutdown')
             rospy.signal_shutdown(str(e))
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-            rospy.logfatal(e)
-            rospy.signal_shutdown(str(e))
-
-        try:
-            rospy.loginfo('Call stop_consuming on the read_channel')
-            self._rabbitmq_read_channel.stop_consuming()
-        except AssertionError:
-            pass
-
-        rospy.loginfo("Waiting for the msg and srv handler threads to join")
-        ros_msg_handler_thread.join()
-        ros_srv_handler_thread.join()
-
-        rospy.loginfo("RabbitMQBridge stopped")
+            rospy.logwarn('Connection or channel closed, reconnecting when enabled')
+        else:
+            rospy.loginfo('All consumers canceled, keep spinning for producers')
+            while not rospy.is_shutdown():
+                rospy.sleep(0.1)
+                if not self._check_connection_open(self._rabbitmq_read_connection):
+                    rospy.logwarn('Connection or channel closed, reconnecting when enabled')
+                    break
 
 
 if __name__ == '__main__':
     rospy.init_node('rabbitmq_bridge', disable_signals=True)
-
-    try:
-        bridge = RabbitMQBridge(
-            get_topic_bridges(rospy.get_param('~subscribers', [])),
-            get_topic_bridges(rospy.get_param('~publishers', [])),
-            get_service_bridges(rospy.get_param('~servers', [])),
-            get_service_bridges(rospy.get_param('~clients', [])),
-            rospy.get_param('~rabbitmq_host', 'localhost'),
-            rospy.get_param('~rabbitmq_virtual_host', '/'),
-            rospy.get_param('~rabbitmq_username', ''),
-            rospy.get_param('~rabbitmq_password', ''),
-            rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
-            rospy.get_param('~rabbitmq_reconnect_timeout', 5),
-            rospy.get_param('~rabbitmq_heartbeat', 0),  # Node will stay alive even when the server cannot be reached
-            rospy.get_param('~ros_publisher_queue_size', 10),
-            rospy.get_param('~queue_empty_timeout', 0.01),
-            rospy.get_param('~ros_service_response_timeout', 1)
-        )
-    except Exception as e:
-        rospy.logfatal(e)
-        sys.exit(1)
-    else:
-        bridge.spin()
+    reconnect_timeout = rospy.get_param('~rabbitmq_reconnect_timeout', 5)
+    bridge = RabbitMQBridge(
+        get_topic_bridges(rospy.get_param('~subscribers', [])),
+        get_topic_bridges(rospy.get_param('~publishers', [])),
+        get_service_bridges(rospy.get_param('~servers', [])),
+        get_service_bridges(rospy.get_param('~clients', [])),
+        rospy.get_param('~rabbitmq_host', 'localhost'),
+        rospy.get_param('~rabbitmq_virtual_host', '/'),
+        rospy.get_param('~rabbitmq_username', ''),
+        rospy.get_param('~rabbitmq_password', ''),
+        rospy.get_param('~rabbitmq_queue_prefix', socket.gethostname()),
+        reconnect_timeout,
+        rospy.get_param('~rabbitmq_heartbeat', 0),  # Node will stay alive even when the server can't be reached
+        rospy.get_param('~ros_publisher_queue_size', 10),
+        rospy.get_param('~queue_empty_timeout', 0.01),
+        rospy.get_param('~ros_service_response_timeout', 1)
+    )
+    while not rospy.is_shutdown():
+        try:
+            bridge.initialize_connection()
+        except pika.exceptions.AMQPError as e:  # both channel and connection errors
+            rospy.logerr(e)
+        else:
+            bridge.spin()
+            bridge.shutdown_connection()
+            if reconnect_timeout <= 0:
+                rospy.loginfo('Reconnect disabled, exiting')
+                sys.exit(1)
+        rospy.sleep(reconnect_timeout)
