@@ -8,5 +8,5 @@ Copyright 2020 RUVU Robotics B.V.
     <param name="rabbitmq_host" value="$(optenv RABBITMQ_HOST localhost)" />
   </node>
 
-  <test test-name="test_publishers" pkg="ruvu_rabbitmq_bridge" type="test_publishers.py" time-limit="5.0"/>
+  <test test-name="test_publishers" pkg="ruvu_rabbitmq_bridge" type="test_publishers.py" time-limit="30.0"/>
 </launch>
