@@ -150,15 +150,17 @@ class RabbitMQBridge(object):
                 publisher.topic, publisher.message_type, queue_size=self._ros_publisher_queue_size
             )
 
-            if publisher.exchange:
-                self._rabbitmq_write_channel.exchange_declare(exchange=publisher.exchange, durable=publisher.durable)
-
             # Create RabbitMQ subscriber
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable,
-                                                      auto_delete=publisher.auto_delete)
+            try:
+                self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable,
+                                                          auto_delete=publisher.auto_delete)
+            except pika.exceptions.ChannelClosed as e:
+                rospy.logwarn('Queue declare failed due to: %s', e)
+                return False
 
             if publisher.exchange:
+                self._rabbitmq_read_channel.exchange_declare(exchange=publisher.exchange, durable=publisher.durable)
                 self._rabbitmq_read_channel.queue_bind(exchange=publisher.exchange, queue=rabbitmq_queue_name)
 
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_msg_callback, queue=rabbitmq_queue_name,
@@ -174,10 +176,14 @@ class RabbitMQBridge(object):
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
 
-            response_queue = self._rabbitmq_rpc_response_channel.queue_declare(
-                queue=rabbitmq_response_queue_name, exclusive=True, durable=server.durable,
-                auto_delete=server.auto_delete
-            )
+            try:
+                response_queue = self._rabbitmq_rpc_response_channel.queue_declare(
+                    queue=rabbitmq_response_queue_name, exclusive=True, durable=server.durable,
+                    auto_delete=server.auto_delete
+                )
+            except pika.exceptions.ChannelClosed as e:
+                rospy.logwarn('Queue declare failed due to: %s', e)
+                return False
 
             self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
             self._rabbitmq_rpc_response_channel.basic_consume(
@@ -190,10 +196,6 @@ class RabbitMQBridge(object):
             )
 
         for client in self._clients:
-            # Declare exchange
-            if client.exchange:
-                self._rabbitmq_read_channel.exchange_declare(exchange=client.exchange, durable=client.durable)
-
             # Create ROS service client
             self._ros_clients[client.topic] = rospy.ServiceProxy(client.topic, client.message_type)
             rospy.loginfo("Waiting for ROS server for: %s", client.topic)
@@ -202,11 +204,16 @@ class RabbitMQBridge(object):
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable,
-                                                      auto_delete=client.auto_delete)
+            try:
+                self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable,
+                                                          auto_delete=client.auto_delete)
+            except pika.exceptions.ChannelClosed as e:
+                rospy.logwarn('Queue declare failed due to: %s', e)
+                return False
             self._rabbitmq_read_channel.basic_qos(prefetch_count=1)
 
             if client.exchange:
+                self._rabbitmq_read_channel.exchange_declare(exchange=client.exchange, durable=client.durable)
                 self._rabbitmq_read_channel.queue_bind(exchange=client.exchange, queue=rabbitmq_queue_name)
 
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_rpc_server_callback, queue=rabbitmq_queue_name)
