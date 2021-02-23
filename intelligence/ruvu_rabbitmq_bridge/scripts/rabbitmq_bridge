@@ -40,7 +40,7 @@ def reply_failed_json_message(channel, properties, exception):
                               body=json_msg
                               )
     except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-        pass
+        rospy.loginfo("Failed to produce message, connection or channel closed")
 
 
 class RabbitMQBridge(object):
@@ -261,7 +261,7 @@ class RabbitMQBridge(object):
                 routing_key=rabbitmq_queue_name,
                 body=body)
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-            pass
+            rospy.loginfo("Failed to produce message, connection or channel closed")
 
     def _publish_ros_srv_rabbitmq(self, server, msg):
         """
@@ -284,7 +284,7 @@ class RabbitMQBridge(object):
                 body=body
             )
         except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-            pass
+            rospy.loginfo("Failed to produce message, connection or channel closed")
 
     def _rabbitmq_msg_callback(self, channel, method, properties, body):
         """
@@ -352,7 +352,7 @@ class RabbitMQBridge(object):
                                           )
                     channel.basic_ack(delivery_tag=method.delivery_tag)
                 except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-                    pass
+                    rospy.loginfo("Failed to produce message, connection or channel closed")
         else:
             rospy.logerr('Route key %s not prefixed by %s', method.routing_key, self._rabbitmq_queue_prefix)
 
