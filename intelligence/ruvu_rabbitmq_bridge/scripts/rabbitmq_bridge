@@ -223,6 +223,7 @@ class RabbitMQBridge(object):
         rospy.loginfo("Waiting for the msg and srv handler threads to join")
         self._ros_msg_handler_thread.join()
         self._ros_srv_handler_thread.join()
+        self._close_connection = False
         rospy.loginfo("RabbitMQBridge stopped")
 
     def _ros_msg_callback(self, subscriber, msg):
