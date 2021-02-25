@@ -19,7 +19,7 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/test_rabbitmq_rpc.test)
 endif()
 
-install(PROGRAMS
-	scripts/rabbitmq_bridge
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+catkin_install_python(PROGRAMS
+    scripts/rabbitmq_bridge
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -14,7 +14,7 @@ Copyright 2020 RUVU Robotics B.V.
     <remap from="rpc_test" to="rpc_test_client"/>
   </node>
 
-  <node name="rpc_test_server_node" pkg="ruvu_rabbitmq_bridge" type="rpc_test_server_node">
+  <node name="rpc_test_server_node" pkg="ruvu_rabbitmq_bridge" type="rpc_test_server_node" launch-prefix="python$(env ROS_PYTHON_VERSION)">
     <remap from="input" to="rpc_test_client"/>
   </node>
 
