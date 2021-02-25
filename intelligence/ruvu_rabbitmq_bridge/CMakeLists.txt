@@ -17,6 +17,7 @@ if (CATKIN_ENABLE_TESTING)
     add_rostest(test/test_rabbitmq_bridge.test)
     add_rostest(test/test_publishers.test)
     add_rostest(test/test_rabbitmq_rpc.test)
+    add_rostest(test/test_message_rate.test)
 endif()
 
 catkin_install_python(PROGRAMS
