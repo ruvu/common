@@ -14,11 +14,11 @@ Copyright 2020 RUVU Robotics B.V.
     <remap from="float_msg" to="float_msg_out"/>
   </node>
 
-  <node name="publisher" pkg="rostopic" type="rostopic" args="pub -r 1000 float_msg std_msgs/Float32 'data: 1.0'" required="true"/>
+  <node name="publisher" pkg="rostopic" type="rostopic" args="pub -r 500 float_msg std_msgs/Float32 'data: 1.0'" required="true"/>
 
   <test test-name="hztest_test" pkg="rostest" type="hztest" name="hztest" >
     <param name="topic" value="float_msg_out" />
-    <param name="hz" value="1000.0" />
+    <param name="hz" value="500.0" />
     <param name="hzerror" value="50" />
     <param name="test_duration" value="5.0" />
   </test>
