@@ -27,5 +27,6 @@ Copyright 2020 RUVU Robotics B.V.
   <test_depend>geometry_msgs</test_depend>
   <test_depend>ruvu_lint</test_depend>
   <test_depend>rostest</test_depend>
+  <test_depend>rostopic</test_depend>
   <test_depend>std_msgs</test_depend>
 </package>
