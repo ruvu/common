@@ -463,7 +463,7 @@ if __name__ == '__main__':
         try:
             bridge.initialize_connection()
         except pika.exceptions.AMQPError as e:  # both channel and connection errors
-            rospy.loginfo(e)
+            rospy.logerr(e)
         else:
             bridge.spin()
             bridge.shutdown_connection()
