@@ -434,6 +434,7 @@ class RabbitMQBridge(object):
         else:
             rospy.loginfo('All consumers canceled, keep spinning for producers')
             while not rospy.is_shutdown():
+                rospy.sleep(0.1)
                 if not self._check_connection_open(self._rabbitmq_read_connection):
                     rospy.logwarn('Connection or channel closed, reconnecting when enabled')
                     break
