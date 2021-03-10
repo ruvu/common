@@ -163,6 +163,8 @@ def _find_shortest_path(graph, start_nodes, end_node):
         except nx.NetworkXNoPath as e:
             rospy.logdebug(e)
         else:
+            if len(shortest_path) == 1:
+                shortest_path *= 2  # Ensure paths of length >= 2
             shortest_paths.append((shortest_path, shortest_path_length))
 
     if shortest_paths:
@@ -470,6 +472,8 @@ class PoseGraphNode(object):
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
                 result.outcome = GetPathResult.TF_ERROR
                 result.message = "failed to obtain transform from {} to {}".format(self._frame_id, self._robot_frame_id)
+                self._get_path_as.set_aborted(result, result.message)
+                return
             else:
                 _add_projected_nodes_on_edges(graph, transform.transform.translation, goal.tolerance)
                 start_nodes = self._get_sorted_nodes_within_distance(graph, transform.transform.translation,
@@ -485,9 +489,10 @@ class PoseGraphNode(object):
 
             try:
                 shortest_path = _find_shortest_path(graph, start_nodes, end_node)
-            except nx.NetworkXNoPath as e:
+            except nx.NetworkXNoPath:
                 result.outcome = GetPathResult.NO_PATH_FOUND
-                result.message = e.message
+                result.message = "No path could be found between {} and {}".format(start_nodes, end_node)
+                rospy.logwarn("%s", result.message)
                 self._last_planned_path_pub.publish(_get_empty_path(self._frame_id))
             else:
                 rospy.loginfo("Found shortest path: %s", shortest_path)
@@ -502,7 +507,7 @@ class PoseGraphNode(object):
                     result.path.poses.append(end_pose)
 
                 self._last_planned_path_pub.publish(result.path)
-        elif start_nodes is []:
+        elif not start_nodes:
             result.outcome = GetPathResult.NO_PATH_FOUND
             result.message = "No start nodes could not be found, with tolerance {}".format(goal.tolerance)
         else:
