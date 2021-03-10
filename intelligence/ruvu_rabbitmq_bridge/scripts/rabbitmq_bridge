@@ -101,7 +101,13 @@ class RabbitMQBridge(object):
         self._rabbitmq_rpc_client_callback_queue = None
         self._diagnostic_updater = None
 
+        # Diagnostics
+        self._diagnostic_updater = diagnostic_updater.Updater()
+        self._diagnostic_updater.setHardwareID(self._rabbitmq_host)
+        self._diagnostic_updater.add("Rabbitmq connection", self._diagnostics)
+
     def initialize_connection(self):
+        self._diagnostic_updater.update()
         parameters = {
             'host': self._rabbitmq_host,
             'virtual_host': self._rabbitmq_virtual_host,
@@ -129,6 +135,7 @@ class RabbitMQBridge(object):
 
         self._ros_msg_queue = Queue()  # input queue for ROS msgs
         self._ros_srv_queue = Queue()  # input queue for ROS srvs
+
         for subscriber in self._subscribers:
             # Create ROS subscriber
             self._ros_subscribers[subscriber.topic] = rospy.Subscriber(
@@ -200,10 +207,6 @@ class RabbitMQBridge(object):
                 self._rabbitmq_read_channel.queue_bind(exchange=client.exchange, queue=rabbitmq_queue_name)
 
             self._rabbitmq_read_channel.basic_consume(self._rabbitmq_rpc_server_callback, queue=rabbitmq_queue_name)
-
-        self._diagnostic_updater = diagnostic_updater.Updater()
-        self._diagnostic_updater.setHardwareID(self._rabbitmq_host)
-        self._diagnostic_updater.add(diagnostic_updater.Heartbeat())
 
     def shutdown_connection(self):
         # Stop sending and receiving
@@ -393,9 +396,7 @@ class RabbitMQBridge(object):
                 self._publish_ros_msg_rabbitmq(*self._ros_msg_queue.get(timeout=self._queue_empty_timeout))
             except Empty:
                 pass
-
-            if self._check_connection_open(self._rabbitmq_write_connection):
-                self._diagnostic_updater.update()
+            self._diagnostic_updater.update()
 
     def _ros_srv_handler_thread_function(self):
         while not (rospy.is_shutdown() or self._close_connection):
@@ -403,16 +404,23 @@ class RabbitMQBridge(object):
                 self._publish_ros_srv_rabbitmq(*self._ros_srv_queue.get(timeout=self._queue_empty_timeout))
             except Empty:
                 pass
-
-            if self._check_connection_open(self._rabbitmq_rpc_connection):
-                self._diagnostic_updater.update()
+            self._diagnostic_updater.update()
 
     def _check_connection_open(self, connection):
+        if connection is None:
+            return False
         try:
             connection.process_data_events()
             return True
-        except pika.exceptions.ConnectionClosed as e:
+        except pika.exceptions.ConnectionClosed:
             return False
+
+    def _diagnostics(self, stat):
+        if self._check_connection_open(self._rabbitmq_read_connection):
+            stat.summary(diagnostic_updater.DiagnosticStatus.OK, "Rabbitmq connection is OK")
+        else:
+            stat.summary(diagnostic_updater.DiagnosticStatus.ERROR,
+                         "Rabbitmq connection with host {} has failed".format(self._rabbitmq_host))
 
     def spin(self):
         """
