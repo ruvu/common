@@ -46,7 +46,7 @@ class TestClient(unittest.TestCase):
         connection.close()
 
         # check if the string is received in a ROS message
-        msg = self.message_queue.get(timeout=10)  # with a timeout, get somehow accepts SIGINT
+        msg = self.message_queue.get(timeout=30)  # with a timeout, get somehow accepts SIGINT
         self.assertIsNotNone(msg)
 
     def string_cb(self, msg):
