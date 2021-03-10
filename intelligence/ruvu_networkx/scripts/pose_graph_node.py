@@ -15,7 +15,7 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, Point, PoseStamped, PointStamped, Quaternion
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
 from nav_msgs.msg import Path
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import MarkerArray, InteractiveMarkerFeedback
 from mbf_msgs.msg import GetPathAction, GetPathResult
 from tf.transformations import quaternion_slerp
 from future.utils import iteritems
@@ -299,7 +299,7 @@ class PoseGraphNode(object):
         Callback received when the store service is called, it will store the graph to file (file path parameter)
         """
         nx.write_yaml(self._graph, self._file_path)
-        rospy.loginfo("Stored graph to {}".format(self._file_path))
+        rospy.logwarn('store is deprecated, changes are stored automatically')
         return {}
 
     def _check_frame_id(self, frame_id):
@@ -343,6 +343,7 @@ class PoseGraphNode(object):
             return
 
         self._add_pose_to_graph(pose.pose)
+        nx.write_yaml(self._graph, self._file_path)
 
     def _remove_node_cb(self, point):
         """
@@ -353,6 +354,7 @@ class PoseGraphNode(object):
             return
 
         self._remove_pose_from_graph(point.point)
+        nx.write_yaml(self._graph, self._file_path)
 
     def _add_edge_cb(self, point):
         """
@@ -368,6 +370,7 @@ class PoseGraphNode(object):
                 and (point.header.stamp - self._last_connect_clicked_point.header.stamp).to_sec() < self._click_timeout:
             self._add_edge_to_graph(self._last_connect_clicked_point.point, point.point)
             rospy.loginfo("let's connect")
+            nx.write_yaml(self._graph, self._file_path)
 
         self._last_connect_clicked_point = point
 
@@ -380,6 +383,7 @@ class PoseGraphNode(object):
             return
 
         self._remove_edge_from_graph(point.point)
+        nx.write_yaml(self._graph, self._file_path)
 
     def _get_path_cb(self, point):
         """
@@ -609,6 +613,8 @@ class PoseGraphNode(object):
         """
         self._graph.add_node(int(feedback.marker_name), pose=feedback.pose)  # Update existing node's pose
         self._publish_graph_visualization()
+        if feedback.event_type == InteractiveMarkerFeedback.MOUSE_UP:
+            nx.write_yaml(self._graph, self._file_path)
 
 
 if __name__ == "__main__":
