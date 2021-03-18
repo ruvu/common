@@ -8,7 +8,7 @@ from std_msgs.msg import Header, ColorRGBA
 from visualization_msgs.msg import MarkerArray, Marker, InteractiveMarkerControl, InteractiveMarker
 
 
-def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, marker_scale, attribute_name="pose"):
+def get_visualization_marker_array_msg_from_pose_graph(graph, frame_id, marker_scale=1.0, attribute_name="pose"):
     """
     Returns a visualization_msgs/MarkerArray from a pose graph
     :param frame_id: Frame name in the header of the message
