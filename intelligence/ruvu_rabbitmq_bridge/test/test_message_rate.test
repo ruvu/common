@@ -19,7 +19,7 @@ Copyright 2020 RUVU Robotics B.V.
   <test test-name="hztest_test" pkg="rostest" type="hztest" name="hztest" >
     <param name="topic" value="float_msg_out" />
     <param name="hz" value="500.0" />
-    <param name="hzerror" value="50" />
+    <param name="hzerror" value="100" />
     <param name="test_duration" value="5.0" />
   </test>
 </launch>
