@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     rospy.loginfo('%s started', rospy.get_name())
 
-    rate = rospy.Rate(10.0)
+    rate = rospy.Rate(10.0, reset=True)
     while not rospy.is_shutdown():
         try:
             transform = buffer.lookup_transform(target_frame, source_frame, rospy.Time())
