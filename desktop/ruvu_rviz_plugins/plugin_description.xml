@@ -81,4 +81,11 @@ Copyright 2020 RUVU Robotics B.V.
       Cancel all goals
     </description>
   </class>
+  <class name="ruvu_rviz_plugins/AddPath"
+         type="ruvu_rviz_plugins::PathTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Create a path by dragging and dropping
+    </description>
+  </class>
 </library>

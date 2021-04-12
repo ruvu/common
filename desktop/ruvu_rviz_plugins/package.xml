@@ -15,12 +15,18 @@ Copyright 2020 RUVU Robotics B.V.
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>control_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>rviz</build_depend>
+  <build_depend>std_msgs</build_depend>
 
   <exec_depend>control_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
   <exec_depend>qtbase5-dev</exec_depend>
   <exec_depend>rviz</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
 
   <test_depend>ruvu_lint</test_depend>
 
