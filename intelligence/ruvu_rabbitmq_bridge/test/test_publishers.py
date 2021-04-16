@@ -41,7 +41,6 @@ class TestClient(unittest.TestCase):
         queue = platform.node() + '/string_from_rabbitmq'
         connection = BlockingConnection(ConnectionParameters(host))
         channel = connection.channel()
-        channel.queue_declare(queue=queue)
         channel.basic_publish(exchange='Test.Publishers', routing_key=queue, body=dumps({'data': 'somestring'}))
         connection.close()
 
