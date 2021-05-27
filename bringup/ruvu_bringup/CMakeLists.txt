@@ -28,3 +28,8 @@ catkin_install_python(PROGRAMS
     scripts/systemd_service_from_launch_file.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(DIRECTORY
+    systemd
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
