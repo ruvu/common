@@ -46,7 +46,8 @@ def reply_failed_json_message(channel, properties, exception):
 class RabbitMQBridge(object):
     def __init__(self, subscribers, publishers, servers, clients, rabbitmq_host, rabbitmq_virtual_host,
                  rabbitmq_username, rabbitmq_password, rabbitmq_queue_prefix, rabbitmq_reconnect_timeout,
-                 rabbitmq_heartbeat, ros_publisher_queue_size, ros_queue_empty_timeout, ros_service_response_timeout):
+                 rabbitmq_heartbeat, ros_publisher_queue_size, ros_queue_empty_timeout, ros_service_response_timeout,
+                 message_ttl):
         """
         RabbitMQ ROS Bridge that bridges between the ROS and the RabbitMQ network
         :param subscribers: ROS subscriber topic bridges
@@ -63,6 +64,7 @@ class RabbitMQBridge(object):
         :param ros_publisher_queue_size: ROS publisher queue size
         :param ros_queue_empty_timeout: When there is no incoming ROS message, wait for x seconds
         :param ros_service_response_timeout: When there's no ROS service response [seconds], pass an error to the client
+        :param message_ttl: Time-to-live of messages in a queue [milliseconds]
         """
         self._subscribers = subscribers
         self._publishers = publishers
@@ -78,6 +80,7 @@ class RabbitMQBridge(object):
         self._ros_publisher_queue_size = ros_publisher_queue_size
         self._queue_empty_timeout = ros_queue_empty_timeout
         self._ros_service_response_timeout = rospy.Duration(ros_service_response_timeout)
+        self._message_ttl = message_ttl
 
         self._ros_subscribers = {}
         self._ros_publishers = {}
@@ -153,7 +156,9 @@ class RabbitMQBridge(object):
 
             # Create RabbitMQ subscriber
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + publisher.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=publisher.durable,
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name,
+                                                      durable=publisher.durable,
+                                                      arguments={'x-message-ttl': self._message_ttl},
                                                       auto_delete=publisher.auto_delete)
 
             if publisher.exchange:
@@ -173,10 +178,13 @@ class RabbitMQBridge(object):
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + server.topic
             rabbitmq_response_queue_name = rabbitmq_queue_name + '_response'
 
-            response_queue = self._rabbitmq_rpc_response_channel.queue_declare(
-                queue=rabbitmq_response_queue_name, exclusive=True, durable=server.durable,
-                auto_delete=server.auto_delete
-            )
+            response_queue = self._rabbitmq_rpc_response_channel.queue_declare(queue=rabbitmq_response_queue_name,
+                                                                               exclusive=True,
+                                                                               arguments={
+                                                                                   'x-message-ttl': self._message_ttl},
+                                                                               durable=server.durable,
+                                                                               auto_delete=server.auto_delete
+                                                                               )
 
             self._rabbitmq_rpc_client_callback_queue = response_queue.method.queue
             self._rabbitmq_rpc_response_channel.basic_consume(
@@ -197,7 +205,9 @@ class RabbitMQBridge(object):
 
             # Create RabbitMQ RPC server
             rabbitmq_queue_name = self._rabbitmq_queue_prefix + client.topic
-            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name, durable=client.durable,
+            self._rabbitmq_read_channel.queue_declare(queue=rabbitmq_queue_name,
+                                                      durable=client.durable,
+                                                      arguments={'x-message-ttl': self._message_ttl},
                                                       auto_delete=client.auto_delete)
 
             self._rabbitmq_read_channel.basic_qos(prefetch_count=1)
@@ -465,7 +475,8 @@ if __name__ == '__main__':
         rospy.get_param('~rabbitmq_heartbeat', 0),  # Node will stay alive even when the server can't be reached
         rospy.get_param('~ros_publisher_queue_size', 10),
         rospy.get_param('~queue_empty_timeout', 0.01),
-        rospy.get_param('~ros_service_response_timeout', 1)
+        rospy.get_param('~ros_service_response_timeout', 1),
+        rospy.get_param('~message_ttl', 0),
     )
     while not rospy.is_shutdown():
         try:
