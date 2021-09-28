@@ -416,21 +416,12 @@ class RabbitMQBridge(object):
                 pass
             self._diagnostic_updater.update()
 
-    def _check_connection_open(self, connection):
-        if connection is None:
-            return False
-        try:
-            connection.process_data_events()
-            return True
-        except pika.exceptions.ConnectionClosed:
-            return False
-
     def _diagnostics(self, stat):
-        if self._check_connection_open(self._rabbitmq_read_connection):
-            stat.summary(diagnostic_updater.DiagnosticStatus.OK, "Rabbitmq connection is OK")
+        if self._rabbitmq_read_channel and self._rabbitmq_read_channel.is_open:
+            stat.summary(diagnostic_updater.DiagnosticStatus.OK, "Rabbitmq read channel is created and open")
         else:
             stat.summary(diagnostic_updater.DiagnosticStatus.ERROR,
-                         "Rabbitmq connection with host {} has failed".format(self._rabbitmq_host))
+                         "No open Rabbitmq read channel established with host {}".format(self._rabbitmq_host))
 
     def spin(self):
         """
@@ -452,9 +443,10 @@ class RabbitMQBridge(object):
         else:
             rospy.loginfo('All consumers canceled, keep spinning for producers')
             while not rospy.is_shutdown():
-                rospy.sleep(0.1)
-                if not self._check_connection_open(self._rabbitmq_read_connection):
-                    rospy.logwarn('Connection or channel closed, reconnecting when enabled')
+                try:
+                    self._rabbitmq_read_connection.sleep(0.1)  # Checking connection.is_open() is not enough
+                except pika.exceptions.ConnectionClosed:
+                    rospy.logwarn('Rabbitmq read channel closed, reconnecting when enabled')
                     break
 
 
