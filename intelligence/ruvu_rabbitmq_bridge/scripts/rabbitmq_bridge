@@ -433,21 +433,17 @@ class RabbitMQBridge(object):
         self._ros_msg_handler_thread.start()
         self._ros_srv_handler_thread = threading.Thread(target=self._ros_srv_handler_thread_function)
         self._ros_srv_handler_thread.start()
-        try:
-            self._rabbitmq_read_channel.start_consuming()  # blocking call
-        except KeyboardInterrupt as e:
-            rospy.loginfo('signal shutdown')
-            rospy.signal_shutdown(str(e))
-        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-            rospy.logwarn('Connection or channel closed, reconnecting when enabled')
-        else:
-            rospy.loginfo('All consumers canceled, keep spinning for producers')
-            while not rospy.is_shutdown():
-                try:
-                    self._rabbitmq_read_connection.sleep(0.1)  # Checking connection.is_open() is not enough
-                except pika.exceptions.ConnectionClosed:
-                    rospy.logwarn('Rabbitmq read channel closed, reconnecting when enabled')
-                    break
+        while not rospy.is_shutdown():
+            try:
+                self._rabbitmq_read_channel.start_consuming()  # blocking call
+                # All consumers are canceled, keep checking if the connection is open:
+                self._rabbitmq_read_connection.sleep(0.1)  # Checking connection.is_open() is not enough
+            except KeyboardInterrupt as e:
+                rospy.loginfo('signal shutdown')
+                rospy.signal_shutdown(str(e))
+            except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
+                rospy.logwarn('Connection or channel closed, reconnecting when enabled')
+                break
 
 
 if __name__ == '__main__':
